@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import NeoTokyoUnderworld from "./NeoTokyoUnderworld.jsx";
 import { createStorageBridge } from "./storage.js";
 import OnlineHub from "./online/OnlineHub.jsx";
+import { supabase } from "./online/supabase.js";
 import "./mobile.css";
 
 class CrashScreen extends React.Component {
@@ -24,10 +25,7 @@ class CrashScreen extends React.Component {
   }
 }
 
-window.storage = createStorageBridge({
-  url: import.meta.env.VITE_SUPABASE_URL,
-  anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-});
+window.storage = createStorageBridge({ client: supabase });
 
 createRoot(document.getElementById("root")).render(
   <CrashScreen><OnlineHub><NeoTokyoUnderworld /></OnlineHub></CrashScreen>,
