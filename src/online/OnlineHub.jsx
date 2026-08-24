@@ -8,6 +8,7 @@ import Inventory, { getArmoryBonuses, normalizeInventory } from "./Inventory.jsx
 import { migrateAccountSave, SAVE_KEY, serializeAccountSave } from "./accountSave.js";
 import "./online-hub.css";
 import "./account-gate.css";
+import "./visual-v3-overlays.css";
 
 const LEGACY_OWNER_KEY = "ntu:legacy-save-owner";
 const nativeRedirect = "com.neotokyo.underworld://auth/callback";

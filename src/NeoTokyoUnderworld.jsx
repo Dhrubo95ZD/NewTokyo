@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import "./visual-v3.css";
 
 /* ============================================================
    NEO-TOKYO UNDERWORLD — a Torn-style anime crime RPG
@@ -163,6 +164,8 @@ export function Brawl({ stats, enemy, onEnd }) {
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     canvas.width = W * dpr; canvas.height = H * dpr;
     ctx.scale(dpr, dpr);
+    const arenaBg = new Image();
+    arenaBg.src = "/assets/world-v3/undercity-arena.webp";
 
     const MOB_COLORS = { punk: "#00AEEF", delinq: "#FF4D82", ronin_e: "#8f7bff", maid: "#ffb3d1", oni_e: "#F1385C", kitsune: "#f2ecff", phantom: "#63f0ff" };
     const reduce = 60 / (60 + stats.def + stats.aPow);
@@ -339,10 +342,17 @@ export function Brawl({ stats, enemy, onEnd }) {
       ctx.save();
       ctx.clearRect(0, 0, W, H);
       if (S.shake > 0) ctx.translate((Math.random() - 0.5) * S.shake * 40, (Math.random() - 0.5) * S.shake * 40);
-      /* night floor */
-      const bg = ctx.createLinearGradient(0, 0, 0, H);
-      bg.addColorStop(0, "#1b1534"); bg.addColorStop(0.6, "#141026"); bg.addColorStop(1, "#0c0a17");
-      ctx.fillStyle = bg; ctx.fillRect(-10, -10, W + 20, H + 20);
+      /* illustrated undercity floor, cropped to cover the canvas */
+      if (arenaBg.complete && arenaBg.naturalWidth) {
+        const scale = Math.max(W / arenaBg.naturalWidth, H / arenaBg.naturalHeight);
+        const dw = arenaBg.naturalWidth * scale, dh = arenaBg.naturalHeight * scale;
+        ctx.drawImage(arenaBg, (W - dw) / 2, (H - dh) / 2, dw, dh);
+        ctx.fillStyle = "rgba(3,7,15,.34)"; ctx.fillRect(-10, -10, W + 20, H + 20);
+      } else {
+        const bg = ctx.createLinearGradient(0, 0, 0, H);
+        bg.addColorStop(0, "#111c2c"); bg.addColorStop(0.6, "#0b1421"); bg.addColorStop(1, "#050a12");
+        ctx.fillStyle = bg; ctx.fillRect(-10, -10, W + 20, H + 20);
+      }
       /* giant watermark kanji */
       ctx.font = "210px DotGothic16, monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.fillStyle = "rgba(255,111,174,.05)"; ctx.fillText("斬", W / 2, H / 2 + 10);
@@ -2937,6 +2947,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
       );
       case "home": return (
         <Panel title={`${p.name}${(p.evo || 0) > 0 ? " " + "★".repeat(Math.min(p.evo, 5)) : ""} — Level ${p.level}`} kanji="家">
+          <div className="city-brief"><small>NEO-TOKYO // WARD 09</small><b>The city remembers</b><span>Rain over Shinjuku. Syndicate traffic is rising beneath the mag-rail.</span></div>
           {armoryProgress < 3 && <div className="progression-callout"><small>RUNNER INITIATION · {armoryProgress + 1}/3</small><b>{armoryProgress === 0 ? "Survive your first District Run" : armoryProgress === 1 ? "Equip the weapon you extracted" : "Enhance that weapon to +1"}</b><span>{armoryProgress === 0 ? "Live combat earns your first real item and 12 Nano Shards." : armoryProgress === 1 ? "Your visible loadout directly increases arena power." : "Enhancement makes the item permanently stronger, up to +20."}</span><button className="chip" onClick={onOpenArmory}>Continue initiation</button></div>}
           {p.title && <p className="flavor" style={{ marginTop: -6 }}><span style={{ color: "#D98600" }}>「{p.title}」</span> · 🔥 {p.streak || 1}-day streak</p>}
           {(p.statPoints || 0) > 0 && (
