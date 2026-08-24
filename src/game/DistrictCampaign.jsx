@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { RunnerPortrait } from "../online/CharacterCreator.jsx";
+import ReactiveCombat from "./ReactiveCombat.jsx";
 import "./district-campaign.css";
 
 const STEPS = ["briefing", "skirmish", "loot", "boss"];
@@ -520,9 +521,9 @@ export default function DistrictCampaign({
       <div className="dc-stage">
         {campaign.status === "available" && <section className="dc-card dc-intro"><div><small>WARD REQUEST 01</small><h2>Open the First Light route</h2><p>A medical and supply convoy is waiting beyond a disabled transit concourse. Scout the signal, clear the roadblock, choose your first real weapon and stop the rogue Rail Warden.</p><ul><li>Interactive scouting</li><li>Lane-based combat</li><li>Permanent Green weapon</li><li>Guaranteed +1 calibration</li></ul><button className="dc-primary" onClick={beginCampaign} disabled={syncing}>{syncing ? "SECURING ROUTE…" : "BEGIN DISTRICT ONE"}</button></div><img src="/assets/campaign/rail-warden-k9.webp" alt="Rail Warden K-9" /></section>}
         {campaign.status !== "available" && campaign.step === "briefing" && <SignalScout role={resolvedRole} progress={campaign.scout} onCommit={finishScout} />}
-        {campaign.status !== "available" && campaign.step === "skirmish" && <LaneEncounter role={resolvedRole} profile={profile} attempts={campaign.skirmish.attempts} onWin={winSkirmish} onAttempt={recordSkirmishAttempt} />}
+        {campaign.status !== "available" && campaign.step === "skirmish" && <ReactiveCombat role={resolvedRole} profile={profile} attempts={campaign.skirmish.attempts} onWin={winSkirmish} onAttempt={recordSkirmishAttempt} />}
         {campaign.status !== "available" && campaign.step === "loot" && <LootChoice role={resolvedRole} selectedId={campaign.loot.weaponId} onSelect={selectWeapon} onAdvance={beginBoss} />}
-        {campaign.status !== "available" && campaign.step === "boss" && !campaign.boss.complete && <LaneEncounter boss role={resolvedRole} profile={profile} weapon={weapon} attempts={campaign.boss.attempts} onWin={winBoss} onAttempt={recordBossAttempt} />}
+        {campaign.status !== "available" && campaign.step === "boss" && !campaign.boss.complete && <ReactiveCombat boss role={resolvedRole} profile={profile} weapon={weapon} attempts={campaign.boss.attempts} onWin={winBoss} onAttempt={recordBossAttempt} />}
         {campaign.status !== "available" && campaign.step === "boss" && campaign.boss.complete && !campaign.complete && weapon && <section className="dc-card dc-victory"><small>RAIL WARDEN DISABLED</small><h2>The convoy is moving</h2><p>Use recovered tuning parts to finish the initiation and make your first weapon permanently stronger.</p><Calibration weapon={weapon} locks={campaign.boss.calibrationLocks || 0} onLock={calibrationLock} /></section>}
         {campaign.complete && <section className="dc-card dc-complete"><div className="dc-complete-mark">✓</div><small>DISTRICT ONE COMPLETE</small><h2>East Market is connected</h2><p>The relief convoy reached the clinics and supply depots. Your runner now has a real loadout and a route into the wider city.</p><div className="dc-rewards"><span><b>{weapon?.name}</b><small>Equipped · +1</small></span><span><b>850</b><small>Credits</small></span><span><b>120</b><small>XP</small></span></div>{onExit && <button className="dc-primary" onClick={onExit}>Return to city</button>}</section>}
         {syncing && <div className="dc-syncing" role="status"><i /><b>Securing online progress…</b></div>}
