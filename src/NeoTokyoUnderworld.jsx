@@ -957,6 +957,7 @@ function CricketGame({ bet, onEnd }) {
   const [runs, setRuns] = useState(0);
   const [phase, setPhase] = useState("ready"); // ready | bowling | between | done
   const [banner, setBanner] = useState("Back-alley rules. Six balls. Time your shot.");
+  const [shot, setShot] = useState("");
   const ballRef = useRef(null);
   const flight = useRef(null);
   const over = useRef({ balls: [], runs: 0 });
@@ -989,23 +990,26 @@ function CricketGame({ bet, onEnd }) {
     const el = ballRef.current;
     if (el && add >= 4) { el.style.transition = "all .45s ease-out"; el.style.top = "-14%"; el.style.left = `${20 + Math.random() * 60}%`; el.style.opacity = "0"; }
     else if (el) el.style.opacity = "0";
-    if (res === "W" || over.current.balls.length >= 6) later(finishOver, 1000);
+    /* Street rules always give the player the full six-ball over. */
+    if (over.current.balls.length >= 6) later(finishOver, 1000);
     else later(bowl, 1300);
   };
 
   const bowl = () => {
     setBanner("");
+    setShot("");
     setPhase("bowling");
     const dur = 850 + Math.random() * 520;
     const drift = (Math.random() - 0.5) * 40;
     const el = ballRef.current;
     if (el) { el.style.transition = "none"; el.style.opacity = "1"; el.style.top = "10%"; el.style.left = "50%"; }
-    flight.current = { t0: performance.now(), dur, drift, done: false, raf: 0 };
+    flight.current = { t0: performance.now(), dur, drift, progress: 0, done: false, raf: 0 };
     const step = (t) => {
       const f = flight.current;
       if (!f || f.done || !alive.current) return;
       const kk = (t - f.t0) / f.dur;
       const k = Math.min(1, kk);
+      f.progress = kk;
       const node = ballRef.current;
       if (node) {
         node.style.top = `${10 + k * 72}%`;
@@ -1023,17 +1027,21 @@ function CricketGame({ bet, onEnd }) {
     flight.current.raf = requestAnimationFrame(step);
   };
 
-  const swing = () => {
+  const swing = (event) => {
+    event?.preventDefault?.();
     const f = flight.current;
     if (phase !== "bowling" || !f || f.done) return;
     f.done = true;
     cancelAnimationFrame(f.raf);
-    const dt = performance.now() - f.t0 - f.dur;
+    setShot("swing");
+    later(() => setShot(""), 360);
+    /* Rendered progress keeps timing fair if a phone drops a frame. */
+    const dt = ((f.progress ?? ((performance.now() - f.t0) / f.dur)) - 1) * f.dur;
     const a = Math.abs(dt);
-    if (a <= 48) resolveBall("6", 6, "SIX!! Off into the neon signs!");
-    else if (a <= 98) resolveBall("4", 4, "FOUR! Races between the dumpsters!");
-    else if (a <= 152) resolveBall("2", 2, "Two runs, quick between the crates.");
-    else if (a <= 218) resolveBall("1", 1, "A scrappy single.");
+    if (a <= 70) resolveBall("6", 6, "PERFECT — SIX into the neon!");
+    else if (a <= 135) resolveBall("4", 4, "GREAT — FOUR through the alley!");
+    else if (a <= 210) resolveBall("2", 2, "GOOD — two quick runs.");
+    else if (a <= 285) resolveBall("1", 1, "CONTACT — a scrappy single.");
     else if (dt < 0) {
       const out = Math.random() < 0.3;
       resolveBall(out ? "W" : ".", 0, out ? "Skied it — CAUGHT by a salaryman!" : "Way too early. Swing and a miss.");
@@ -1049,7 +1057,9 @@ function CricketGame({ bet, onEnd }) {
         <div className="ck-strip" />
         <div className="ck-bowler">投</div>
         <div className="ck-ball" ref={ballRef} style={{ opacity: 0 }} />
+        <div className="ck-hit-zone"><span>HIT ZONE</span></div>
         <div className="ck-batter">打</div>
+        <div className={`ck-bat ${shot}`} aria-hidden="true" />
         <div className="ck-stumps"><span /><span /><span /></div>
         {banner && <div className={`bj-banner ${runs >= 16 || banner.includes("SIX") || banner.includes("FOUR") ? "win" : banner.includes("BOWLED") || banner.includes("CAUGHT") || banner.includes("OUT") ? "lose" : ""}`} style={{ position: "absolute", left: 0, right: 0, top: "38%" }}>{banner}</div>}
       </div>
@@ -1065,10 +1075,10 @@ function CricketGame({ bet, onEnd }) {
         <span>BET <b style={{ color: "#D98600" }}>{fmt(bet)}</b></span>
       </div>
       {phase === "ready" && <button className="btn big" onClick={bowl}>PLAY BALL</button>}
-      {phase === "bowling" && <button className="btn big" onPointerDown={swing}>斬 BAT!</button>}
+      {phase === "bowling" && <button className="btn big ck-bat-button" onPointerDown={swing}>BAT NOW</button>}
       {(phase === "between" || phase === "done") && <button className="btn big" disabled>…</button>}
       <p className="muted" style={{ marginTop: 6, fontSize: 11.5 }}>
-        Tap BAT (or the pitch) as the ball reaches the crease. Perfect = 6, good = 4. 10+ runs doubles your bet, 16+ triples, 24+ pays 5×. A wicket with under 10 runs loses it all.
+        Tap BAT or anywhere on the pitch when the ball enters the cyan hit zone. You always face six balls. 10+ runs doubles your bet, 16+ triples, 24+ pays 5×.
       </p>
     </div>
   );
@@ -1156,8 +1166,8 @@ CRICKET: Street Cricket minigame in the casino — bet, face 6 balls, tap BAT wi
 CASINO: BLACKJACK table (graphical, vs dealer Madam Koi with two bot regulars Goro & Mika; hit/stand/double, blackjack pays 3:2; a live feed shows real players' wins when online) plus coin flip 48% 2x and slots up to 10x (jackpot gives a Star Shard). RENOWN (fame): casino wins build renown through tiers (Nobody -> Known Face 25 -> High Roller 75 -> Casino Royalty 150 -> Neon Legend 300). Each tier: crimes pay +5%, dates give more affection, and after wins over 1500 yen girls sometimes approach you with free affection.
 MISSIONS: claimable goals (fights, crimes, trains, shifts, gamble wins, crafts).
 ROMANCE (Hearts): 5 girls, 7 chapters each. Sakura Kurosawa (mafia heir; final unlocks 10% shop discount ch4 + Kurosawa Contracts ch7), Rin Amasawa (racer; faster energy regen), Hana Mochizuki (medic; faster HP regen, half hospital), Yumi Hoshino (idol; happiness barely decays, casino luck), Ayame Tachibana (detective; shorter jail, 30% bust escape). Raise affection via Hang out (6 energy+¥200) and gifts (Pocky+4, Ramen+5, Sake+6, Plushie+15, Charm+25). Ch6 is the confession with a CHOICE that branches the finale. JEALOUSY: confessing (ch6) while another girl is already at ch6+ triggers a confrontation — choose one (other is heartbroken forever) or be honest. Honesty works ONLY if the pair is compatible (Rin+Yumi, Rin+Hana, Hana+Yumi, Yumi+Sakura, Hana+Ayame) AND both have 100+ affection → shared relationship, both perk sets, joint chapter after both ch7s. Incompatible pairs (e.g. Sakura+Ayame) = lose both.
-EVOLVE (prestige): at level 25+, the Home screen offers EVOLVE — resets level/stats/points/cash(to 500)/job/records/story missions, KEEPS gear/bag/bank/romance/renown/titles/streak/Grid Pass. Each evolution permanently grants +10% XP, +10% yen, +5 max energy, one Star Shard, and a gold star by your name (shown on rankings). Stacks forever.
-MULTIPLAYER: World Chat, City Rankings, Grid Pass (handle+PIN login syncs saves anywhere).
+EVOLVE (prestige): at level 25+, the Home screen offers EVOLVE — resets level/stats/points/cash(to 500)/job/records/story missions, KEEPS gear/bag/bank/romance/renown/titles/streak/account save. Each evolution permanently grants +10% XP, +10% yen, +5 max energy, one Star Shard, and a gold star by your name (shown on rankings). Stacks forever.
+MULTIPLAYER: Google account login, account-owned cloud saves, World Chat and City Rankings. Progress follows the signed-in Google account automatically.
 JAIL/HOSPITAL: all actions locked until the timer ends.
 QOL: Quick heal button (Fights) auto-eats the best food. Claim-all button (Missions). Auto-salvage toggle (Bag) melts common drops to scrap. ALL IN chip at the casino. Bank interest accrues while away. PITY: a legendary gear drop is GUARANTEED within every 40 gear drops (counter shown on Fights screen; resets on any legendary).
 RARITY GEAR: fights (both modes) can drop rolled gear — common/uncommon/rare/GOLDEN/LEGENDARY (~1% normal, ~8% from world boss). Legendary is ~10x golden's power. Gear rolls substats (STR/DEF/SPD/DEX, Max HP, Crit%, Yen Find%, XP Gain%) — up to 4 on legendary. Enhance gear +0 to +10 in the Bag detail (scrap + yen, each + adds 10% power). Salvage unwanted gear into scrap. Equipped gear substats apply to all combat.
@@ -2089,7 +2099,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
     if (has("stat", "point", "train", "gym", "build", "respec")) return "Stats come from level-ups now — +5 points per level, spent freely on the Stats screen. STR = damage, DEF = tanking, SPD = first strike + move speed, DEX = dodge + crit. Respec anytime for level×1000 yen. *beep*";
     if (has("fight", "combat", "enemy", "lose", "hospital")) return "Fights cost 8 energy. STR = damage, DEF = tanking, SPD = striking first, DEX = dodging. If Kenji beats you up, buy a Bokken and Jacket first! Losing means the hospital, but Hana can halve that. *beep*";
     if (has("jail", "police", "bust", "arrest")) return "Busted crimes have a 50% jail chance. Ayame's perks shrink sentences and can void busts entirely at ch7. Or just... commit better crimes, senpai. ♪";
-    if (has("grid", "pin", "login", "handle", "save")) return "Grid Pass = handle + PIN, set on the join screen. Log in from ANY device and your whole save follows. Don't forget the PIN — there's no reset, even my circuits can't recover it!";
+    if (has("grid", "pin", "login", "handle", "save")) return "Your progress is tied to the Google account you used to sign in, senpai. No extra PIN is needed — cloud save follows that account automatically!";
     if (has("chat", "player", "rank", "leader")) return "World Chat and City Rankings are in the nav — real players, live! Claim a handle first. Be nice out there or I'll *beep* disapprovingly.";
     if (has("hi", "hello", "hey", "who are you", "simi")) return "*happy beep* I'm Simi! Guide unit, morale officer, and the only resident of this city who won't rob you. Ask me 'what now?' anytime, senpai! ♪";
     return "*processing whirr* Hmm, my circuits didn't catch that one. Try asking about crimes, fights, the Forge, money, romance, or just 'what should I do now?' ♪";
@@ -2434,11 +2444,6 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
       pushLog(`Mission complete — ${m.name}: ${fmt(m.reward)}.`, "good");
       return q;
     });
-  };
-
-  const resetGame = async () => {
-    try { await window.storage.delete("ntu-save-v1"); } catch (e) { /* fine */ }
-    setP(newPlayer()); setLog([{ t: "system", msg: "New life started. Don't waste it." }]); setScreen("home");
   };
 
   /* ---------- romance ---------- */
@@ -2826,16 +2831,6 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
     } catch (e) { setHandleErr(`Couldn't reach the grid (${(e && e.message) || "error"}) - try again in a moment.`); }
   };
 
-  const setPassForExisting = async () => {
-    if (!p.handle || !validPin(pinInput)) { setHandleErr("PIN must be 4–8 digits."); return; }
-    try {
-      const key = await enableCloud(p.handle, pinInput, p);
-      setP((pl) => ({ ...pl, cloudKey: key }));
-      setPinInput(""); setHandleErr("");
-      pushLog("Grid Pass set. Your save now syncs everywhere.", "system");
-    } catch (e) { setHandleErr(`Couldn't reach the grid (${(e && e.message) || "error"}) — try again.`); }
-  };
-
   const keyName = (k) => (typeof k === "string" ? k : (k && (k.key || k.name)) || "");
 
   const pollChat = useCallback(async () => {
@@ -2980,7 +2975,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
               <div>
                 <p className="flavor" style={{ color: "#E23A6B" }}>
                   Evolving resets: level, XP, stats & points, cash (to ¥500), job, records, and story missions.
-                  It keeps: gear, bag & materials, bank, romance, renown, titles, streak, and Grid Pass.
+                  It keeps: gear, bag & materials, bank, romance, renown, titles, streak, and your online account save.
                   You gain forever: +10% XP, +10% yen, +5 max energy, a 星 Star Shard, and a ★ by your name.
                 </p>
                 <div className="grid2">
@@ -3006,25 +3001,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
             </div>
           )}
           <Bar label="XP to next level" val={p.xp} max={xpNeed(p)} color="linear-gradient(90deg,#FFAB00,#FF4D82)" />
-          {p.handle && p.cloudKey && (
-            <p className="muted" style={{ marginTop: 10 }}>Grid Pass active — signed in as <b style={{ color: "#0C93CC" }}>{p.handle}</b>. Your save syncs to the cloud and follows you to any device.</p>
-          )}
-          {p.handle && !p.cloudKey && (
-            <div style={{ marginTop: 12 }}>
-              <p className="flavor">Set a Grid Pass PIN to sync this character everywhere:</p>
-              <div className="chat-row">
-                <input className="chat-input" value={pinInput} maxLength={8} inputMode="numeric" type="password"
-                  placeholder="PIN — 4 to 8 digits"
-                  onChange={(e) => { setPinInput(e.target.value.replace(/\D/g, "")); setHandleErr(""); }} />
-                <button className="btn" onClick={setPassForExisting}>Set PIN</button>
-              </div>
-              {handleErr && <p className="muted" style={{ marginTop: 6, color: "#E23A6B" }}>{handleErr}</p>}
-            </div>
-          )}
-          {!p.handle && (
-            <button className="btn ghost" onClick={() => setScreen("chat")}>Join the grid or log in with a Grid Pass</button>
-          )}
-          <button className="btn ghost" onClick={resetGame}>Start a new life (wipe save)</button>
+          <p className="online-save-note"><span>●</span><b>ONLINE SAVE ACTIVE</b> Progress is secured to your signed-in Google account.</p>
         </Panel>
       );
       case "gym": {
@@ -4166,20 +4143,19 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
         );
       })()}
       {!brawl && <button className="simi-fab" onClick={() => setSimiOpen((o) => !o)} aria-label="Chat with Simi">
-        <span className="simi-antenna" />
-        <span className="simi-face">
-          <span className="simi-eye" /><span className="simi-eye" />
-        </span>
-        <span className="simi-mouth" />
+        <img src="/assets/companions/simi-v2.webp" alt="" />
+        <span className="simi-ping" />
       </button>}
 
       {simiOpen && (
         <div className="simi-panel">
           <div className="simi-head">
-            <div>
+            <img src="/assets/companions/simi-v2.webp" alt="" />
+            <div className="simi-title">
               <b>SIMI</b> <span className="simi-sub">シミ · guide unit</span>
             </div>
             <span className="simi-status">{simiBusy ? "processing…" : "● online"}</span>
+            <button className="simi-close" onClick={() => setSimiOpen(false)} aria-label="Close Simi">×</button>
           </div>
           <div className="simi-msgs">
             {simiMsgs.map((m, i) => (
