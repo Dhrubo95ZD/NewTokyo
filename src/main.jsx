@@ -30,5 +30,5 @@ window.storage = createStorageBridge({
 });
 
 createRoot(document.getElementById("root")).render(
-  <CrashScreen><NeoTokyoUnderworld /><OnlineHub /></CrashScreen>,
+  <CrashScreen><OnlineHub><NeoTokyoUnderworld /></OnlineHub></CrashScreen>,
 );
