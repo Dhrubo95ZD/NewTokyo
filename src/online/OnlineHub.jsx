@@ -3,6 +3,7 @@ import { App } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
 import { onlineConfigured, supabase } from "./supabase.js";
+import CharacterCreator, { RunnerPortrait } from "./CharacterCreator.jsx";
 import "./online-hub.css";
 import "./account-gate.css";
 
@@ -15,6 +16,8 @@ export default function OnlineHub({ children }) {
   const [session, setSession] = useState(null);
   const [booting, setBooting] = useState(true);
   const [accountReady, setAccountReady] = useState(false);
+  const [characterProfile, setCharacterProfile] = useState(null);
+  const [editingCharacter, setEditingCharacter] = useState(false);
   const [busy, setBusy] = useState(false);
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
@@ -45,7 +48,7 @@ export default function OnlineHub({ children }) {
     let appUrlListener;
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setBooting(false); });
     const { data: auth } = supabase.auth.onAuthStateChange((_event, next) => {
-      if (!next?.user) { window.storage.setUser(null); setAccountReady(false); }
+      if (!next?.user) { window.storage.setUser(null); setAccountReady(false); setCharacterProfile(null); setEditingCharacter(false); }
       setSession(next); setBooting(false);
     });
     if (Capacitor.isNativePlatform()) {
@@ -74,12 +77,6 @@ export default function OnlineHub({ children }) {
     setAccountReady(false);
     (async () => {
       window.storage.setUser(user.id);
-      const { error: profileError } = await supabase.from("profiles").upsert({
-        id: user.id, display_name: displayName.slice(0, 32),
-        avatar_url: metadata.avatar_url || metadata.picture || null,
-        last_seen_at: new Date().toISOString(),
-      });
-      if (profileError) { setStatus(profileError.message); return; }
       const existing = await window.storage.get(SAVE_KEY);
       let player = existing?.value ? JSON.parse(existing.value) : {};
       if (player.onlineUserId && player.onlineUserId !== user.id) player = {};
@@ -88,12 +85,19 @@ export default function OnlineHub({ children }) {
         if (legacyOwner && legacyOwner !== user.id) player = {};
         else localStorage.setItem(LEGACY_OWNER_KEY, user.id);
       }
-      player.handle = handle;
-      player.name = displayName.slice(0, 24);
+      const identityName = player.characterProfile?.codename || displayName;
+      const { error: profileError } = await supabase.from("profiles").upsert({
+        id: user.id, display_name: identityName.slice(0, 32),
+        avatar_url: metadata.avatar_url || metadata.picture || null,
+        last_seen_at: new Date().toISOString(),
+      });
+      if (profileError) { setStatus(profileError.message); return; }
+      player.handle = player.characterProfile?.codename || handle;
+      player.name = identityName.slice(0, 24);
       player.onlineUserId = user.id;
       delete player.cloudKey;
       await window.storage.set(SAVE_KEY, JSON.stringify(player));
-      if (!cancelled) setAccountReady(true);
+      if (!cancelled) { setCharacterProfile(player.characterProfile || null); setAccountReady(true); }
     })();
     return () => { cancelled = true; };
   }, [user]);
@@ -133,7 +137,24 @@ export default function OnlineHub({ children }) {
     setBusy(false);
   };
 
-  const avatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+  const saveCharacter = async (profile) => {
+    if (!user || busy) return;
+    setBusy(true);
+    try {
+      const existing = await window.storage.get(SAVE_KEY);
+      const player = existing?.value ? JSON.parse(existing.value) : {};
+      const next = { ...player, handle: profile.codename, name: profile.codename, onlineUserId: user.id, characterProfile: profile };
+      await window.storage.set(SAVE_KEY, JSON.stringify(next));
+      const { error: saveError } = await supabase.from("player_saves").upsert({ user_id: user.id, save_data: next });
+      if (saveError) throw saveError;
+      const { error } = await supabase.from("profiles").update({ display_name: profile.codename, last_seen_at: new Date().toISOString() }).eq("id", user.id);
+      if (error) throw error;
+      setCharacterProfile(profile);
+      setEditingCharacter(false);
+      setStatus("Runner identity forged");
+    } catch (error) { setStatus(error.message || "Could not save runner"); }
+    setBusy(false);
+  };
 
   if (!onlineConfigured) return (
     <main className="account-gate gate-error">
@@ -157,17 +178,19 @@ export default function OnlineHub({ children }) {
 
   if (!accountReady) return <main className="account-gate"><div className="gate-card"><span className="gate-mark pulse">雲</span><small>NEO GRID</small><h1>Loading your cloud identity…</h1></div></main>;
 
+  if (!characterProfile || editingCharacter) return <CharacterCreator initial={characterProfile} onSave={saveCharacter} onCancel={characterProfile ? () => setEditingCharacter(false) : null} saving={busy} />;
+
   return (
     <>
       {children}
       <button className="online-orb" onClick={() => setOpen((v) => !v)} aria-label="Open online hub">
-        {avatar ? <img src={avatar} alt="" referrerPolicy="no-referrer" /> : <span>網</span>}
+        <RunnerPortrait profile={characterProfile} compact />
         <i className={user ? "online" : ""} />
       </button>
       {open && <aside className="online-hub" aria-label="Neo-Tokyo online hub">
         <header><div><b>NEO GRID</b><small>{status}</small></div><button onClick={() => setOpen(false)}>×</button></header>
         <>
-            <div className="hub-profile">{avatar ? <img src={avatar} alt="" referrerPolicy="no-referrer" /> : <span>走</span>}<div><b>{user.user_metadata?.full_name || user.email}</b><small>Cloud identity active</small></div><button onClick={() => supabase.auth.signOut()}>Sign out</button></div>
+            <div className="hub-profile"><RunnerPortrait profile={characterProfile} compact /><div><b>{characterProfile.codename}</b><small>{user.email}</small></div><button onClick={() => setEditingCharacter(true)}>Edit runner</button><button onClick={() => supabase.auth.signOut()}>Sign out</button></div>
             <div className="hub-channel"><b>SHIBUYA FREQUENCY</b><span>PUBLIC · LIVE</span></div>
             <div className="hub-messages">{messages.length === 0 && <p className="hub-static">No voices on the frequency yet.</p>}{messages.map((m) => <article key={m.id} className={m.user_id === user.id ? "mine" : ""}><img src={m.profiles?.avatar_url || ""} alt="" /><div><b>{m.profiles?.display_name || "Runner"}</b><p>{m.body}</p></div></article>)}<div ref={listEnd} /></div>
             <div className="hub-compose"><input value={message} maxLength={240} placeholder="Broadcast…" onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} /><button onClick={send} disabled={!message.trim() || busy}>送</button></div>
