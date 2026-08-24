@@ -1,0 +1,28 @@
+import assert from "node:assert/strict";
+import {
+  liquidationPrice, normalizeCandle, orderPreview, positionPnl, quoteHealth, validateOrder,
+} from "../src/trading/tradingRules.js";
+
+const now = Date.now();
+const live = { price: 2400, source_at: new Date(now - 250).toISOString() };
+assert.equal(quoteHealth(live, now), "live");
+assert.equal(quoteHealth({ ...live, source_at: new Date(now - 4000).toISOString() }, now), "stale");
+assert.equal(quoteHealth(null, now), "offline");
+
+assert.equal(validateOrder({ side: "buy", marginYen: 5000, leverage: 5, availableYen: 9000, quote: live, now }).ok, true);
+assert.equal(validateOrder({ side: "buy", marginYen: 10000, leverage: 5, availableYen: 9000, quote: live, now }).ok, false);
+assert.equal(validateOrder({ side: "buy", marginYen: 5000, leverage: 50, availableYen: 9000, quote: live, now }).ok, false);
+
+const longPnl = positionPnl({ side: "buy", entry_price: 2400, margin_yen: 10000, leverage: 5 }, { price: 2424 });
+const shortPnl = positionPnl({ side: "sell", entry_price: 2400, margin_yen: 10000, leverage: 5 }, { price: 2376 });
+assert.equal(longPnl, 500);
+assert.equal(shortPnl, 500);
+
+const preview = orderPreview({ side: "buy", marginYen: 10000, leverage: 5, quote: live });
+assert.equal(preview.exposureYen, 50000);
+assert.ok(preview.entryPrice > 2400);
+assert.ok(preview.liquidationPrice < preview.entryPrice);
+assert.ok(liquidationPrice({ side: "sell", entryPrice: 2400, leverage: 10 }) > 2400);
+assert.deepEqual(normalizeCandle({ bucket_at: new Date(now).toISOString(), open: 1, high: 3, low: 0.5, close: 2 }).close, 2);
+
+console.log("Neo Exchange trading-rule smoke tests passed");

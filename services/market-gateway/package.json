@@ -1,0 +1,11 @@
+{
+  "name": "neo-exchange-market-gateway",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": { "start": "node index.mjs" },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.4",
+    "ws": "^8.18.3"
+  }
+}
