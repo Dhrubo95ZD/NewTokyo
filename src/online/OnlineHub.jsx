@@ -58,7 +58,11 @@ export default function OnlineHub({ children }) {
       App.addListener("appUrlOpen", async ({ url }) => {
         if (!url.startsWith(nativeRedirect)) return;
         setStatus("Finishing Google sign-in…");
-        const { error } = await supabase.auth.exchangeCodeForSession(url);
+        const callback = new URL(url);
+        const code = callback.searchParams.get("code");
+        const { error } = code
+          ? await supabase.auth.exchangeCodeForSession(code)
+          : { error: new Error("Google did not return an authorization code") };
         await Browser.close();
         setStatus(error ? error.message : "Online");
       }).then((listener) => { appUrlListener = listener; });
