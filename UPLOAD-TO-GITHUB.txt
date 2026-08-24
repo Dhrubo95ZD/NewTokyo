@@ -1,0 +1,8 @@
+1. Extract this ZIP on your computer.
+2. Open your empty GitHub repository and choose Add file > Upload files.
+3. Drag EVERYTHING INSIDE the extracted folder onto the upload page.
+4. Confirm the upload list includes the android, src, dist, supabase, and .github folders.
+5. Commit the upload.
+6. Open Actions > Build Android APK > Run workflow.
+
+Do not upload this ZIP itself; GitHub does not extract ZIP files automatically.

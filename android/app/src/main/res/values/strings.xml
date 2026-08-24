@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Neo-Tokyo Underworld</string>
+    <string name="title_activity_main">Neo-Tokyo Underworld</string>
+    <string name="package_name">com.neotokyo.underworld</string>
+    <string name="custom_url_scheme">com.neotokyo.underworld</string>
+</resources>
