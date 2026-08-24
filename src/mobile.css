@@ -1,5 +1,10 @@
 html, body, #root { min-height: 100%; margin: 0; background: #fbf3e3; }
 html { overscroll-behavior: none; }
-body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); -webkit-tap-highlight-color: transparent; }
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: max(64px, env(safe-area-inset-bottom));
+  -webkit-tap-highlight-color: transparent;
+}
 button, input { touch-action: manipulation; }
+button { -webkit-user-select: none; user-select: none; }
 * { box-sizing: border-box; }
