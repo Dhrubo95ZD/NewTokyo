@@ -3734,7 +3734,7 @@ export default function NeoTokyoUnderworld() {
           radial-gradient(800px 460px at -5% 15%, rgba(0,174,239,.10), transparent 60%),
           radial-gradient(700px 400px at 50% 115%, rgba(140,92,247,.08), transparent 60%),
           var(--paper);
-          color:var(--ink);font-family:'Nunito',sans-serif;padding-bottom:90px;position:relative}
+          color:var(--ink);font-family:'Nunito',sans-serif;padding-bottom:190px;position:relative}
         .ntu::after{content:"";position:fixed;inset:0;pointer-events:none;
           background:repeating-linear-gradient(0deg,rgba(44,34,64,.012) 0 1px,transparent 1px 3px)}
         .top{position:sticky;top:0;z-index:5;background:rgba(255,246,234,.9);backdrop-filter:blur(8px);
@@ -4020,7 +4020,7 @@ export default function NeoTokyoUnderworld() {
         .brawl-btn:active{transform:scale(.9) translate(1px,1px);box-shadow:1px 1px 0 rgba(44,34,64,.4)}
         @media(hover:hover) and (pointer:fine){.brawl-btn{display:none}}
         /* ---- Simi the guide robot: friendly light chat ---- */
-        .simi-fab{position:fixed;right:14px;bottom:78px;z-index:45;width:58px;height:58px;
+        .simi-fab{position:fixed;right:14px;bottom:152px;z-index:85;width:58px;height:58px;
           background:linear-gradient(160deg,#fff,#FFF0DC);border:3px solid var(--ink);border-radius:20px;
           cursor:pointer;box-shadow:3px 4px 0 rgba(44,34,64,.35);display:flex;flex-direction:column;
           align-items:center;justify-content:center;gap:3px;animation:simiBob 3.2s ease-in-out infinite;padding:0}
@@ -4035,7 +4035,7 @@ export default function NeoTokyoUnderworld() {
         @keyframes simiBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
         @keyframes simiBlink{0%,91%,100%{transform:scaleY(1)}94%{transform:scaleY(.12)}}
         @keyframes antennaPulse{0%,100%{opacity:.6}50%{opacity:1}}
-        .simi-panel{position:fixed;right:10px;bottom:146px;z-index:46;width:min(370px,calc(100vw - 20px));
+        .simi-panel{position:fixed;right:10px;bottom:220px;z-index:86;width:min(370px,calc(100vw - 20px));
           max-height:62vh;display:flex;flex-direction:column;background:var(--card);
           border:4px solid var(--ink);border-radius:24px;box-shadow:5px 6px 0 rgba(44,34,64,.28);
           overflow:hidden;animation:screenIn .25s ease both}
@@ -4077,13 +4077,21 @@ export default function NeoTokyoUnderworld() {
         .log-line.good{border-color:var(--mint-deep);color:var(--mint-deep);background:#EAFAF3}
         .log-line.bad{border-color:var(--coral);color:var(--coral-deep);background:#FFF0F4}
         .log-line.system{border-color:var(--gold-deep);color:var(--gold-deep);background:#FFF8E8}
-        nav{position:fixed;bottom:0;left:0;right:0;z-index:6;background:var(--card);border-top:3px solid var(--ink);
-          display:flex;overflow-x:auto;justify-content:space-around;padding:6px 4px 10px;box-shadow:0 -3px 0 rgba(44,34,64,.05)}
-        nav button{background:none;border:none;color:var(--ink-faint);font-family:'Nunito';font-size:9.5px;font-weight:800;letter-spacing:.3px;
-          text-transform:uppercase;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:56px;padding:4px 2px}
-        nav button .nk{font-family:'DotGothic16',monospace;font-size:18px;width:30px;height:30px;line-height:30px;
-          border-radius:10px;transition:all .15s}
-        nav button.on{color:var(--coral)}
+        nav{position:fixed;bottom:max(64px,env(safe-area-inset-bottom));left:10px;right:10px;z-index:80;
+          background:rgba(255,255,255,.97);border:3px solid var(--ink);border-radius:20px;
+          display:flex;overflow-x:auto;overflow-y:hidden;justify-content:flex-start;gap:3px;
+          padding:7px 8px;box-shadow:4px 5px 0 rgba(44,34,64,.22);scrollbar-width:none;
+          overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;touch-action:pan-x}
+        nav::-webkit-scrollbar{display:none}
+        nav button{background:none;border:2px solid transparent;border-radius:14px;color:var(--ink-faint);
+          font-family:'Nunito';font-size:10px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;
+          cursor:pointer;display:flex;flex:0 0 64px;min-width:64px;min-height:58px;flex-direction:column;
+          align-items:center;justify-content:center;gap:3px;padding:5px 3px;touch-action:manipulation;
+          -webkit-user-select:none;user-select:none}
+        nav button:active{background:#FFF0F4;transform:scale(.96)}
+        nav button .nk{font-family:'DotGothic16',monospace;font-size:18px;width:32px;height:32px;line-height:32px;
+          border-radius:10px;transition:background .15s,color .15s}
+        nav button.on{color:var(--coral);background:#FFF0F4;border-color:rgba(255,77,130,.28)}
         nav button.on .nk{background:var(--coral);color:#fff}
         @media(prefers-reduced-motion:reduce){.bar-fill,.hp-fill{transition:none}.petal,.floater,.screen-in,.fl-line,.battle-banner,.loot-rays,.loot-spark,.loot-glyph,.loot-card,.loot-ov{animation:none}.floater,.loot-ov,.loot-card{opacity:1}}
         @media(max-width:520px){.bars{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}
