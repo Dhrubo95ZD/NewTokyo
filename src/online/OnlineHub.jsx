@@ -4,13 +4,15 @@ import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
 import { onlineConfigured, supabase } from "./supabase.js";
 import "./online-hub.css";
+import "./account-gate.css";
 
 const SAVE_KEY = "ntu:ntu-save-v1";
 const nativeRedirect = "com.neotokyo.underworld://auth/callback";
 
-export default function OnlineHub() {
+export default function OnlineHub({ children }) {
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState(null);
+  const [booting, setBooting] = useState(true);
   const [busy, setBusy] = useState(false);
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
@@ -50,8 +52,8 @@ export default function OnlineHub() {
   useEffect(() => {
     if (!supabase) return undefined;
     let appUrlListener;
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: auth } = supabase.auth.onAuthStateChange((_event, next) => setSession(next));
+    supabase.auth.getSession().then(({ data }) => { setSession(data.session); setBooting(false); });
+    const { data: auth } = supabase.auth.onAuthStateChange((_event, next) => { setSession(next); setBooting(false); });
     if (Capacitor.isNativePlatform()) {
       App.addListener("appUrlOpen", async ({ url }) => {
         if (!url.startsWith(nativeRedirect)) return;
@@ -108,22 +110,42 @@ export default function OnlineHub() {
   };
 
   const avatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+
+  if (!onlineConfigured) return (
+    <main className="account-gate gate-error">
+      <div className="gate-card"><span className="gate-mark">網</span><small>NEO GRID</small><h1>Online setup required</h1><p>This release requires a Google account. Online services have not been connected to this build yet.</p></div>
+    </main>
+  );
+
+  if (booting) return <main className="account-gate"><div className="gate-card"><span className="gate-mark pulse">東</span><small>NEO GRID</small><h1>Connecting to Neo-Tokyo…</h1></div></main>;
+
+  if (!user) return (
+    <main className="account-gate">
+      <div className="gate-card">
+        <span className="gate-mark">新</span><small>NEO-TOKYO UNDERWORLD</small>
+        <h1>Your identity opens the city.</h1>
+        <p>Sign in to create your runner, protect your progress, enter live chat and compete in city events.</p>
+        <button className="google-login" onClick={signIn} disabled={busy}><b>G</b>{busy ? "Opening Google…" : "Continue with Google"}</button>
+        <em>Google account required · One identity per save</em>
+      </div>
+    </main>
+  );
+
   return (
     <>
+      {children}
       <button className="online-orb" onClick={() => setOpen((v) => !v)} aria-label="Open online hub">
         {avatar ? <img src={avatar} alt="" referrerPolicy="no-referrer" /> : <span>網</span>}
         <i className={user ? "online" : ""} />
       </button>
       {open && <aside className="online-hub" aria-label="Neo-Tokyo online hub">
         <header><div><b>NEO GRID</b><small>{status}</small></div><button onClick={() => setOpen(false)}>×</button></header>
-        {!onlineConfigured ? <div className="hub-empty"><b>Online mode is not configured.</b><p>Add the Supabase URL and anon key to the build environment.</p></div>
-          : !user ? <div className="hub-login"><span className="hub-mon">接続</span><h2>Enter the Neo Grid</h2><p>Secure cloud saves, a persistent identity, live chat, events and rankings.</p><button onClick={signIn} disabled={busy}>G&nbsp; Continue with Google</button></div>
-          : <>
+        <>
             <div className="hub-profile">{avatar ? <img src={avatar} alt="" referrerPolicy="no-referrer" /> : <span>走</span>}<div><b>{user.user_metadata?.full_name || user.email}</b><small>Cloud identity active</small></div><button onClick={() => supabase.auth.signOut()}>Sign out</button></div>
             <div className="hub-channel"><b>SHIBUYA FREQUENCY</b><span>PUBLIC · LIVE</span></div>
             <div className="hub-messages">{messages.length === 0 && <p className="hub-static">No voices on the frequency yet.</p>}{messages.map((m) => <article key={m.id} className={m.user_id === user.id ? "mine" : ""}><img src={m.profiles?.avatar_url || ""} alt="" /><div><b>{m.profiles?.display_name || "Runner"}</b><p>{m.body}</p></div></article>)}<div ref={listEnd} /></div>
             <div className="hub-compose"><input value={message} maxLength={240} placeholder="Broadcast…" onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} /><button onClick={send} disabled={!message.trim() || busy}>送</button></div>
-          </>}
+          </>
       </aside>}
     </>
   );
