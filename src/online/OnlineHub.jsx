@@ -7,6 +7,7 @@ import "./online-hub.css";
 import "./account-gate.css";
 
 const SAVE_KEY = "ntu-save-v1";
+const LEGACY_OWNER_KEY = "ntu:legacy-save-owner";
 const nativeRedirect = "com.neotokyo.underworld://auth/callback";
 
 export default function OnlineHub({ children }) {
@@ -80,7 +81,13 @@ export default function OnlineHub({ children }) {
       });
       if (profileError) { setStatus(profileError.message); return; }
       const existing = await window.storage.get(SAVE_KEY);
-      const player = existing?.value ? JSON.parse(existing.value) : {};
+      let player = existing?.value ? JSON.parse(existing.value) : {};
+      if (player.onlineUserId && player.onlineUserId !== user.id) player = {};
+      if (!player.onlineUserId && Object.keys(player).length) {
+        const legacyOwner = localStorage.getItem(LEGACY_OWNER_KEY);
+        if (legacyOwner && legacyOwner !== user.id) player = {};
+        else localStorage.setItem(LEGACY_OWNER_KEY, user.id);
+      }
       player.handle = handle;
       player.name = displayName.slice(0, 24);
       player.onlineUserId = user.id;
