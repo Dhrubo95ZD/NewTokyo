@@ -4,7 +4,7 @@ import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
 import { onlineConfigured, supabase } from "./supabase.js";
 import CharacterCreator, { RunnerPortrait } from "./CharacterCreator.jsx";
-import Inventory, { LOOT, normalizeInventory } from "./Inventory.jsx";
+import Inventory, { ItemArt, LOOT, normalizeInventory } from "./Inventory.jsx";
 import "./online-hub.css";
 import "./account-gate.css";
 
@@ -207,7 +207,7 @@ export default function OnlineHub({ children }) {
         <i className={user ? "online" : ""} />
       </button>
       <button className="inventory-orb" onClick={() => { setOpen(false); setInventoryOpen(true); }} aria-label="Open runner loadout">
-        <img src={LOOT.find((item) => item.id === inventoryState?.equipped?.weapon)?.image || "/assets/loot/weapon-0.webp"} alt=""/><span>LOADOUT</span>
+        <ItemArt item={LOOT.find((item) => item.id === inventoryState?.equipped?.weapon)} level={inventoryState?.enhancement?.[inventoryState?.equipped?.weapon] || 0} small/><span>LOADOUT</span>
       </button>
       {open && <aside className="online-hub" aria-label="Neo-Tokyo online hub">
         <header><div><b>NEO GRID</b><small>{status}</small></div><button onClick={() => setOpen(false)}>×</button></header>
