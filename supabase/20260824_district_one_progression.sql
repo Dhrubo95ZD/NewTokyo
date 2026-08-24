@@ -215,8 +215,8 @@ begin
 
   -- These are lower bounds, not encounter durations. The client still runs the
   -- full interactive stages, while the server rejects impossible instant skips.
-  required_wait := case target_stage when 1 then interval '3 seconds'
-    when 2 then interval '8 seconds' else interval '12 seconds' end;
+  required_wait := case target_stage when 1 then interval '2 seconds'
+    when 2 then interval '3 seconds' else interval '6 seconds' end;
   if progress.stage_updated_at > now() - required_wait then
     raise exception 'District One checkpoint completed too quickly';
   end if;

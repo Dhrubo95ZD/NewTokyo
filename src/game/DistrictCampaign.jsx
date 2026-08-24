@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { RunnerPortrait } from "../online/CharacterCreator.jsx";
 import "./district-campaign.css";
 
 const STEPS = ["briefing", "skirmish", "loot", "boss"];
@@ -165,134 +166,195 @@ function SignalScout({ role, progress, onCommit }) {
   );
 }
 
-function RunnerGlyph({ lane, role, weapon }) {
-  return <div className={`dc-runner lane-${lane}`} style={{ "--runner": ROLE_KITS[role].accent }}><i /><b>{weapon ? weapon.mark : "走"}</b></div>;
+function RunnerGlyph({ lane, role, weapon, profile, phase }) {
+  return (
+    <div className={`dc-runner lane-${lane} ${phase === "opening" ? "counter-ready" : ""}`} style={{ "--runner": ROLE_KITS[role].accent }}>
+      <RunnerPortrait profile={{ ...(profile || {}), role, archetype: role }} compact />
+      <i /><b>{weapon ? weapon.mark : "走"}</b>
+    </div>
+  );
 }
 
-function LaneEncounter({ role, boss = false, weapon = null, attempts = 0, onWin, onAttempt }) {
+const ENCOUNTER_PATTERNS = {
+  patrol: [2, 0, 1, 2, 1, 0, 2, 0],
+  boss: [1, 0, 2, 1, 2, 0, 0, 2, 1, 0],
+};
+
+function initialEncounterState({ maxHp, enemyMax, shield }) {
+  return {
+    lane: 1, hp: maxHp, enemyHp: enemyMax, round: 0, phase: "telegraph",
+    meter: 0, focus: 0, shield, stun: 0, combo: 0, struck: false,
+    outcome: null, message: "Dodge the red lane. Counter when the target flashes OPEN.",
+  };
+}
+
+export function resolveEncounterImpact(current, { dangerLane, boss = false, fastFocus = false }) {
+  let hp = current.hp;
+  let shield = current.shield;
+  let focus = current.focus;
+  let stun = current.stun;
+  let message;
+  if (stun > 0) {
+    stun -= 1;
+    message = "JAMMED — free counter window!";
+  } else if (current.lane === dangerLane) {
+    if (shield > 0) {
+      shield -= 1;
+      focus = Math.min(100, focus + 10);
+      message = "Barrier absorbed the impact. Counter now!";
+    } else {
+      const damage = boss ? 24 : 16;
+      hp = Math.max(0, hp - damage);
+      message = `Hit for ${damage}. Move earlier on the next warning.`;
+    }
+  } else {
+    focus = Math.min(100, focus + (fastFocus ? 28 : 22));
+    message = "Clean dodge — target exposed!";
+  }
+  if (hp <= 0) return { ...current, hp: 0, shield, focus, stun, meter: 100, outcome: "defeat", message: "The convoy pulled back safely." };
+  return { ...current, hp, shield, focus, stun, phase: "opening", meter: 0, struck: false, message };
+}
+
+export function resolveEncounterStrike(current, { role, baseDamage, weaponAttack = 0, fastFocus = false }) {
+  if (current.outcome || current.phase !== "opening" || current.struck) return current;
+  const combo = current.combo + 1;
+  const roleBonus = role === "striker" ? 5 : 0;
+  const damage = baseDamage + weaponAttack + roleBonus + Math.min(8, (combo - 1) * 2);
+  const enemyHp = Math.max(0, current.enemyHp - damage);
+  return {
+    ...current, enemyHp, combo, struck: true,
+    focus: Math.min(100, current.focus + (fastFocus ? 34 : 27)),
+    outcome: enemyHp <= 0 ? "victory" : null,
+    message: enemyHp <= 0 ? "Target disabled. Route secured." : `${combo > 1 ? `${combo}× COMBO · ` : ""}${damage} damage`,
+  };
+}
+
+function LaneEncounter({ role, boss = false, weapon = null, profile = null, attempts = 0, onWin, onAttempt }) {
   const kit = ROLE_KITS[role];
   const maxHp = kit.hp + (weapon?.stats.defense || 0) * 2;
-  const enemyMax = boss ? 150 : 74;
-  const [lane, setLane] = useState(1);
-  const [hp, setHp] = useState(maxHp);
-  const [enemyHp, setEnemyHp] = useState(enemyMax);
-  const [round, setRound] = useState(0);
-  const [clock, setClock] = useState(0);
-  const [focus, setFocus] = useState(0);
-  const [shield, setShield] = useState((boss && weapon?.id.includes("neon-sentinel")) ? 1 : kit.grace);
-  const [stun, setStun] = useState(0);
-  const [ready, setReady] = useState(true);
-  const [message, setMessage] = useState("Watch the warning lane. Move, then strike during the white timing band.");
-  const [ended, setEnded] = useState(false);
-  const laneRef = useRef(lane);
-  const shieldRef = useRef(shield);
-  const stunRef = useRef(stun);
-  const pattern = boss ? [1, 0, 2, 1, 2, 0, 0, 2] : [2, 0, 1, 2, 1, 0];
-  const dangerLane = pattern[round % pattern.length];
-  const dangerRef = useRef(dangerLane);
-
-  useEffect(() => { laneRef.current = lane; }, [lane]);
-  useEffect(() => { shieldRef.current = shield; }, [shield]);
-  useEffect(() => { stunRef.current = stun; }, [stun]);
-  useEffect(() => { dangerRef.current = dangerLane; }, [dangerLane]);
+  const enemyMax = boss ? 176 : 84;
+  const openingMs = boss ? 1050 : 1250;
+  const telegraphMs = boss ? 1200 : 1450;
+  const startingShield = (boss && weapon?.id.includes("neon-sentinel")) ? 1 : kit.grace;
+  const pattern = boss ? ENCOUNTER_PATTERNS.boss : ENCOUNTER_PATTERNS.patrol;
+  const [combat, setCombat] = useState(() => initialEncounterState({ maxHp, enemyMax, shield: startingShield }));
+  const [advancing, setAdvancing] = useState(false);
+  const touchStart = useRef(null);
+  const winSent = useRef(false);
+  const dangerLane = pattern[combat.round % pattern.length];
 
   useEffect(() => {
-    if (ended) return undefined;
+    if (combat.outcome) return undefined;
     const timer = window.setInterval(() => {
-      setClock((value) => {
-        const next = value + (boss ? 3.2 : 2.7);
-        if (next < 100) return next;
-        if (stunRef.current > 0) {
-          setStun((amount) => Math.max(0, amount - 1));
-          setMessage("Signal jam held the attack. Take the opening.");
-        } else if (laneRef.current === dangerRef.current) {
-          if (shieldRef.current > 0) {
-            setShield((amount) => Math.max(0, amount - 1));
-            setMessage("Impact absorbed. Reposition now.");
-          } else {
-            const hit = boss ? 23 : 17;
-            setHp((amount) => Math.max(0, amount - hit));
-            setMessage(`Direct hit · -${hit} integrity`);
-          }
-        } else {
-          setFocus((amount) => Math.min(100, amount + 18));
-          setMessage("Clean dodge · focus gained");
+      setCombat((current) => {
+        if (current.outcome) return current;
+        const duration = current.phase === "telegraph" ? telegraphMs : openingMs;
+        const meter = current.meter + (50 / duration) * 100;
+        if (meter < 100) return { ...current, meter };
+
+        const currentDanger = pattern[current.round % pattern.length];
+        if (current.phase === "telegraph") {
+          return resolveEncounterImpact(current, {
+            dangerLane: currentDanger, boss, fastFocus: weapon?.id.includes("ghost-protocol"),
+          });
         }
-        setRound((value) => value + 1);
-        return 0;
+
+        return {
+          ...current, phase: "telegraph", meter: 0, round: current.round + 1,
+          combo: current.struck ? current.combo : 0, struck: false,
+          message: current.struck ? "Read the next lane." : "Counter window missed — read the next lane.",
+        };
       });
-    }, 40);
+    }, 50);
     return () => window.clearInterval(timer);
-  }, [boss, ended]);
+  }, [boss, combat.outcome, openingMs, pattern, telegraphMs, weapon?.id]);
 
-  useEffect(() => {
-    if (ended || enemyHp > 0) return;
-    setEnded(true);
-    const timer = window.setTimeout(onWin, 420);
-    return () => window.clearTimeout(timer);
-  }, [ended, enemyHp, onWin]);
-
-  useEffect(() => {
-    if (ended || hp > 0) return;
-    setEnded(true);
-    onAttempt?.(attempts + 1);
-  }, [attempts, ended, hp, onAttempt]);
-
-  const move = (nextLane) => {
-    if (ended || hp <= 0) return;
-    setLane(Math.max(0, Math.min(2, nextLane)));
-  };
+  const move = useCallback((nextLane) => {
+    setCombat((current) => current.outcome ? current : { ...current, lane: Math.max(0, Math.min(2, nextLane)) });
+  }, []);
 
   const strike = () => {
-    if (!ready || ended || hp <= 0) return;
-    const timing = clock >= 44 && clock <= 78;
-    const safe = lane !== dangerLane;
-    let damage = kit.damage + (weapon?.stats.attack || 0);
-    if (timing) damage += 5;
-    if (timing && role === "striker") damage += 4;
-    if (!safe) damage = Math.max(4, damage - 6);
-    setEnemyHp((amount) => Math.max(0, amount - damage));
-    setFocus((amount) => Math.min(100, amount + (timing ? (weapon?.id.includes("ghost-protocol") ? 36 : 30) : 15)));
-    setMessage(timing ? `Perfect strike · ${damage} damage` : `Glancing strike · ${damage} damage`);
-    setReady(false);
-    window.setTimeout(() => setReady(true), 420);
+    setCombat((current) => resolveEncounterStrike(current, {
+      role, baseDamage: kit.damage, weaponAttack: weapon?.stats.attack || 0,
+      fastFocus: weapon?.id.includes("ghost-protocol"),
+    }));
   };
 
   const special = () => {
-    if (focus < 100 || ended || hp <= 0) return;
-    if (role === "striker") { setEnemyHp((amount) => Math.max(0, amount - 31)); setMessage("Power Break shattered the guard · 31 damage"); }
-    else if (role === "technician") { setStun(2); setEnemyHp((amount) => Math.max(0, amount - 12)); setMessage("Signal Jam cancelled two attack cycles"); }
-    else { setHp((amount) => Math.min(maxHp, amount + 28)); setShield((amount) => amount + 1); setMessage("Field Barrier restored integrity and one shield"); }
-    setFocus(0);
+    setCombat((current) => {
+      if (current.outcome || current.focus < 100) return current;
+      if (role === "guardian") return {
+        ...current, hp: Math.min(maxHp, current.hp + 30), shield: current.shield + 1,
+        focus: 0, message: "FIELD BARRIER — integrity restored and one hit blocked.",
+      };
+      const damage = role === "striker" ? 34 : 15;
+      const enemyHp = Math.max(0, current.enemyHp - damage);
+      return {
+        ...current, enemyHp, focus: 0, stun: role === "technician" ? 2 : current.stun,
+        outcome: enemyHp <= 0 ? "victory" : null,
+        message: role === "technician" ? "SIGNAL JAM — two attacks cancelled." : "POWER BREAK — guard shattered.",
+      };
+    });
   };
 
-  if (hp <= 0) return (
+  const retry = () => {
+    onAttempt?.(attempts + 1);
+    winSent.current = false;
+    setCombat(initialEncounterState({ maxHp, enemyMax, shield: startingShield }));
+  };
+
+  const continueVictory = async () => {
+    if (winSent.current) return;
+    winSent.current = true;
+    setAdvancing(true);
+    try { await onWin?.(); }
+    finally {
+      // A successful checkpoint unmounts this encounter. If the network rejects
+      // it, release the button so the player can retry without replaying combat.
+      window.setTimeout(() => { winSent.current = false; setAdvancing(false); }, 700);
+    }
+  };
+
+  const handleTouchStart = (event) => { touchStart.current = event.changedTouches?.[0]?.clientX ?? null; };
+  const handleTouchEnd = (event) => {
+    const end = event.changedTouches?.[0]?.clientX;
+    if (touchStart.current == null || end == null) return;
+    const delta = end - touchStart.current;
+    if (Math.abs(delta) > 34) move(combat.lane + (delta > 0 ? 1 : -1));
+    touchStart.current = null;
+  };
+
+  if (combat.outcome === "defeat") return (
     <section className="dc-card dc-defeat" style={{ "--dc-accent": kit.accent }}>
-      <small>EXTRACTION RESET</small><h2>Route compromised</h2>
-      <p>The convoy pulled back safely. Review the warning lanes and take the intercept again.</p>
-      <button className="dc-primary" onClick={() => { setHp(maxHp); setEnemyHp(enemyMax); setRound(0); setClock(0); setFocus(0); setEnded(false); setLane(1); }}>Retry encounter</button>
+      <small>SAFE WITHDRAWAL</small><h2>Route compromised</h2>
+      <p>The convoy pulled back safely. Red means danger: swipe or use the large lane buttons before the warning fills.</p>
+      <button className="dc-primary" onClick={retry}>Retry encounter</button>
     </section>
   );
 
+  const phaseLabel = combat.phase === "telegraph" ? "DODGE" : "COUNTER";
   return (
-    <section className={`dc-arena ${boss ? "boss" : ""}`} style={{ "--dc-accent": kit.accent, "--danger-progress": `${clock}%` }}>
+    <section className={`dc-arena ${boss ? "boss" : ""} phase-${combat.phase} ${combat.outcome === "victory" ? "is-victory" : ""}`} style={{ "--dc-accent": kit.accent, "--phase-progress": `${combat.meter}%` }}>
       <div className="dc-hud">
         <div><small>{boss ? "ROGUE CONSTRUCTION EXOSUIT" : "JAMMER PATROL"}</small><b>{boss ? "Rail Warden K-9" : "Roadblock Unit"}</b></div>
-        <div className="dc-bars"><label><span>YOU</span><i><b style={{ width: `${hp / maxHp * 100}%` }} /></i><em>{hp}/{maxHp}</em></label><label className="enemy"><span>TARGET</span><i><b style={{ width: `${enemyHp / enemyMax * 100}%` }} /></i><em>{enemyHp}/{enemyMax}</em></label></div>
+        <div className="dc-bars"><label><span>YOU</span><i><b style={{ width: `${combat.hp / maxHp * 100}%` }} /></i><em>{combat.hp}/{maxHp}</em></label><label className="enemy"><span>TARGET</span><i><b style={{ width: `${combat.enemyHp / enemyMax * 100}%` }} /></i><em>{combat.enemyHp}/{enemyMax}</em></label></div>
       </div>
-      <div className="dc-playfield">
-        {[0, 1, 2].map((track) => <div key={track} className={`dc-lane ${dangerLane === track ? "danger" : ""} ${lane === track ? "occupied" : ""}`}><i /><span>{dangerLane === track ? "INCOMING" : "CLEAR"}</span></div>)}
-        <div className={`dc-opponent ${boss ? "is-boss" : ""}`}>
-          {boss ? <img src="/assets/campaign/rail-warden-k9.webp" alt="Rail Warden K-9 construction exosuit" /> : <><i /><b>阻</b></>}
+      <div className="dc-phase-banner"><b>{phaseLabel}</b><span>{combat.phase === "telegraph" ? "Leave the red lane" : "Target exposed — attack now"}</span><i><b style={{ width: `${combat.meter}%` }} /></i></div>
+      <div className="dc-playfield" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+        {[0, 1, 2].map((track) => <button type="button" aria-label={`Move to ${["left", "centre", "right"][track]} lane`} onClick={() => move(track)} key={track} className={`dc-lane ${combat.phase === "telegraph" && dangerLane === track ? "danger" : ""} ${combat.lane === track ? "occupied" : ""}`}><i /><span>{combat.phase === "telegraph" && dangerLane === track ? "DANGER" : combat.lane === track ? "YOU" : "SAFE"}</span></button>)}
+        <div className={`dc-opponent ${boss ? "is-boss" : "is-patrol"} ${combat.phase === "opening" ? "exposed" : ""}`}>
+          <img src={boss ? "/assets/campaign/rail-warden-k9.webp" : "/assets/campaign/roadblock-unit.webp"} alt={boss ? "Rail Warden K-9 construction exosuit" : "Roadblock Unit security exosuit"} />
         </div>
-        <RunnerGlyph lane={lane} role={role} weapon={weapon} />
-        <div className="dc-timing"><i /><b style={{ left: `${clock}%` }} /></div>
+        <RunnerGlyph lane={combat.lane} role={role} weapon={weapon} profile={profile} phase={combat.phase} />
+        <div className="dc-combo"><b>{combat.combo}×</b><span>COMBO</span></div>
+        {combat.shield > 0 && <div className="dc-shield">SHIELD ×{combat.shield}</div>}
+        {combat.outcome === "victory" && <div className="dc-victory-overlay"><small>ENCOUNTER COMPLETE</small><h3>Route secured</h3><p>The target is disabled and cannot block the relief convoy.</p><button className="dc-primary" disabled={advancing} onClick={continueVictory}>{advancing ? "Securing progress…" : "Continue"}</button></div>}
       </div>
-      <p className="dc-combat-log" role="status">{message}</p>
+      <p className="dc-combat-log" role="status">{combat.message}</p>
       <div className="dc-controls">
-        <div className="dc-movement"><button onClick={() => move(lane - 1)} disabled={lane === 0} aria-label="Move left">‹</button><button onClick={() => move(lane + 1)} disabled={lane === 2} aria-label="Move right">›</button></div>
-        <button className="dc-strike" onClick={strike} disabled={!ready}>STRIKE<small>{ready ? "time the white band" : "recovering"}</small></button>
-        <button className="dc-special" onClick={special} disabled={focus < 100}>{kit.special}<i><b style={{ width: `${focus}%` }} /></i></button>
+        <div className="dc-movement"><button onClick={() => move(combat.lane - 1)} disabled={combat.lane === 0 || combat.outcome} aria-label="Move left"><b>‹</b><small>LEFT</small></button><button onClick={() => move(combat.lane + 1)} disabled={combat.lane === 2 || combat.outcome} aria-label="Move right"><b>›</b><small>RIGHT</small></button></div>
+        <button className={`dc-strike ${combat.phase === "opening" && !combat.struck ? "ready" : ""}`} onClick={strike} disabled={combat.phase !== "opening" || combat.struck || combat.outcome}>COUNTER<small>{combat.phase === "opening" ? (combat.struck ? "hit landed" : "ATTACK NOW") : "dodge first"}</small></button>
+        <button className="dc-special" onClick={special} disabled={combat.focus < 100 || combat.outcome}>{kit.special}<small>{combat.focus >= 100 ? "READY" : `${Math.round(combat.focus)}% focus`}</small><i><b style={{ width: `${combat.focus}%` }} /></i></button>
       </div>
     </section>
   );
@@ -458,9 +520,9 @@ export default function DistrictCampaign({
       <div className="dc-stage">
         {campaign.status === "available" && <section className="dc-card dc-intro"><div><small>WARD REQUEST 01</small><h2>Open the First Light route</h2><p>A medical and supply convoy is waiting beyond a disabled transit concourse. Scout the signal, clear the roadblock, choose your first real weapon and stop the rogue Rail Warden.</p><ul><li>Interactive scouting</li><li>Lane-based combat</li><li>Permanent Green weapon</li><li>Guaranteed +1 calibration</li></ul><button className="dc-primary" onClick={beginCampaign} disabled={syncing}>{syncing ? "SECURING ROUTE…" : "BEGIN DISTRICT ONE"}</button></div><img src="/assets/campaign/rail-warden-k9.webp" alt="Rail Warden K-9" /></section>}
         {campaign.status !== "available" && campaign.step === "briefing" && <SignalScout role={resolvedRole} progress={campaign.scout} onCommit={finishScout} />}
-        {campaign.status !== "available" && campaign.step === "skirmish" && <LaneEncounter role={resolvedRole} attempts={campaign.skirmish.attempts} onWin={winSkirmish} onAttempt={recordSkirmishAttempt} />}
+        {campaign.status !== "available" && campaign.step === "skirmish" && <LaneEncounter role={resolvedRole} profile={profile} attempts={campaign.skirmish.attempts} onWin={winSkirmish} onAttempt={recordSkirmishAttempt} />}
         {campaign.status !== "available" && campaign.step === "loot" && <LootChoice role={resolvedRole} selectedId={campaign.loot.weaponId} onSelect={selectWeapon} onAdvance={beginBoss} />}
-        {campaign.status !== "available" && campaign.step === "boss" && !campaign.boss.complete && <LaneEncounter boss role={resolvedRole} weapon={weapon} attempts={campaign.boss.attempts} onWin={winBoss} onAttempt={recordBossAttempt} />}
+        {campaign.status !== "available" && campaign.step === "boss" && !campaign.boss.complete && <LaneEncounter boss role={resolvedRole} profile={profile} weapon={weapon} attempts={campaign.boss.attempts} onWin={winBoss} onAttempt={recordBossAttempt} />}
         {campaign.status !== "available" && campaign.step === "boss" && campaign.boss.complete && !campaign.complete && weapon && <section className="dc-card dc-victory"><small>RAIL WARDEN DISABLED</small><h2>The convoy is moving</h2><p>Use recovered tuning parts to finish the initiation and make your first weapon permanently stronger.</p><Calibration weapon={weapon} locks={campaign.boss.calibrationLocks || 0} onLock={calibrationLock} /></section>}
         {campaign.complete && <section className="dc-card dc-complete"><div className="dc-complete-mark">✓</div><small>DISTRICT ONE COMPLETE</small><h2>East Market is connected</h2><p>The relief convoy reached the clinics and supply depots. Your runner now has a real loadout and a route into the wider city.</p><div className="dc-rewards"><span><b>{weapon?.name}</b><small>Equipped · +1</small></span><span><b>850</b><small>Credits</small></span><span><b>120</b><small>XP</small></span></div>{onExit && <button className="dc-primary" onClick={onExit}>Return to city</button>}</section>}
         {syncing && <div className="dc-syncing" role="status"><i /><b>Securing online progress…</b></div>}
