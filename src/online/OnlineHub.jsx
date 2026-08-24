@@ -6,13 +6,14 @@ import { onlineConfigured, supabase } from "./supabase.js";
 import "./online-hub.css";
 import "./account-gate.css";
 
-const SAVE_KEY = "ntu:ntu-save-v1";
+const SAVE_KEY = "ntu-save-v1";
 const nativeRedirect = "com.neotokyo.underworld://auth/callback";
 
 export default function OnlineHub({ children }) {
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState(null);
   const [booting, setBooting] = useState(true);
+  const [accountReady, setAccountReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
@@ -33,27 +34,19 @@ export default function OnlineHub({ children }) {
   }, [user]);
 
   const syncSave = useCallback(async () => {
-    if (!supabase || !user) return;
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (raw) {
-      try {
-        await supabase.from("player_saves").upsert({ user_id: user.id, save_data: JSON.parse(raw) });
-        setStatus("Cloud save synced");
-      } catch { setStatus("Cloud sync paused"); }
-      return;
-    }
-    const { data } = await supabase.from("player_saves").select("save_data").eq("user_id", user.id).maybeSingle();
-    if (data?.save_data) {
-      localStorage.setItem(SAVE_KEY, JSON.stringify(data.save_data));
-      setStatus("Cloud save restored — reopen the game");
-    }
+    if (!user || window.storage.getUser() !== user.id) return;
+    const save = await window.storage.get(SAVE_KEY);
+    if (save?.value) await window.storage.set(SAVE_KEY, save.value);
   }, [user]);
 
   useEffect(() => {
     if (!supabase) return undefined;
     let appUrlListener;
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setBooting(false); });
-    const { data: auth } = supabase.auth.onAuthStateChange((_event, next) => { setSession(next); setBooting(false); });
+    const { data: auth } = supabase.auth.onAuthStateChange((_event, next) => {
+      if (!next?.user) { window.storage.setUser(null); setAccountReady(false); }
+      setSession(next); setBooting(false);
+    });
     if (Capacitor.isNativePlatform()) {
       App.addListener("appUrlOpen", async ({ url }) => {
         if (!url.startsWith(nativeRedirect)) return;
@@ -73,21 +66,41 @@ export default function OnlineHub({ children }) {
   useEffect(() => {
     if (!supabase || !user) return undefined;
     const metadata = user.user_metadata || {};
-    supabase.from("profiles").upsert({
-      id: user.id,
-      display_name: metadata.full_name || metadata.name || user.email?.split("@")[0] || "Runner",
-      avatar_url: metadata.avatar_url || metadata.picture || null,
-      last_seen_at: new Date().toISOString(),
-    }).then(() => {});
+    const displayName = metadata.full_name || metadata.name || user.email?.split("@")[0] || "Runner";
+    const base = displayName.replace(/[^A-Za-z0-9_]/g, "").slice(0, 10) || "Runner";
+    const handle = `${base}_${user.id.slice(0, 4)}`.slice(0, 16);
+    let cancelled = false;
+    setAccountReady(false);
+    (async () => {
+      window.storage.setUser(user.id);
+      const { error: profileError } = await supabase.from("profiles").upsert({
+        id: user.id, display_name: displayName.slice(0, 32),
+        avatar_url: metadata.avatar_url || metadata.picture || null,
+        last_seen_at: new Date().toISOString(),
+      });
+      if (profileError) { setStatus(profileError.message); return; }
+      const existing = await window.storage.get(SAVE_KEY);
+      const player = existing?.value ? JSON.parse(existing.value) : {};
+      player.handle = handle;
+      player.name = displayName.slice(0, 24);
+      player.onlineUserId = user.id;
+      delete player.cloudKey;
+      await window.storage.set(SAVE_KEY, JSON.stringify(player));
+      if (!cancelled) setAccountReady(true);
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  useEffect(() => {
+    if (!supabase || !user || !accountReady) return undefined;
     loadMessages();
     syncSave();
     const channel = supabase.channel("world-chat")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages" }, loadMessages)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "chat_messages" }, loadMessages)
       .subscribe((state) => setStatus(state === "SUBSCRIBED" ? "Live · Shibuya channel" : "Connecting…"));
-    const timer = setInterval(syncSave, 15000);
-    return () => { clearInterval(timer); supabase.removeChannel(channel); };
-  }, [loadMessages, syncSave, user]);
+    return () => { supabase.removeChannel(channel); };
+  }, [accountReady, loadMessages, syncSave, user]);
 
   useEffect(() => { if (open) listEnd.current?.scrollIntoView({ block: "end" }); }, [messages, open]);
 
@@ -134,6 +147,8 @@ export default function OnlineHub({ children }) {
       </div>
     </main>
   );
+
+  if (!accountReady) return <main className="account-gate"><div className="gate-card"><span className="gate-mark pulse">雲</span><small>NEO GRID</small><h1>Loading your cloud identity…</h1></div></main>;
 
   return (
     <>
