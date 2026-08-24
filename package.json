@@ -7,6 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "test:ichi": "node scripts/ichi-smoke.mjs",
+    "test:progression": "node scripts/progression-rules-smoke.mjs",
+    "test:campaign": "node scripts/district-campaign-smoke.mjs",
+    "test": "npm run test:ichi && npm run test:progression && npm run test:campaign",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"
