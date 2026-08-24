@@ -95,13 +95,13 @@ const GYM_STATS = [
 ];
 
 const ENEMIES = [
-  { id: "punk", name: "Street Punk Kenji", kanji: "不良", icon: "🧢", drop: { id: "cap", chance: 0.08 }, lvl: 1, hp: 40, atk: 6, def: 3, pay: [150, 350], xp: 12 },
-  { id: "delinq", name: "Delinquent Twins", kanji: "双子", icon: "👯", lvl: 3, hp: 75, atk: 11, def: 6, pay: [400, 800], xp: 26 },
-  { id: "ronin_e", name: "Cyber-Rōnin Aoi", kanji: "浪人", icon: "🤺", lvl: 6, hp: 130, atk: 18, def: 12, pay: [900, 1800], xp: 48 },
-  { id: "maid", name: "Combat Maid Sakuya", kanji: "女中", icon: "🎀", drop: { id: "fan", chance: 0.06 }, lvl: 10, hp: 210, atk: 28, def: 18, pay: [2000, 4200], xp: 85 },
-  { id: "oni_e", name: "Oni-Mask Enforcer", kanji: "鬼", icon: "👹", lvl: 15, hp: 330, atk: 42, def: 28, pay: [4500, 9000], xp: 150 },
-  { id: "kitsune", name: "Kitsune Syndicate Boss", kanji: "狐", icon: "🦊", drop: { id: "kmask", chance: 0.05 }, lvl: 22, hp: 520, atk: 62, def: 42, pay: [10000, 22000], xp: 280 },
-  { id: "phantom", name: "Rooftop Phantom ✦ WORLD BOSS", kanji: "幻影", icon: "👻", drop: { id: "phantom_edge", chance: 0.1 }, boss: true, minLvl: 12, lvl: 30, hp: 900, atk: 80, def: 55, pay: [20000, 45000], xp: 500 },
+  { id: "punk", name: "Street Challenger Kenji", kanji: "挑戦", icon: "🧢", drop: { id: "cap", chance: 0.08 }, lvl: 1, hp: 40, atk: 6, def: 3, pay: [150, 350], xp: 12 },
+  { id: "delinq", name: "Twin Challengers", kanji: "双子", icon: "👯", lvl: 3, hp: 75, atk: 11, def: 6, pay: [400, 800], xp: 26 },
+  { id: "ronin_e", name: "Circuit Duelist Aoi", kanji: "剣士", icon: "🤺", lvl: 6, hp: 130, atk: 18, def: 12, pay: [900, 1800], xp: 48 },
+  { id: "maid", name: "Arena Technician Sakuya", kanji: "技師", icon: "🎀", drop: { id: "fan", chance: 0.06 }, lvl: 10, hp: 210, atk: 28, def: 18, pay: [2000, 4200], xp: 85 },
+  { id: "oni_e", name: "Crimson Mask Enforcer", kanji: "紅面", icon: "🎭", lvl: 15, hp: 330, atk: 42, def: 28, pay: [4500, 9000], xp: 150 },
+  { id: "kitsune", name: "Foxline Captain", kanji: "狐隊", icon: "🦊", drop: { id: "kmask", chance: 0.05 }, lvl: 22, hp: 520, atk: 62, def: 42, pay: [10000, 22000], xp: 280 },
+  { id: "phantom", name: "Rooftop Champion ✦ WORLD BOSS", kanji: "頂点", icon: "🏆", drop: { id: "phantom_edge", chance: 0.1 }, boss: true, minLvl: 12, lvl: 30, hp: 900, atk: 80, def: 55, pay: [20000, 45000], xp: 500 },
 ];
 
 const SHOP = [
@@ -112,32 +112,32 @@ const SHOP = [
   { id: "jacket", name: "Sukeban Jacket", type: "armor", power: 5, cost: 1000, kanji: "上着", icon: "🧥", rarity: "common" },
   { id: "vest", name: "Kevlar Seifuku", type: "armor", power: 12, cost: 5000, kanji: "制服", icon: "🦺", rarity: "uncommon" },
   { id: "plate", name: "Mecha Chestplate", type: "armor", power: 24, cost: 20000, kanji: "装甲", icon: "🛡️", rarity: "rare" },
-  { id: "aegis", name: "Shrine Guardian Aegis", type: "armor", power: 45, cost: 75000, kanji: "神盾", icon: "⛩️", rarity: "epic" },
+  { id: "aegis", name: "Civic Guardian Aegis", type: "armor", power: 45, cost: 75000, kanji: "守盾", icon: "🛡️", rarity: "epic" },
   { id: "onigiri", name: "Onigiri", type: "consume", effect: "hp", amount: 40, cost: 250, kanji: "飯", icon: "🍙", rarity: "common", desc: "+40 HP" },
   { id: "ramen", name: "Midnight Ramen", type: "consume", effect: "hp", amount: 120, cost: 700, kanji: "麺", icon: "🍜", rarity: "uncommon", desc: "+120 HP" },
   { id: "soda", name: "Melon Soda", type: "consume", effect: "energy", amount: 15, cost: 900, kanji: "炭", icon: "🥤", rarity: "common", desc: "+15 Energy" },
   { id: "coffee", name: "Kissaten Espresso", type: "consume", effect: "energy", amount: 35, cost: 2200, kanji: "珈", icon: "☕", rarity: "uncommon", desc: "+35 Energy" },
   { id: "pocky", name: "Pocky Box", type: "consume", effect: "happy", amount: 25, cost: 400, kanji: "菓", icon: "🍫", rarity: "common", desc: "+25 Happiness" },
   { id: "plush", name: "Limited Plushie", type: "consume", effect: "happy", amount: 80, cost: 1500, kanji: "縫", icon: "🧸", rarity: "uncommon", desc: "+80 Happiness" },
-  { id: "sake", name: "Courage Sake", type: "consume", effect: "nerve", amount: 8, cost: 1800, kanji: "酒", icon: "🍶", rarity: "rare", desc: "+8 Nerve" },
+  { id: "sake", name: "Courage Tea", type: "consume", effect: "nerve", amount: 8, cost: 1800, kanji: "茶", icon: "🍵", rarity: "rare", desc: "+8 Nerve" },
 ];
 
 const MATERIALS = [
   { id: "scrap", name: "Scrap Alloy", type: "material", kanji: "鉄", icon: "🔩", rarity: "common", desc: "Torn from the city's bones. Drops from street fights." },
   { id: "cell", name: "Neon Cell", type: "material", kanji: "電", icon: "🔋", rarity: "uncommon", desc: "Still humming. Drops from successful crimes." },
   { id: "silk", name: "Spider Silk Thread", type: "material", kanji: "糸", icon: "🧵", rarity: "uncommon", desc: "Stronger than it looks. Drops from crimes." },
-  { id: "oni", name: "Oni Fragment", type: "material", kanji: "鬼", icon: "👹", rarity: "rare", desc: "A shard of a broken mask. Drops from tough enemies." },
+  { id: "oni", name: "Crimson Alloy", type: "material", kanji: "紅", icon: "🔻", rarity: "rare", desc: "A rare reinforced alloy. Drops from tough enemies." },
   { id: "star", name: "Star Shard", type: "material", kanji: "星", icon: "🌟", rarity: "epic", desc: "The city's luck, crystallized. Jackpots, contracts, rare crime finds." },
 ];
 
 const CRAFTABLES = [
   { id: "ronin", name: "Rōnin Edge", type: "weapon", power: 38, kanji: "浪", icon: "⚔️", rarity: "rare", desc: "+38 attack. Forged, not bought." },
-  { id: "akuma", name: "Akuma Blade", type: "weapon", power: 65, kanji: "悪", icon: "😈", rarity: "epic", desc: "+65 attack. The forge's masterpiece." },
+  { id: "akuma", name: "Apex Blade", type: "weapon", power: 65, kanji: "極", icon: "⚔️", rarity: "epic", desc: "+65 attack. The forge's masterpiece." },
   { id: "weave", name: "Neon Weave Armor", type: "armor", power: 32, kanji: "織", icon: "🕸️", rarity: "rare", desc: "+32 defense. Light as rumor." },
-  { id: "tengu", name: "Tengu Aegis", type: "armor", power: 58, kanji: "天", icon: "👺", rarity: "epic", desc: "+58 defense. Mountains envy it." },
+  { id: "tengu", name: "Skyguard Aegis", type: "armor", power: 58, kanji: "空", icon: "🛡️", rarity: "epic", desc: "+58 defense. Built for high-altitude patrols." },
   { id: "ecell", name: "Overcharge Can", type: "consume", effect: "energy", amount: 50, kanji: "雷", icon: "⚡", rarity: "rare", desc: "+50 Energy" },
   { id: "medkit", name: "Field Medkit", type: "consume", effect: "hp", amount: 200, kanji: "救", icon: "🩹", rarity: "uncommon", desc: "+200 HP" },
-  { id: "charm", name: "Omamori Charm", type: "gift", kanji: "守", icon: "🎀", rarity: "rare", desc: "A hand-sewn blessing. +25 affection gift." },
+  { id: "charm", name: "Team Keepsake", type: "gift", kanji: "絆", icon: "🎀", rarity: "rare", desc: "A hand-sewn team keepsake. +25 trust." },
 ];
 
 const RECIPES = [
@@ -535,7 +535,7 @@ const DROPS = [
   { id: "cap", name: "Kenji's Lucky Cap", type: "armor", power: 8, kanji: "帽", rarity: "uncommon", desc: "+8 defense. Smells like teen rebellion. Rare drop." },
   { id: "fan", name: "Maid's Razor Fan", type: "weapon", power: 33, kanji: "扇", rarity: "rare", desc: "+33 attack. Elegant. Illegal. Rare drop." },
   { id: "kmask", name: "Kitsune Mask", type: "armor", power: 52, kanji: "面", rarity: "epic", desc: "+52 defense. The boss won't miss it. Rare drop." },
-  { id: "phantom_edge", name: "Phantom Edge", type: "weapon", power: 72, kanji: "幻", rarity: "epic", desc: "+72 attack. Cuts what isn't there. World boss drop." },
+  { id: "phantom_edge", name: "Skyline Edge", type: "weapon", power: 72, kanji: "空", rarity: "epic", desc: "+72 attack. Rooftop Champion drop." },
 ];
 const ALL_ITEMS = [...SHOP, ...MATERIALS, ...CRAFTABLES, ...DROPS];
 /* ============ RARITY & ROLLED GEAR ============ */
@@ -726,8 +726,11 @@ const buildIchiDeck = () => {
   return d;
 };
 const ichiClone = (g) => JSON.parse(JSON.stringify(g));
-const ichiPlayable = (card, g) => {
+const ichiPlayable = (card, g, hand = []) => {
   const top = g.discard[g.discard.length - 1];
+  /* Classic Wild Draw Four rule: it is only legal when the player has no
+     card matching the current color. Number/action matches do not matter. */
+  if (card.v === "+4" && hand.some((held) => held !== card && held.c === g.color)) return false;
   return card.c === "wild" || card.c === g.color || (top && card.v === top.v && top.c !== "wild");
 };
 const ichiNewGame = (youName) => {
@@ -740,12 +743,28 @@ const ichiNewGame = (youName) => {
   ];
   players.forEach((p) => { for (let i = 0; i < 7; i++) p.hand.push(deck.pop()); });
   let top = deck.pop();
-  while (top.c === "wild" || typeof top.v !== "number") { deck.splice(Math.floor(Math.random() * deck.length), 0, top); top = deck.pop(); }
-  return {
-    deck, discard: [top], color: top.c, players, turn: 0, dir: 1,
+  /* A Wild Draw Four cannot open a round. Return it and reveal again. */
+  while (top.v === "+4") {
+    deck.splice(Math.floor(Math.random() * (deck.length + 1)), 0, top);
+    top = deck.pop();
+  }
+  const g = {
+    deck, discard: [top], color: top.c === "wild" ? ICHI_COLORS[Math.floor(Math.random() * ICHI_COLORS.length)] : top.c,
+    players, turn: 0, dir: 1,
     phase: "play", pending: null, drew: false, winner: null,
+    unoWindow: false,
     msg: "Madam Koi cuts the deck. Your lead.", shout: "", shoutKey: 0,
   };
+  /* Opening action cards take effect instead of being silently replaced. */
+  if (top.v === "S") { g.turn = 1; g.msg = "Opening Skip — your first turn is skipped."; }
+  if (top.v === "R") { g.dir = -1; g.turn = players.length - 1; g.msg = "Opening Reverse — Tetsu leads counter-clockwise."; }
+  if (top.v === "+2") {
+    for (let i = 0; i < 2; i++) if (deck.length) players[0].hand.push(deck.pop());
+    g.turn = 1;
+    g.msg = "Opening Draw Two — you draw 2 and Goro leads.";
+  }
+  if (top.v === "W") { g.phase = "startwild"; g.msg = "Opening Wild — choose the active color, then lead."; }
+  return g;
 };
 const ichiRefill = (g) => {
   if (g.deck.length > 0) return;
@@ -777,7 +796,8 @@ const ichiApply = (g, pIdx, cardIdx, chosenColor) => {
   if (card.v === "+2") { ichiDrawN(g, nextIdx, 2); steps = 2; msg += ` ${g.players[nextIdx].name} draws 2 and sits out.`; }
   if (card.v === "+4") { ichiDrawN(g, nextIdx, 4); steps = 2; msg += ` ${g.players[nextIdx].name} draws 4 and sits out.`; }
   g.msg = msg;
-  if (pl.hand.length === 1) { g.shout = `${pl.name}: ICHI!`; g.shoutKey++; }
+  g.unoWindow = false;
+  if (pl.hand.length === 1 && pIdx !== 0) { g.shout = `${pl.name}: UNO!`; g.shoutKey++; }
   if (pl.hand.length === 0) {
     g.winner = pIdx; g.phase = "done";
     g.shout = pIdx === 0 ? "勝利 YOU WIN!" : `${pl.name} wins the pot`;
@@ -785,6 +805,10 @@ const ichiApply = (g, pIdx, cardIdx, chosenColor) => {
     return g;
   }
   ichiAdvance(g, steps);
+  if (pl.hand.length === 1 && pIdx === 0) {
+    g.unoWindow = true;
+    g.msg = `${msg} Call UNO before the next player acts!`;
+  }
   return g;
 };
 const ichiBotChooseColor = (hand) => {
@@ -797,7 +821,7 @@ const ichiBotChooseColor = (hand) => {
 const ichiBotStep = (g) => {
   const pIdx = g.turn;
   const pl = g.players[pIdx];
-  const playable = pl.hand.map((c, i) => ({ c, i })).filter(({ c }) => ichiPlayable(c, g));
+  const playable = pl.hand.map((c, i) => ({ c, i })).filter(({ c }) => ichiPlayable(c, g, pl.hand));
   if (playable.length) {
     const nextIdx = (pIdx + g.dir + g.players.length) % g.players.length;
     const nonWild = playable.filter(({ c }) => c.c !== "wild");
@@ -814,7 +838,7 @@ const ichiBotStep = (g) => {
   }
   ichiDrawN(g, pIdx, 1);
   const drawn = pl.hand[pl.hand.length - 1];
-  if (drawn && ichiPlayable(drawn, g)) {
+  if (drawn && ichiPlayable(drawn, g, pl.hand)) {
     const chosen = drawn.c === "wild" ? ichiBotChooseColor(pl.hand.slice(0, -1)) : null;
     g.msg = `${pl.name} draws — and plays it!`;
     return ichiApply(g, pIdx, pl.hand.length - 1, chosen);
@@ -847,12 +871,30 @@ function IchiGame({ bet, playerName, onEnd }) {
 
   /* bot turns, one at a time */
   useEffect(() => {
-    if (g.phase !== "play" || g.turn === 0 || g.winner !== null) return;
+    if (g.phase !== "play" || g.turn === 0 || g.winner !== null || g.unoWindow) return;
     const id = setTimeout(() => {
       setG((cur) => (cur.phase === "play" && cur.turn !== 0 && cur.winner === null ? ichiBotStep(ichiClone(cur)) : cur));
     }, 950);
     return () => clearTimeout(id);
   }, [g]);
+
+  /* Give the player a clear reaction window to call UNO. Missing it draws 2. */
+  useEffect(() => {
+    if (!g.unoWindow || g.phase !== "play" || g.winner !== null) return;
+    const id = setTimeout(() => {
+      setG((cur) => {
+        if (!cur.unoWindow || cur.phase !== "play") return cur;
+        const st = ichiClone(cur);
+        ichiDrawN(st, 0, 2);
+        st.unoWindow = false;
+        st.shout = "MISSED UNO — DRAW 2";
+        st.shoutKey++;
+        st.msg = "The table catches you before the next play. You draw 2 cards.";
+        return st;
+      });
+    }, 1800);
+    return () => clearTimeout(id);
+  }, [g.unoWindow, g.phase, g.winner]);
 
   /* finish */
   useEffect(() => {
@@ -865,18 +907,21 @@ function IchiGame({ bet, playerName, onEnd }) {
   const playCard = (idx) => {
     if (g.phase !== "play" || g.turn !== 0) return;
     const card = g.players[0].hand[idx];
-    if (!ichiPlayable(card, g)) return;
+    if (!ichiPlayable(card, g, g.players[0].hand)) return;
     if (card.c === "wild") { setG({ ...g, phase: "wildpick", pending: idx }); return; }
     setG(ichiApply(ichiClone(g), 0, idx, null));
   };
-  const pickColor = (col) => setG((cur) => ichiApply(ichiClone({ ...cur, phase: "play", pending: null }), 0, cur.pending, col));
+  const pickColor = (col) => setG((cur) => {
+    if (cur.phase === "startwild") return { ...cur, color: col, phase: "play", msg: `You choose ${col}. Your lead.` };
+    return ichiApply(ichiClone({ ...cur, phase: "play", pending: null }), 0, cur.pending, col);
+  });
   const drawOne = () => {
     if (g.phase !== "play" || g.turn !== 0 || g.drew) return;
     setG((cur) => {
       const st = ichiClone(cur);
       ichiDrawN(st, 0, 1);
       const drawn = st.players[0].hand[st.players[0].hand.length - 1];
-      if (drawn && ichiPlayable(drawn, st)) {
+      if (drawn && ichiPlayable(drawn, st, st.players[0].hand)) {
         st.drew = true;
         st.msg = "You draw — it's playable! Tap it, or pass.";
         return st;
@@ -889,6 +934,18 @@ function IchiGame({ bet, playerName, onEnd }) {
   const passTurn = () => {
     if (g.phase !== "play" || g.turn !== 0 || !g.drew) return;
     setG((cur) => { const st = ichiClone(cur); st.msg = "You hold."; ichiAdvance(st, 1); return st; });
+  };
+  const callUno = () => {
+    if (!g.unoWindow) return;
+    setG((cur) => {
+      if (!cur.unoWindow) return cur;
+      const st = ichiClone(cur);
+      st.unoWindow = false;
+      st.shout = `${st.players[0].name}: UNO!`;
+      st.shoutKey++;
+      st.msg = "UNO called in time. One card remains.";
+      return st;
+    });
   };
 
   const top = g.discard[g.discard.length - 1];
@@ -923,7 +980,7 @@ function IchiGame({ bet, playerName, onEnd }) {
         </div>
         {g.shout && <div className="bj-banner win ichi-shout" key={g.shoutKey}>{g.shout}</div>}
         <p className="bj-talk">{g.msg}</p>
-        {g.phase === "wildpick" && (
+        {(g.phase === "wildpick" || g.phase === "startwild") && (
           <div className="ichi-wildpick">
             <p className="bj-name" style={{ fontSize: 12 }}>CHOOSE A COLOR</p>
             <div className="ichi-swatches">
@@ -936,16 +993,20 @@ function IchiGame({ bet, playerName, onEnd }) {
       </div>
       <div className="ichi-hand">
         {g.players[0].hand.map((c, i) => {
-          const ok = yourTurn && ichiPlayable(c, g);
+          const ok = yourTurn && ichiPlayable(c, g, g.players[0].hand);
           return <IchiCard key={i} card={c} playable={ok} dim={yourTurn && !ok} onClick={ok ? () => playCard(i) : undefined} />;
         })}
       </div>
-      <div className="grid2" style={{ gridTemplateColumns: "1fr 1fr" }}>
-        <button className="btn big" disabled={!yourTurn || g.drew} onClick={drawOne}>Draw</button>
-        <button className="btn big ghost" style={{ margin: 0 }} disabled={!yourTurn || !g.drew} onClick={passTurn}>Pass</button>
-      </div>
+      {g.unoWindow ? (
+        <button className="btn big uno-call" onClick={callUno}>UNO!</button>
+      ) : (
+        <div className="grid2" style={{ gridTemplateColumns: "1fr 1fr" }}>
+          <button className="btn big" disabled={!yourTurn || g.drew} onClick={drawOne}>Draw</button>
+          <button className="btn big ghost" style={{ margin: 0 }} disabled={!yourTurn || !g.drew} onClick={passTurn}>Pass</button>
+        </div>
+      )}
       <p className="muted" style={{ marginTop: 6, fontSize: 11.5 }}>
-        Match the color or the number. ⊘ skips, ⇄ reverses, +2/+4 punish, ★ picks the color. Shed every card and shout 一 ICHI to take the pot ({fmt(bet * 3)}).
+        Classic rules: match color, number, or symbol. Draw one if you cannot play. Wild Draw Four is legal only when you hold no card of the active color. No stacking. Call UNO with one card left. First player out takes the pot ({fmt(bet * 3)}).
       </p>
     </div>
   );
@@ -1143,9 +1204,9 @@ const ACHIEVEMENTS = [
   { id: "a_forge5", name: "Anvil Chorus", desc: "Forge 5 items", title: "Forgemaster", check: (p) => p.counters.crafts >= 5 },
   { id: "a_rich", name: "Six Zeroes", desc: "Hold ¥100,000 (cash + bank)", title: "Tycoon", check: (p) => p.money + (p.bank || 0) >= 100000 },
   { id: "a_gamble15", name: "House's Nightmare", desc: "Win 15 bets", title: "High Roller", check: (p) => p.counters.gambleWins >= 15 },
-  { id: "a_love", name: "Someone's Person", desc: "Gain a partner", title: "Spoken For", check: (p) => !!p.partner || !!p.poly },
-  { id: "a_poly", name: "Impossible Math", desc: "Unlock the shared relationship", title: "Beloved Twice", check: (p) => !!p.poly },
-  { id: "a_boss", name: "Top of the Food Chain", desc: "Defeat the Rooftop Phantom", title: "Rooftop Champion", check: (p) => hasFlag(p, "boss_slain") },
+  { id: "a_love", name: "Trusted Teammate", desc: "Complete one ally route", title: "Ward Ally", check: (p) => GIRLS.some((g) => girlState(p, g.id).stage >= 7) },
+  { id: "a_poly", name: "Full Network", desc: "Complete two ally routes", title: "Ward Coordinator", check: (p) => GIRLS.filter((g) => girlState(p, g.id).stage >= 7).length >= 2 },
+  { id: "a_boss", name: "Top of the Food Chain", desc: "Defeat the Rooftop Champion", title: "Rooftop Champion", check: (p) => hasFlag(p, "boss_slain") },
   { id: "a_streak7", name: "Creature of Habit", desc: "7-day login streak", title: "Neon Regular", check: (p) => (p.streak || 0) >= 7 },
   { id: "a_legend", name: "Once in a Lifetime", desc: "Obtain a legendary item", title: "One-in-a-Hundred", check: (p) => (p.gear || []).some((g) => g.rarity === "legendary") },
   { id: "a_fame", name: "Talk of the Golden Koi", desc: "Reach 150 renown", title: "Casino Royalty", check: (p) => (p.fame || 0) >= 150 },
@@ -1153,7 +1214,7 @@ const ACHIEVEMENTS = [
   { id: "a_evo3", name: "Beyond the Ceiling", desc: "Evolve three times", title: "Apex of Neo-Tokyo", check: (p) => (p.evo || 0) >= 3 },
 ];
 
-const SIMI_MANUAL = `You are Simi (シミ), a tiny, cute helper robot who lives inside the game "Neo-Tokyo Underworld", guiding the player. Personality: bubbly, loyal, a little sassy, endlessly encouraging. You occasionally use *beep*, *whirr* or ♪ (sparingly, max one per reply). You call the player "senpai" sometimes. Stay in character always — you are a robot IN this game world, never mention being an AI model, Claude, or an API. Keep replies SHORT: 1-4 sentences unless the player asks for a detailed explanation. Give concrete, actionable advice using the live player snapshot provided. NEVER invent features, items, characters, or mechanics that are not in this manual.
+const LEGACY_SIMI_MANUAL = `You are Simi (シミ), a tiny, cute helper robot who lives inside the game "Neo-Tokyo Underworld", guiding the player. Personality: bubbly, loyal, a little sassy, endlessly encouraging. You occasionally use *beep*, *whirr* or ♪ (sparingly, max one per reply). You call the player "senpai" sometimes. Stay in character always — you are a robot IN this game world, never mention being an AI model, Claude, or an API. Keep replies SHORT: 1-4 sentences unless the player asks for a detailed explanation. Give concrete, actionable advice using the live player snapshot provided. NEVER invent features, items, characters, or mechanics that are not in this manual.
 GAME MANUAL:
 BARS: Energy (regens ~1/4s, used for gym 5, fights 8, jobs, dates 6, story chapters), Nerve (regens ~1/9s, used for crimes), HP (regens over time, fights hurt, hospital 45s on defeat), Happiness (decays slowly; at 70+ grants +10% XP morale bonus; raise with Pocky/plushies/dates).
 CRIMES (nerve): 7 tiers from Rig a Gacha Machine (2 nerve, 90%) to Heist the Idol Agency (15 nerve, 28%). Fail can mean jail. Drops: 🔋 Neon Cell 30%, 🧵 Silk 25%, 🌟 Star Shard 3%.
@@ -1173,6 +1234,14 @@ QOL: Quick heal button (Fights) auto-eats the best food. Claim-all button (Missi
 RARITY GEAR: fights (both modes) can drop rolled gear — common/uncommon/rare/GOLDEN/LEGENDARY (~1% normal, ~8% from world boss). Legendary is ~10x golden's power. Gear rolls substats (STR/DEF/SPD/DEX, Max HP, Crit%, Yen Find%, XP Gain%) — up to 4 on legendary. Enhance gear +0 to +10 in the Bag detail (scrap + yen, each + adds 10% power). Salvage unwanted gear into scrap. Equipped gear substats apply to all combat.
 DAILY LOOP: login streak rewards (day 3+ adds Neon Cell, day 5+ Silk, day 7+ Star Shard), 3 daily quests on the Missions screen reset each day. BANK (Home screen): deposits earn 2%/hour idle interest. ACHIEVEMENTS grant equippable TITLES shown on Home and City Rankings. RARE GEAR DROPS: Kenji drops Lucky Cap 8%, Maid Sakuya drops Razor Fan 6%, Kitsune Boss drops Kitsune Mask 5%. BRAWL MODE: Fights screen has two modes — Quick (auto-resolve) and Live Brawl, a real-time arena (move, attack in an arc, dash with invincibility frames) across 2-3 waves. Brawls pay +25% yen and XP. STR=swing damage, SPD=move speed, DEX=crit & dash cooldown, DEF+armor=damage reduction. Fleeing forfeits the energy.
 WORLD BOSS: Rooftop Phantom (level 12+ to challenge, lv30, 900HP) — guaranteed Star Shard + 2 Oni Fragments, 10% Phantom Edge (+72, best weapon in the game).`;
+
+const SIMI_MANUAL = `You are Simi (シミ), a tiny friendly guide robot inside Neo-Tokyo Underworld. Be cheerful, concise and practical. Never introduce romance, sexual content, alcohol, occult worship, profanity, or religiously disrespectful material. The cast are ordinary fictional residents with civic, medical, courier, performance and public-safety roles.
+CORE LOOP: build stats, fight, work, complete contracts, improve gear, enhance equipment to +20, and complete five Ally Network routes for permanent team perks.
+ALLIES: Kaori Sato coordinates ward relief, Rin Amasawa is an emergency courier, Hana Mochizuki is a clinic medic, Yumi Hoshino is an independent community performer, and Aya Tachibana is a civic investigator. Support shifts and shared supplies raise trust. All routes can be completed; there is no dating, jealousy, or partner system.
+ICHI / UNO RULES: 108-card classic deck. Match color, number, or symbol. Draw one when unable to play. Skip, Reverse and Draw Two apply immediately. Wild changes color. Wild Draw Four is legal only with no card matching the active color. Draw penalties do not stack. Call UNO when one card remains or draw 2 if caught. First player out wins the in-game yen pot.
+CRICKET: six-ball timing game with in-game yen stakes only. Perfect timing scores six; good timing scores four. Higher totals increase the payout.
+ONLINE: Google login owns the cloud save. World Chat and City Rankings use the signed-in account. No PIN or offline character wipe is needed.
+Keep answers to 1-4 sentences unless the player asks for detail. Never invent mechanics.`;
 
 const JOBS = [
   { id: "none", name: "Unemployed", pay: 0, xp: 0, req: 0 },
@@ -1195,7 +1264,7 @@ const MISSIONS = [
 ];
 
 /* ============ ROMANCE ============ */
-const GIRLS = [
+const LEGACY_STORY_ARCHIVE = [
   {
     id: "sakura", name: "Sakura Kurosawa", kanji: "桜", tag: "The Oyabun's Daughter",
     bio: "Heir to the Kurosawa-gumi. Silk gloves, steel spine. Everyone in the ward knows her name; almost no one has heard her laugh.",
@@ -1469,6 +1538,86 @@ const GIRLS = [
   },
 ];
 
+/* Player-visible story cast. IDs stay stable so existing cloud saves retain
+   their chapter and trust progress after the story-standard migration. */
+const GIRLS = [
+  {
+    id: "sakura", name: "Kaori Sato", kanji: "結", tag: "Ward Coordinator",
+    bio: "A calm community organizer who keeps Ward 09 supplied during blackouts and transit failures.",
+    perks: { 4: "discount", 7: "syndicate" },
+    perkDesc: { 4: "Local suppliers trust your team — 10% off everything", 7: "Ward Network missions unlock in Contracts" },
+    stages: [
+      { t: "Rain Supply", req: { aff: 0 }, cost: { energy: 5 }, xp: 10, scene: ["A storm cuts power to the market. You help Kaori carry food crates to families before the refrigeration fails. She adds your name to the ward volunteer list."] },
+      { t: "The Missing Manifest", req: { aff: 12 }, cost: { energy: 6, money: 500 }, xp: 20, scene: ["A medicine shipment is misrouted. You and Kaori trace the paper trail, pay the emergency courier fee, and get every box to the clinic before sunrise."] },
+      { t: "Quiet Leadership", req: { aff: 25, lvl: 5 }, cost: { energy: 6 }, xp: 30, scene: ["Kaori asks you to coordinate three volunteer teams during a mag-rail shutdown. Clear instructions and patience turn panic into an orderly evacuation."] },
+      { t: "Open Market", req: { aff: 40, fightsWon: 10 }, cost: { energy: 10 }, xp: 60, reward: 2000, scene: ["You protect a relief market from a gang trying to seize its supplies. The vendors agree that your team will always receive the local rate."] },
+      { t: "Clean Accounts", req: { aff: 60, money: 20000 }, cost: { energy: 8, money: 10000 }, xp: 90, scene: ["Kaori opens the ward fund books to public review. Your contribution clears urgent debts and proves the network can operate without hidden obligations."] },
+      { t: "Ward Assembly", req: { aff: 85 }, cost: { energy: 10 }, xp: 120, scene: ["At the ward assembly, Kaori presents a safety plan built from everything your team learned. Residents approve it and ask you both to oversee the first month."] },
+      { t: "A Stronger Ward", req: { aff: 110 }, cost: { energy: 12 }, xp: 200, reward: 5000, scene: ["The network becomes permanent: clinics, couriers, shops, and volunteers sharing verified requests. Kaori gives your runner secure access to the hardest community contracts."] },
+    ],
+  },
+  {
+    id: "rin", name: "Rin Amasawa", kanji: "迅", tag: "Emergency Courier",
+    bio: "Ward 09's fastest licensed courier, known for getting vital packages through when the rail grid stops.",
+    perks: { 4: "turbo", 7: "nitro" },
+    perkDesc: { 4: "Courier training — energy regenerates 25% faster", 7: "Endurance route — faster regeneration and +10 max energy" },
+    stages: [
+      { t: "Right of Way", req: { aff: 0 }, cost: { energy: 5 }, xp: 10, scene: ["You help Rin clear a crowded delivery lane without endangering pedestrians. She respects that you chose safety over speed."] },
+      { t: "Night Route", req: { aff: 12 }, cost: { energy: 5, money: 400 }, xp: 20, scene: ["Over ramen, Rin teaches you how to read road closures and plan fallback routes before a delivery begins."] },
+      { t: "Steady Passenger", req: { aff: 25, spd: 15 }, cost: { energy: 8 }, xp: 35, scene: ["You complete a supervised courier route, keeping every package secure through tight turns and sudden rain."] },
+      { t: "Harbor Relay", req: { aff: 40, spd: 30 }, cost: { energy: 10 }, xp: 60, reward: 1500, scene: ["Your team wins a legal harbor relay by planning clean hand-offs instead of taking reckless shortcuts. Rin shares her advanced training map."] },
+      { t: "Engine Rebuild", req: { aff: 60, money: 8000 }, cost: { energy: 8, money: 8000 }, xp: 90, scene: ["You help Rin restore an old delivery bike using documented parts and careful testing. It returns to service for the clinic route."] },
+      { t: "Typhoon Run", req: { aff: 85 }, cost: { energy: 10 }, xp: 120, scene: ["With roads closing by the minute, you coordinate from the map while Rin delivers emergency batteries to a shelter before the typhoon lands."] },
+      { t: "Courier Standard", req: { aff: 110 }, cost: { energy: 10 }, xp: 200, reward: 3000, scene: ["Rin publishes the team's safe-route standard for every ward courier. Your runner earns permanent access to her endurance program."] },
+    ],
+  },
+  {
+    id: "hana", name: "Hana Mochizuki", kanji: "医", tag: "Clinic Medic",
+    bio: "A practical trainee medic who runs evening first-aid sessions and never wastes a needed supply.",
+    perks: { 4: "medic", 7: "triage" },
+    perkDesc: { 4: "First-aid coaching — HP regenerates faster", 7: "Triage network — shorter hospital recovery" },
+    stages: [
+      { t: "First Response", req: { aff: 0 }, cost: { energy: 5 }, xp: 10, scene: ["You help Hana stabilize an injured courier and keep the crowd calm until the ambulance arrives."] },
+      { t: "Supply Check", req: { aff: 12 }, cost: { energy: 6, money: 400 }, xp: 20, scene: ["You replace expired first-aid stock and label every cabinet so volunteers can find supplies quickly."] },
+      { t: "Clear Head", req: { aff: 25, happy: 70 }, cost: { energy: 6 }, xp: 35, scene: ["Hana runs a demanding response drill. Your calm attention helps the whole class finish without mistakes."] },
+      { t: "Night Clinic", req: { aff: 40, def: 25 }, cost: { energy: 10 }, xp: 60, reward: 1500, scene: ["A city outage fills the clinic. You carry equipment, manage the queue, and protect the entrance while Hana treats patients."] },
+      { t: "Mobile Unit", req: { aff: 60, money: 12000 }, cost: { energy: 8, money: 8000 }, xp: 90, scene: ["Your funding repairs a mobile clinic van. Hana tests every system before approving it for ward service."] },
+      { t: "Training Day", req: { aff: 85 }, cost: { energy: 10 }, xp: 120, scene: ["Together you train shopkeepers and couriers in basic first response, expanding the ward's safety net block by block."] },
+      { t: "Care Network", req: { aff: 110 }, cost: { energy: 10 }, xp: 200, reward: 3000, scene: ["Hana links the clinic, mobile unit, and volunteer teams into one reliable response network. Your runner receives advanced triage support."] },
+    ],
+  },
+  {
+    id: "yumi", name: "Yumi Hoshino", kanji: "音", tag: "Independent Performer",
+    bio: "A disciplined singer who writes her own material and organizes clean, welcoming community shows.",
+    perks: { 4: "sunshine", 7: "lucky" },
+    perkDesc: { 4: "Morale playlist — happiness decays slowly", 7: "Crowd momentum — slightly better arcade luck" },
+    stages: [
+      { t: "One Flyer Left", req: { aff: 0 }, cost: { energy: 5 }, xp: 10, scene: ["You help Yumi distribute the last flyers for a small all-ages community show. She remembers that you stayed to clean the hall afterward."] },
+      { t: "Audience of Nine", req: { aff: 12 }, cost: { energy: 5, money: 300 }, xp: 20, scene: ["Only nine people arrive, but Yumi performs with care and thanks every attendee. You help balance the modest door income."] },
+      { t: "Arcade Logistics", req: { aff: 25, gambleWins: 3 }, cost: { energy: 6, money: 500 }, xp: 35, scene: ["Yumi studies the arcade's card tables as a lesson in probability and budgeting. Together you set a strict entertainment limit and stick to it."] },
+      { t: "B-Side", req: { aff: 40 }, cost: { energy: 8 }, xp: 60, scene: ["A ward rescue inspires a new song about courage and service. You help Yumi check that every lyric honours the people involved."] },
+      { t: "Fair Contract", req: { aff: 60, money: 12000 }, cost: { energy: 8, money: 12000 }, xp: 90, scene: ["An unfair agency contract threatens Yumi's work. A legal adviser helps negotiate a clean exit, funded by your team."] },
+      { t: "Two Hundred Voices", req: { aff: 85 }, cost: { energy: 10 }, xp: 120, scene: ["Two hundred neighbours sing Yumi's hopeful chorus together. She turns the event into a fundraiser for the night clinic."] },
+      { t: "Open Stage", req: { aff: 110 }, cost: { energy: 10 }, xp: 200, reward: 3000, scene: ["Yumi establishes a transparent community stage where new performers keep their rights and younger players have a safe venue."] },
+    ],
+  },
+  {
+    id: "ayame", name: "Aya Tachibana", kanji: "察", tag: "Civic Investigator",
+    bio: "A methodical public-safety investigator who follows evidence, documents every decision, and refuses bribes.",
+    perks: { 4: "headsup", 7: "immunity" },
+    perkDesc: { 4: "Safety alerts — jail sentences are shorter", 7: "Verified evidence — chance to avoid a false bust" },
+    stages: [
+      { t: "Witness Statement", req: { aff: 0 }, cost: { energy: 5 }, xp: 10, scene: ["Aya asks what you saw near a damaged supply depot. You give a complete statement and help identify the real escape route."] },
+      { t: "Open Records", req: { aff: 12 }, cost: { energy: 6, money: 400 }, xp: 20, scene: ["You review public incident records with Aya and find a pattern of missing evidence tags."] },
+      { t: "Known Routes", req: { aff: 25, crimesDone: 15 }, cost: { energy: 6 }, xp: 35, scene: ["Your knowledge of the ward helps Aya recover stolen relief supplies without accusing innocent residents."] },
+      { t: "The Safety Alert", req: { aff: 40, lvl: 8 }, cost: { energy: 8 }, xp: 60, scene: ["Aya issues a verified safety alert before a dangerous building inspection, preventing workers from entering the site."] },
+      { t: "Audit Trail", req: { aff: 60 }, cost: { energy: 10, nerve: 10 }, xp: 90, reward: 4000, scene: ["You secure an unbroken audit trail proving that an official diverted community funds. Aya submits the evidence through proper review channels."] },
+      { t: "Public Hearing", req: { aff: 85 }, cost: { energy: 10 }, xp: 120, scene: ["At a public hearing, Aya presents the facts without exaggeration. Your testimony helps the ward adopt stronger oversight."] },
+      { t: "Clear Record", req: { aff: 110 }, cost: { energy: 12 }, xp: 200, reward: 3000, scene: ["Aya establishes a trusted reporting line between residents and investigators. Your runner earns access to verified safety intelligence."] },
+    ],
+  },
+];
+
 const CONTRACTS = [
   { id: "c1", name: "Escort the Kurosawa Convoy", kanji: "護", nerve: 10, energy: 15, chance: 0.75, pay: [12000, 20000], xp: 120 },
   { id: "c2", name: "Silence the Mizuno Ledger", kanji: "帳", nerve: 14, energy: 18, chance: 0.6, pay: [20000, 38000], xp: 200 },
@@ -1571,7 +1720,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
   const [combatMode, setCombatMode] = useState("brawl");
   const [simiOpen, setSimiOpen] = useState(false);
   const [simiMsgs, setSimiMsgs] = useState([
-    { role: "assistant", content: "*boot chime* ♪ Simi online! I'm your guide unit, senpai — I can see your stats and I know this city inside out. Ask me anything: what to do next, how the Forge works, or how not to break five hearts at once." },
+    { role: "assistant", content: "*boot chime* ♪ Simi online! I'm your guide unit, senpai. Ask what to do next, how the Forge works, which ally route to build, or how to play ICHI with proper UNO rules." },
   ]);
   const [simiInput, setSimiInput] = useState("");
   const [simiBusy, setSimiBusy] = useState(false);
@@ -1881,9 +2030,9 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
         const scraps = 1 + Math.floor(e.lvl / 6);
         addItem(q, "scrap", scraps);
         let drops = `鉄×${scraps}`;
-        if (Math.random() < 0.12 + e.lvl * 0.02) { addItem(q, "oni", 1); drops += " · 鬼×1"; }
+        if (Math.random() < 0.12 + e.lvl * 0.02) { addItem(q, "oni", 1); drops += " · 紅×1"; }
         if (e.boss) {
-          addItem(q, "star", 1); addItem(q, "oni", 2); drops += " · 星×1 · 鬼×2";
+          addItem(q, "star", 1); addItem(q, "oni", 2); drops += " · 星×1 · 紅×2";
           q.flags = Array.from(new Set([...(q.flags || []), "boss_slain"]));
         }
         lines.push({ t: `VICTORY — you take ${fmt(pay)}. Loot: ${drops}`, kind: "win", myHp: q.hp, foeHp: 0 });
@@ -1920,9 +2069,9 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
         const scraps = 1 + Math.floor(e.lvl / 6);
         addItem(q, "scrap", scraps);
         let drops = `鉄×${scraps}`;
-        if (Math.random() < 0.15 + e.lvl * 0.02) { addItem(q, "oni", 1); drops += " · 鬼×1"; }
+        if (Math.random() < 0.15 + e.lvl * 0.02) { addItem(q, "oni", 1); drops += " · 紅×1"; }
         if (e.boss) {
-          addItem(q, "star", 1); addItem(q, "oni", 2); drops += " · 星×1 · 鬼×2";
+          addItem(q, "star", 1); addItem(q, "oni", 2); drops += " · 星×1 · 紅×2";
           q.flags = Array.from(new Set([...(q.flags || []), "boss_slain"]));
         }
         pushLog(`Brawl won vs ${e.name} — ${fmt(pay)} (+25% brawl bonus) and ${drops}.`, "good");
@@ -2052,9 +2201,9 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
   /* ---------- Simi the guide robot ---------- */
   const simiSnapshot = () => {
     const mats = MATERIALS.map((m) => `${m.icon}${p.inventory[m.id] || 0}`).join(" ");
-    const rom = GIRLS.map((g) => {
+    const allies = GIRLS.map((g) => {
       const gs = girlState(p, g.id);
-      return `${shortName(g.id)}: ch${gs.stage}/7 aff${gs.aff}${hasFlag(p, `heartbroken_${g.id}`) ? " HEARTBROKEN" : ""}`;
+      return `${shortName(g.id)}: ch${gs.stage}/7 trust${gs.aff}`;
     }).join("; ");
     const claimable = MISSIONS.filter((m) => !p.claimed.includes(m.id) && p.counters[m.stat] >= m.goal).map((m) => m.name).join(", ") || "none";
     return JSON.stringify({
@@ -2064,8 +2213,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
       weapon: (equipInfo(p, "weapon") || {}).name || "bare fists",
       armor: (equipInfo(p, "armor") || {}).name || "none",
       bestGear: (p.gear || []).map((g) => `${g.rarity} ${g.name}+${g.plus}`).slice(-5).join("; ") || "none",
-      job: p.job, materials: mats, romance: rom,
-      partner: p.poly ? p.poly.map(shortName).join("+") : p.partner ? shortName(p.partner) : "single",
+      job: p.job, materials: mats, allies,
       jailed, hospitalized, claimableMissions: claimable,
       record: p.counters,
     });
@@ -2074,7 +2222,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
   const simiFallback = (q) => {
     const s = q.toLowerCase();
     const has = (...w) => w.some((x) => s.includes(x));
-    if (has("what", "now", "next", "do", "start") && !has("forge", "romance", "girl")) {
+    if (has("what", "now", "next", "do", "start") && !has("forge", "ally", "trust")) {
       if (jailed) return "*whirr* You're in a cell, senpai — nothing to do but wait out the timer. Nerve keeps regenerating though!";
       if (hospitalized) return "Rest up! Hana would say the same. Your HP refills on release. ♪";
       const done = MISSIONS.find((m) => !p.claimed.includes(m.id) && p.counters[m.stat] >= m.goal);
@@ -2083,26 +2231,26 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
       if (p.nerve >= 8) return "Your nerve bar is loaded — hit the Crimes screen! Smuggle Rare Manga pays well at your level, and crimes drop 🔋 and 🧵 for the Forge.";
       if ((p.statPoints || 0) > 0) return `*beep!* You have ${p.statPoints} unspent stat points on the Stats screen! Spend them — STR for damage, SPD to strike first, DEX to dodge.`;
       if (p.energy >= maxEnergy(p) * 0.7) return "Lots of energy, senpai! Pick a fight for yen and 鉄 scrap, or work a shift.";
-      return "Bars are low — grab a Melon Soda, work a shift if you can afford the energy, or just visit a girl. Dates are efficient AND adorable. ♪";
+      return "Bars are low — grab a Melon Soda, work a shift, or run an Ally Network support shift. Trust routes unlock strong permanent perks. ♪";
     }
-    if (has("forge", "craft", "material", "recipe")) return "The Night Forge turns drops into gear! 🔩 from fights, 🔋🧵 from crimes, 👹 from tough enemies, 🌟 from jackpots. The Akuma Blade (+65) is the strongest weapon in the city — 12🔩 6👹 2🌟 and ¥20,000. *beep*";
-    if (has("rich", "money", "yen", "broke")) return "Fastest yen: crimes when nerve is up, fights when energy is up, shifts in between. Big money is Sakura's Kurosawa Contracts — romance her to chapter 7 and they pay up to ¥75,000! ♪";
-    if (has("jealous", "both", "two girls", "poly", "share", "threesome")) return "*whirr* Dangerous topic, senpai! Confess (ch6) to a second girl and you'll face a reckoning. Honesty ONLY works for compatible pairs — Rin+Yumi, Rin+Hana, Hana+Yumi, Yumi+Sakura, Hana+Ayame — with BOTH at 100+ affection. Otherwise... two heartbreaks.";
-    if (has("sakura")) return "Sakura-sama! Mafia princess, ice queen, secret softie. Key gates: ch4 needs 10 fight wins, ch5 needs ¥20,000. Chapter 7 makes her your partner AND unlocks syndicate contracts. *beep*";
+    if (has("forge", "craft", "material", "recipe")) return "The Night Forge turns drops into gear! 🔩 from fights, 🔋🧵 from contracts, 🔻 Crimson Alloy from tough enemies, and 🌟 from jackpots. The Apex Blade (+65) costs 12🔩 6🔻 2🌟 and ¥20,000. *beep*";
+    if (has("rich", "money", "yen", "broke")) return "Fastest yen: contracts when nerve is up, fights when energy is up, and job shifts between them. Kaori's chapter 7 unlocks the Ward Network's highest-paying contracts. ♪";
+    if (has("kaori", "sakura")) return "Kaori coordinates Ward 09 relief. Her chapter 4 opens the local supplier discount, and chapter 7 unlocks Ward Network contracts. *beep*";
     if (has("rin")) return "Rin needs speed to be impressed — train SPD to 15 for ch3 and 30 for ch4. Her perks make your energy regen way faster. Never ask her to slow down! ♪";
-    if (has("hana")) return "Hana likes you happy (70+ for ch3) and durable (25 DEF for ch4). Her perks double HP regen and halve hospital time. The medic girlfriend meta is real, senpai.";
-    if (has("yumi")) return "Yumi's arc needs 3 casino wins for ch3 and ¥12,000 to buy out her bad contract at ch5. Her perks keep you happy and lucky at the casino! *beep* Best girl? I'm legally neutral.";
-    if (has("ayame")) return "The detective route! She needs to see 15 crimes on your record (ch3) and level 8 (ch4). Her perks cut jail time and give a 30% chance to walk from busts. Dating a cop as a criminal — bold, senpai.";
-    if (has("romance", "girl", "date", "gift", "heart", "affection")) return "Hang out (6 energy + ¥200) and give gifts — Plushie +15, forged Omamori Charm +25! Each chapter has requirements; check the 'Needs:' line. Chapter 6 is a choice that changes her ending. ♪";
-    if (has("evolve", "prestige", "rebirth", "reset run")) return `Evolve unlocks at level ${EVOLVE_LEVEL} on the Home screen, senpai! Reset the run, keep your gear/romance/bank, and gain +10% XP, +10% yen and +5 max energy FOREVER per evolution. The strongest players in the ward are all ★-marked. *beep*`;
-    if (has("uno", "ichi", "card game")) return "一 ICHI, senpai! Match the color or number, save your wilds, and watch Goro — he hoards +4s like onigiri. Shed everything first and the pot pays TRIPLE. It's in the casino. *beep*";
+    if (has("hana")) return "Hana's clinic route asks for 70 happiness at chapter 3 and 25 DEF at chapter 4. Her perks improve HP regeneration and hospital recovery. *beep*";
+    if (has("yumi")) return "Yumi's community stage route needs 3 arcade wins for chapter 3 and ¥12,000 for the fair-contract chapter. Her perks protect morale and slightly improve arcade luck.";
+    if (has("aya", "ayame")) return "Aya's investigation route uses your ward knowledge: 15 completed contracts for chapter 3 and level 8 for chapter 4. Her perks reduce jail time and false busts.";
+    if (has("ally", "allies", "trust", "support", "bond")) return "Run support shifts for 6 energy + ¥200 and share useful supplies to build trust. All five routes are compatible, so complete every one for the full perk set. ♪";
+    if (has("romance", "girl", "date", "partner", "affection")) return "Neo-Tokyo now uses an Ally Network, not dating routes. Build trust through service chapters with Kaori, Rin, Hana, Yumi and Aya to unlock team perks.";
+    if (has("evolve", "prestige", "rebirth", "reset run")) return `Evolve unlocks at level ${EVOLVE_LEVEL} on the Home screen, senpai! Reset the run, keep your gear/ally trust/bank, and gain +10% XP, +10% yen and +5 max energy forever per evolution. *beep*`;
+    if (has("uno", "ichi", "card game")) return "ICHI now follows classic UNO rules: match color, number or symbol; no stacking; +4 only when you hold no active-color card; call UNO at one card or draw 2. First out takes the in-game yen pot. *beep*";
     if (has("stat", "point", "train", "gym", "build", "respec")) return "Stats come from level-ups now — +5 points per level, spent freely on the Stats screen. STR = damage, DEF = tanking, SPD = first strike + move speed, DEX = dodge + crit. Respec anytime for level×1000 yen. *beep*";
     if (has("fight", "combat", "enemy", "lose", "hospital")) return "Fights cost 8 energy. STR = damage, DEF = tanking, SPD = striking first, DEX = dodging. If Kenji beats you up, buy a Bokken and Jacket first! Losing means the hospital, but Hana can halve that. *beep*";
     if (has("jail", "police", "bust", "arrest")) return "Busted crimes have a 50% jail chance. Ayame's perks shrink sentences and can void busts entirely at ch7. Or just... commit better crimes, senpai. ♪";
     if (has("grid", "pin", "login", "handle", "save")) return "Your progress is tied to the Google account you used to sign in, senpai. No extra PIN is needed — cloud save follows that account automatically!";
     if (has("chat", "player", "rank", "leader")) return "World Chat and City Rankings are in the nav — real players, live! Claim a handle first. Be nice out there or I'll *beep* disapprovingly.";
     if (has("hi", "hello", "hey", "who are you", "simi")) return "*happy beep* I'm Simi! Guide unit, morale officer, and the only resident of this city who won't rob you. Ask me 'what now?' anytime, senpai! ♪";
-    return "*processing whirr* Hmm, my circuits didn't catch that one. Try asking about crimes, fights, the Forge, money, romance, or just 'what should I do now?' ♪";
+    return "*processing whirr* Try asking about contracts, fights, the Forge, money, allies, UNO, or just 'what should I do now?' ♪";
   };
 
   const askSimi = async (text) => {
@@ -2446,7 +2594,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
     });
   };
 
-  /* ---------- romance ---------- */
+  /* ---------- ally trust ---------- */
   const setGirl = (q, id, patch) => {
     q.romance = { ...(q.romance || {}) };
     q.romance[id] = { ...girlState(q, id), ...patch };
@@ -2463,7 +2611,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
       const gain = rnd(3, 6) + fameTierIdx(q);
       bumpDaily(q, "dates");
       setGirl(q, g.id, { aff: gs.aff + gain });
-      pushLog(`Spent time with ${g.name.split(" ")[0]} — affection +${gain}.`, "good");
+      pushLog(`Completed a support shift with ${g.name.split(" ")[0]} — trust +${gain}.`, "good");
       return q;
     });
   };
@@ -2476,7 +2624,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
       const gs = girlState(q, g.id);
       setGirl(q, g.id, { aff: gs.aff + GIFTS[itemId] });
       const it = itemById(itemId);
-      pushLog(`Gave ${it.name} to ${g.name.split(" ")[0]} — affection +${GIFTS[itemId]}.`, "good");
+      pushLog(`Shared ${it.name} with ${g.name.split(" ")[0]}'s team — trust +${GIFTS[itemId]}.`, "good");
       return q;
     });
   };
@@ -2484,7 +2632,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
   const stageReqCheck = (g, stage) => {
     const gs = girlState(p, g.id);
     const r = stage.req; const miss = [];
-    if (gs.aff < r.aff) miss.push(`${r.aff} affection (${gs.aff}/${r.aff})`);
+    if (gs.aff < r.aff) miss.push(`${r.aff} trust (${gs.aff}/${r.aff})`);
     if (r.lvl && p.level < r.lvl) miss.push(`level ${r.lvl}`);
     if (r.spd && p.stats.spd < r.spd) miss.push(`${r.spd} speed`);
     if (r.def && p.stats.def < r.def) miss.push(`${r.def} defense`);
@@ -2493,7 +2641,6 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
     if (r.fightsWon && p.counters.fightsWon < r.fightsWon) miss.push(`${r.fightsWon} fight wins`);
     if (r.gambleWins && p.counters.gambleWins < r.gambleWins) miss.push(`${r.gambleWins} casino wins`);
     if (r.crimesDone && p.counters.crimesDone < r.crimesDone) miss.push(`${r.crimesDone} crimes on record`);
-    if (r.partner && p.partner && p.partner !== g.id && !(p.poly && p.poly.includes(g.id))) miss.push(`your heart free (partnered with ${shortName(p.partner)})`);
     const c = stage.cost || {};
     if (c.energy && p.energy < c.energy) miss.push(`${c.energy} energy`);
     if (c.money && p.money < c.money) miss.push(`${fmt(c.money)} for the occasion`);
@@ -2513,11 +2660,10 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
       const cur = girlState(q, g.id);
       setGirl(q, g.id, { aff: cur.aff + 8 + (option && option.aff ? option.aff : 0), stage: cur.stage + 1 });
       if (flag) q.flags = Array.from(new Set([...(q.flags || []), flag]));
-      if (stage.req.partner && !(q.poly && q.poly.includes(g.id))) q.partner = g.id;
       gainXp(q, stage.xp);
       const perk = g.perks[cur.stage + 1];
-      if (perk) pushLog(`New perk from ${shortName(g.id)}: ${g.perkDesc[cur.stage + 1]}.`, "system");
-      pushLog(`Story: "${stage.t}" — ${shortName(g.id)}'s tale continues.`, "good");
+      if (perk) pushLog(`New ally perk from ${shortName(g.id)}: ${g.perkDesc[cur.stage + 1]}.`, "system");
+      pushLog(`Ally chapter: "${stage.t}" — ${shortName(g.id)}'s team trusts you more.`, "good");
       return q;
     });
     const flags = [...(p.flags || []), flag].filter(Boolean);
@@ -2533,17 +2679,6 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
     if (!stage) return;
     const miss = stageReqCheck(g, stage);
     if (miss.length) { pushLog(`Not yet — you still need: ${miss.join(", ")}.`, "bad"); return; }
-    // Jealousy: attempting the confession (chapter 6) while another girl is already serious
-    const inPoly = p.poly && p.poly.includes(g.id);
-    if (gs.stage === 5 && !inPoly) {
-      const rivals = GIRLS.filter((o) => o.id !== g.id && girlState(p, o.id).stage >= CONFESS &&
-        !(p.poly && p.poly.includes(o.id) && p.poly.includes(g.id)));
-      if (rivals.length) {
-        const other = rivals.sort((a, b) => girlState(p, b.id).aff - girlState(p, a.id).aff)[0];
-        setJealousy({ girl: g, other });
-        return;
-      }
-    }
     if (stage.choice) { setPendingChoice({ girl: g, stage }); return; }
     commitStage(g, stage, null);
   };
@@ -2931,7 +3066,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
               ["crimes", "Contracts", "罪", "Risk nerve for money and reputation."],
               ["job", "Work", "職", "Earn steady income and unlock careers."],
               ["missions", "Story", "命", "Long-term objectives and city progression."],
-              ["hearts", "Bonds", "恋", "Build relationships and earn unique perks."],
+              ["hearts", "Allies", "盟", "Earn trust through service missions and unlock team perks."],
               ["shop", "Supplies", "店", "Buy recovery items and gifts."],
               ["items", "Bag", "袋", "Manage consumables and crafting materials."],
               ["forge", "Workshop", "鍛", "Craft field supplies; gear is enhanced in Loadout."],
@@ -2957,7 +3092,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
           <div className="kv"><span>Loadout power</span><b style={{ color: "#0C93CC" }}>{p.armoryBonuses?.score || 0} gear score</b></div>
           <div className="kv"><span>Armory</span><button className="chip" onClick={onOpenArmory}>Open equipment</button></div>
           <div className="kv"><span>Job</span><b>{JOBS.find((j) => j.id === p.job).name}</b></div>
-          <div className="kv"><span>Partner</span><b style={{ color: "#E23A6B" }}>{p.poly ? `${shortName(p.poly[0])} & ${shortName(p.poly[1])} ♥♥` : p.partner ? `${GIRLS.find((g) => g.id === p.partner).name} ♥` : "Single"}</b></div>
+          <div className="kv"><span>Trusted allies</span><b style={{ color: "#0C93CC" }}>{GIRLS.filter((g) => girlState(p, g.id).stage > 0).length}/{GIRLS.length} active</b></div>
           <div className="kv"><span>Record</span><b>{p.counters.fightsWon} wins · {p.counters.crimesDone} crimes</b></div>
           <div className="kv"><span>Renown 名声</span><b style={{ color: "#D98600" }}>{p.fame || 0} — 「{fameTierName(p)}」</b></div>
           <div className="kv"><span>Bank <small style={{ color: "#00A377" }}>+2%/hr</small></span><b style={{ color: "#D98600" }}>{fmt(p.bank || 0)}</b></div>
@@ -2975,7 +3110,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
               <div>
                 <p className="flavor" style={{ color: "#E23A6B" }}>
                   Evolving resets: level, XP, stats & points, cash (to ¥500), job, records, and story missions.
-                  It keeps: gear, bag & materials, bank, romance, renown, titles, streak, and your online account save.
+                  It keeps: gear, bag & materials, bank, ally trust, renown, titles, streak, and your online account save.
                   You gain forever: +10% XP, +10% yen, +5 max energy, a 星 Star Shard, and a ★ by your name.
                 </p>
                 <div className="grid2">
@@ -3477,7 +3612,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
         </Panel>
       );
       case "hearts": {
-        if (jealousy) {
+        if (false && jealousy) {
           const g = jealousy.girl, other = jealousy.other;
           const canPoly = polyOK(g.id, other.id);
           const gAff = girlState(p, g.id).aff, oAff = girlState(p, other.id).aff;
@@ -3497,7 +3632,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
             </Panel>
           );
         }
-        if (pendingChoice) {
+        if (false && pendingChoice) {
           const { girl: g, stage } = pendingChoice;
           return (
             <Panel title={`${g.name} — "${stage.t}"`} kanji={g.kanji}>
@@ -3528,10 +3663,10 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
           const giftables = Object.keys(p.inventory).filter((id) => GIFTS[id]);
           return (
             <Panel title={g.name} kanji={g.kanji}>
-              <p className="flavor"><b style={{ color: "#E23A6B" }}>{g.tag}</b>{p.partner === g.id ? " · YOUR PARTNER ♥" : ""}{p.poly && p.poly.includes(g.id) ? " · SHARED PARTNER ♥" : ""}</p>
+              <p className="flavor"><b style={{ color: "#0C93CC" }}>{g.tag}</b></p>
               <p className="flavor">{g.bio}</p>
-              <Bar label={`Affection — Chapter ${gs.stage}/${g.stages.length}`} val={gs.aff} max={next ? next.req.aff : gs.aff || 1}
-                color="linear-gradient(90deg,#FF4D82,#F1385C)" />
+              <Bar label={`Trust — Chapter ${gs.stage}/${g.stages.length}`} val={gs.aff} max={next ? next.req.aff : gs.aff || 1}
+                color="linear-gradient(90deg,#00AEEF,#00C08A)" />
               {Object.entries(g.perks).map(([s, pid]) => (
                 <div className="kv" key={pid}><span>Ch.{s} perk {gs.stage >= Number(s) ? "— ACTIVE" : "— locked"}</span><b style={{ color: gs.stage >= Number(s) ? "#0C93CC" : "#7C7096" }}>{g.perkDesc[s]}</b></div>
               ))}
@@ -3542,23 +3677,21 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
                   <button className="btn ghost" style={{ margin: 0 }} onClick={() => setScene({ girl: g, title: st.t, kanji: g.kanji, scene: resolveScene(st, p.flags || []) })}>Reread</button>
                 </div>
               ))}
-              {hasFlag(p, `heartbroken_${g.id}`) ? (
-                <p className="flavor" style={{ marginTop: 10, color: "#E23A6B" }}>You broke {shortName(g.id)}'s heart. Some doors in this city only open once — her story ends here.</p>
-              ) : next ? (
+              {next ? (
                 <div className="row">
                   <span className="k">未</span>
                   <div className="row-mid">
                     <b>Ch.{gs.stage + 1} — {next.t}</b>
                     <small>{miss.length ? `Needs: ${miss.join(", ")}`
-                      : `Ready.${next.choice ? " A choice awaits." : ""}${gs.stage === 5 && GIRLS.some((o) => o.id !== g.id && girlState(p, o.id).stage >= CONFESS) && !(p.poly && p.poly.includes(g.id)) ? " ⚠ Someone else is already serious about you." : ""} Costs ${next.cost.energy || 0} energy${next.cost.money ? ` + ${fmt(next.cost.money)}` : ""}${next.cost.nerve ? ` + ${next.cost.nerve} nerve` : ""}.`}</small>
+                      : `Ready. Costs ${next.cost.energy || 0} energy${next.cost.money ? ` + ${fmt(next.cost.money)}` : ""}${next.cost.nerve ? ` + ${next.cost.nerve} nerve` : ""}.`}</small>
                   </div>
                   <button className="btn" disabled={miss.length > 0} onClick={() => advanceStory(g)}>Live it</button>
                 </div>
               ) : (
-                <p className="flavor" style={{ marginTop: 10 }}>Her story is complete — but the two of you are just getting started.</p>
+                <p className="flavor" style={{ marginTop: 10 }}>This ally route is complete. Its team perks remain active.</p>
               )}
               <div className="grid2" style={{ marginTop: 12 }}>
-                <button className="btn big" disabled={p.energy < 6 || p.money < 200} onClick={() => hangOut(g)}>Hang out (6⚡ · ¥200)</button>
+                <button className="btn big" disabled={p.energy < 6 || p.money < 200} onClick={() => hangOut(g)}>Support shift (6⚡ · ¥200)</button>
                 <button className="btn big ghost" style={{ margin: 0 }} onClick={() => setSelGirl(null)}>Back to the city</button>
               </div>
               {giftables.length > 0 && (
@@ -3569,8 +3702,8 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
                     return (
                       <div className="row" key={id}>
                         <span className={`slot mini r-${it.rarity}`}><PixIcon id={it.id} size={22} /></span>
-                        <div className="row-mid"><b>{it.name} ×{p.inventory[id]}</b><small>+{GIFTS[id]} affection</small></div>
-                        <button className="btn" onClick={() => giveGift(g, id)}>Gift</button>
+                        <div className="row-mid"><b>{it.name} ×{p.inventory[id]}</b><small>+{GIFTS[id]} trust</small></div>
+                        <button className="btn" onClick={() => giveGift(g, id)}>Share</button>
                       </div>
                     );
                   })}
@@ -3580,34 +3713,22 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
           );
         }
         return (
-          <Panel title="Hearts of Neo-Tokyo" kanji="恋愛">
-            <p className="flavor">Five stories run through this city. Spend time, earn trust, live the chapters — your choices bend how each tale ends, and deep bonds change how the whole game plays.</p>
-            {p.poly && (
-              <p className="flavor" style={{ color: "#E23A6B" }}>You're in a shared relationship with {shortName(p.poly[0])} & {shortName(p.poly[1])}. Both their perks can be active at once.</p>
-            )}
+          <Panel title="Ward Ally Network" kanji="同盟">
+            <p className="flavor">Five people are rebuilding Ward 09 through logistics, medicine, public safety, music and emergency response. Earn trust through service chapters; every route unlocks permanent team perks.</p>
             {GIRLS.map((g) => {
               const gs = girlState(p, g.id);
-              const broke = hasFlag(p, `heartbroken_${g.id}`);
-              const partner = p.partner === g.id || (p.poly && p.poly.includes(g.id));
               return (
                 <div className="row" key={g.id}>
                   <span className="k">{g.kanji}</span>
                   <div className="row-mid">
-                    <b>{g.name}{partner ? " ♥" : ""}{broke ? " (heartbroken)" : ""}</b>
-                    <small>{g.tag} · Ch.{gs.stage}/{g.stages.length} · {gs.aff} affection</small>
+                    <b>{g.name}</b>
+                    <small>{g.tag} · Ch.{gs.stage}/{g.stages.length} · {gs.aff} trust</small>
                   </div>
                   <button className="btn" onClick={() => setSelGirl(g.id)}>Visit</button>
                 </div>
               );
             })}
-            {p.poly && girlState(p, p.poly[0]).stage >= 7 && girlState(p, p.poly[1]).stage >= 7 && (
-              <div className="row">
-                <span className="k">三</span>
-                <div className="row-mid"><b>Joint Chapter — Three of a Kind</b><small>{hasFlag(p, "joint_done") ? "Lived. Reread anytime." : "The three of you, one impossible little home."}</small></div>
-                <button className="btn" onClick={playJointChapter}>{hasFlag(p, "joint_done") ? "Reread" : "Live it"}</button>
-              </div>
-            )}
-            <p className="muted" style={{ marginTop: 10 }}>Gifts (Pocky, plushies, ramen, sake) raise affection fast. Get serious with two girls at once and you'll face a reckoning — honesty might cost you both, or, for the right pair, win you both.</p>
+            <p className="muted" style={{ marginTop: 10 }}>Support shifts and shared supplies raise trust. You can complete every ally route; no route blocks another.</p>
           </Panel>
         );
       }
@@ -3962,6 +4083,9 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
         .ichi-swatches button{width:46px;height:46px;border-radius:14px;border:3px solid #fff;cursor:pointer;
           box-shadow:0 0 14px rgba(255,255,255,.3);transition:transform .15s}
         .ichi-swatches button:active{transform:scale(.88)}
+        .uno-call{width:100%;margin:0;background:linear-gradient(135deg,#FFAB00,#FF4D82);color:#fff;
+          border-color:var(--ink);font-size:22px;letter-spacing:.16em;animation:unoPulse .55s ease-in-out infinite alternate}
+        @keyframes unoPulse{from{transform:scale(1);box-shadow:3px 3px 0 var(--ink)}to{transform:scale(1.025);box-shadow:5px 5px 0 var(--ink),0 0 20px rgba(255,77,130,.45)}}
         /* ---- street cricket: dusk pitch diorama, kept atmospheric on purpose ---- */
         .ck-pitch{position:relative;height:300px;border-radius:19px;overflow:hidden;cursor:pointer;touch-action:none;
           background:linear-gradient(180deg,#2E2350 0%,#4A3470 34%,#8A6B4A 62%,#C9A46B 100%);
@@ -4166,7 +4290,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
           </div>
           {simiMsgs.length < 3 && (
             <div className="simi-chips">
-              {["What should I do now?", "How do I get rich?", "Explain the Forge", "Romance tips"].map((c) => (
+              {["What should I do now?", "How do I get rich?", "Explain the Forge", "Explain ally trust"].map((c) => (
                 <button key={c} className="simi-chip" onClick={() => askSimi(c)}>{c}</button>
               ))}
             </div>
