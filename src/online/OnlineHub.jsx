@@ -6,6 +6,7 @@ import CharacterCreation from "../game/CharacterCreation.jsx";
 import { onlineConfigured, supabase } from "./supabase.js";
 import AppearanceEditor, { RunnerPortrait } from "./CharacterCreator.jsx";
 import Inventory, { getArmoryBonuses, normalizeInventory } from "./Inventory.jsx";
+import TradingTerminal from "../trading/TradingTerminal.jsx";
 import { migrateAccountSave, SAVE_KEY, serializeAccountSave } from "./accountSave.js";
 import { validateRunnerIdentity } from "./progressionRules.js";
 import "./online-hub.css";
@@ -14,6 +15,10 @@ import "./visual-v3-overlays.css";
 
 const LEGACY_OWNER_KEY = "ntu:legacy-save-owner";
 const nativeRedirect = "com.neotokyo.underworld://auth/callback";
+const makeUuid = () => globalThis.crypto?.randomUUID?.() || "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
+  const value = Math.floor(Math.random() * 16);
+  return (char === "x" ? value : (value & 3) | 8).toString(16);
+});
 
 export default function OnlineHub({ children }) {
   const [open, setOpen] = useState(false);
@@ -23,6 +28,9 @@ export default function OnlineHub({ children }) {
   const [characterProfile, setCharacterProfile] = useState(null);
   const [editingCharacter, setEditingCharacter] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [exchangeOpen, setExchangeOpen] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(null);
+  const [walletAuthority, setWalletAuthority] = useState(false);
   const [inventoryState, setInventoryState] = useState(null);
   const [accountSave, setAccountSave] = useState(null);
   const [armoryAuthority, setArmoryAuthority] = useState(false);
@@ -73,7 +81,7 @@ export default function OnlineHub({ children }) {
     let appUrlListener;
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setBooting(false); });
     const { data: auth } = supabase.auth.onAuthStateChange((_event, next) => {
-      if (!next?.user) { window.storage.setUser(null); accountRef.current = null; setAccountSave(null); setArmoryAuthority(false); setCampaignAuthority(false); setCampaignProgress({ serverState: "not_started", serverStage: 0 }); setAccountReady(false); setCharacterProfile(null); setEditingCharacter(false); setInventoryOpen(false); setInventoryState(null); }
+      if (!next?.user) { window.storage.setUser(null); accountRef.current = null; setAccountSave(null); setArmoryAuthority(false); setCampaignAuthority(false); setWalletAuthority(false); setWalletBalance(null); setCampaignProgress({ serverState: "not_started", serverStage: 0 }); setAccountReady(false); setCharacterProfile(null); setEditingCharacter(false); setInventoryOpen(false); setExchangeOpen(false); setInventoryState(null); }
       setSession(next); setBooting(false);
     });
     if (Capacitor.isNativePlatform()) {
@@ -133,6 +141,16 @@ export default function OnlineHub({ children }) {
           }
         }
       } else setCampaignAuthority(false);
+      const { data: walletState, error: walletError } = await supabase.rpc("get_my_exchange_state");
+      if (!walletError && walletState) {
+        const authoritativeBalance = Math.max(0, Number(walletState.balance) || 0);
+        nextSave.core = { ...(nextSave.core || {}), money: authoritativeBalance };
+        setWalletBalance(authoritativeBalance);
+        setWalletAuthority(true);
+      } else {
+        setWalletBalance(Math.max(0, Number(nextSave.core?.money) || 0));
+        setWalletAuthority(false);
+      }
       const identityName = nextSave.character?.codename || nextSave.core?.name || displayName;
       const { error: profileError } = await supabase.from("profiles").upsert({
         id: user.id, display_name: identityName.slice(0, 32),
@@ -248,8 +266,33 @@ export default function OnlineHub({ children }) {
   const saveCore = useCallback(async (core) => {
     if (!accountRef.current) return;
     const { armoryBonuses: _derived, ...persistedCore } = core;
-    try { await commitSections({ core: { ...persistedCore, onlineUserId: user.id } }); }
+    try {
+      let nextCore = { ...persistedCore, onlineUserId: user.id };
+      if (walletAuthority) {
+        const previousMoney = Math.max(0, Number(accountRef.current.core?.money) || 0);
+        const requestedMoney = Math.max(0, Number(persistedCore.money) || 0);
+        const delta = Math.round(requestedMoney - previousMoney);
+        if (delta !== 0) {
+          const { data, error } = await supabase.rpc("apply_game_wallet_delta", {
+            p_delta: delta,
+            p_event: "core_progress",
+            p_idempotency: makeUuid(),
+          });
+          if (error) throw error;
+          nextCore.money = Math.max(0, Number(data?.balance) || 0);
+          setWalletBalance(nextCore.money);
+        } else nextCore.money = previousMoney;
+      }
+      await commitSections({ core: nextCore });
+    }
     catch (error) { setStatus(error.message || "Progress sync paused"); }
+  }, [commitSections, user, walletAuthority]);
+
+  const acceptExchangeBalance = useCallback(async (nextBalance) => {
+    const amount = Math.max(0, Number(nextBalance) || 0);
+    setWalletBalance(amount);
+    if (!accountRef.current) return;
+    await commitSections({ core: { ...(accountRef.current.core || {}), money: amount, onlineUserId: user.id } });
   }, [commitSections, user]);
 
   const startDistrictRun = useCallback(async () => {
@@ -373,7 +416,10 @@ export default function OnlineHub({ children }) {
         onPlayerChange: saveCore,
         onOpenArmory: () => { setOpen(false); setInventoryOpen(true); },
         onOpenSocial: () => { setInventoryOpen(false); setOpen(true); },
+        onOpenTrading: () => { setOpen(false); setInventoryOpen(false); setExchangeOpen(true); },
+        walletBalance,
       }) : children}
+      <TradingTerminal open={exchangeOpen} balance={walletBalance ?? accountSave?.core?.money ?? 0} onClose={() => setExchangeOpen(false)} onWalletChange={acceptExchangeBalance} />
       {inventoryOpen && <Inventory profile={characterProfile} value={inventoryState} onChange={saveInventory} onClose={() => setInventoryOpen(false)} onStartRun={armoryAuthority ? startDistrictRun : null} onCompleteRun={armoryAuthority ? completeDistrictRun : null} onSaveLoadout={armoryAuthority ? saveArmoryLoadout : null} onEnhanceItem={armoryAuthority ? enhanceArmoryItem : null} campaignValue={campaignProgress} onCampaignChange={saveCampaign} onStartCampaign={startDistrictOne} onCampaignCheckpoint={advanceDistrictOne} onClaimCampaign={claimDistrictOne} onCalibrateCampaign={armoryAuthority ? enhanceArmoryItem : null} onCampaignComplete={completeCampaign} />}
       <button className="online-orb" onClick={() => setOpen((v) => !v)} aria-label="Open online hub">
         <RunnerPortrait profile={characterProfile} compact />

@@ -13,6 +13,6 @@ export const supabase = onlineConfigured
         autoRefreshToken: true,
         detectSessionInUrl: true,
       },
-      realtime: { params: { eventsPerSecond: 8 } },
+      realtime: { params: { eventsPerSecond: 20 } },
     })
   : null;

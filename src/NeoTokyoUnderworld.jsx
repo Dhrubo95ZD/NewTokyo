@@ -1686,7 +1686,7 @@ const Panel = ({ title, kanji, children }) => (
   </section>
 );
 
-export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses = null, armoryProgress = 0, onPlayerChange = null, onOpenArmory = null, onOpenSocial = null }) {
+export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses = null, armoryProgress = 0, walletBalance = null, onPlayerChange = null, onOpenArmory = null, onOpenSocial = null, onOpenTrading = null }) {
   const initialPlayerRef = useRef(initialPlayer);
   const [p, setP] = useState(newPlayer);
   const [screen, setScreen] = useState("home");
@@ -1829,6 +1829,11 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
     if (!armoryBonuses) return;
     setP((player) => ({ ...player, armoryBonuses }));
   }, [armoryBonuses]);
+
+  useEffect(() => {
+    if (!loaded || !Number.isFinite(Number(walletBalance))) return;
+    setP((player) => Number(player.money) === Number(walletBalance) ? player : { ...player, money: Math.max(0, Number(walletBalance)) });
+  }, [loaded, walletBalance]);
 
   /* ---------- autosave ---------- */
   useEffect(() => {
@@ -3072,8 +3077,9 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
               ["shop", "Supplies", "店", "Buy recovery items and gifts."],
               ["items", "Bag", "袋", "Manage consumables and crafting materials."],
               ["forge", "Workshop", "鍛", "Craft field supplies; gear is enhanced in Loadout."],
+              ["exchange", "Neo Exchange", "金", "Trade live XAU/USD with the same yen earned across the city."],
               ["casino", "Arcade", "遊", "Optional side games and high-risk rewards."],
-            ].map(([id, label, kanji, desc]) => <button key={id} className="activity-card" onClick={() => setScreen(id)}><span>{kanji}</span><b>{label}</b><small>{desc}</small></button>)}
+            ].map(([id, label, kanji, desc]) => <button key={id} className="activity-card" onClick={() => id === "exchange" ? onOpenTrading?.() : setScreen(id)}><span>{kanji}</span><b>{label}</b><small>{desc}</small></button>)}
           </div>
         </Panel>
       );
