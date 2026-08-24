@@ -7,15 +7,14 @@ const JACKETS = ["#e73768", "#6857ff", "#00a8a8", "#d17b18", "#252b42"];
 const HAIR = ["Razor", "Shag", "Crown", "Fade", "Ronin"];
 const AUGMENTS = ["None", "Temple Jack", "Optic Line", "Chrome Jaw"];
 const ROLES = [
-  { id: "ghost", name: "Ghost", text: "Speed · stealth · precision" },
-  { id: "samurai", name: "Street Samurai", text: "Power · nerve · combat" },
-  { id: "netrunner", name: "Net Runner", text: "Tech · hacks · intelligence" },
-  { id: "fixer", name: "Fixer", text: "Charm · deals · influence" },
+  { id: "striker", name: "Striker", text: "Power · timing · pressure" },
+  { id: "guardian", name: "Guardian", text: "Defense · recovery · control" },
+  { id: "technician", name: "Technician", text: "Tech · tools · preparation" },
 ];
 
 const defaults = {
   codename: "", frame: "neutral", skin: 1, eyes: 0, jacket: 0,
-  hair: 0, augment: 1, role: "ghost",
+  hair: 0, augment: 1, role: "striker", archetype: "striker",
 };
 
 export function RunnerPortrait({ profile = defaults, compact = false }) {
@@ -50,7 +49,7 @@ export function RunnerPortrait({ profile = defaults, compact = false }) {
         {augment === 3 && <path d="M103 205l18 35 29 14 29-14 18-35-10 45-37 20-37-20z" fill="#9aa4bc" opacity=".65" stroke={eye} strokeWidth="2" />}
         <path d="M70 350l43-74 37 34 37-34 43 74" fill="none" stroke={jacket} strokeWidth="7" />
       </svg>
-      {!compact && <div className="portrait-tag"><span>{profile.codename || "UNNAMED"}</span><small>{ROLES.find((r) => r.id === profile.role)?.name || "Runner"}</small></div>}
+      {!compact && <div className="portrait-tag"><span>{profile.codename || "UNNAMED"}</span><small>{ROLES.find((r) => r.id === (profile.archetype || profile.role))?.name || "Runner"}</small></div>}
     </div>
   );
 }
@@ -83,7 +82,7 @@ export default function CharacterCreator({ initial, onSave, onCancel, saving = f
             <Swatches label="Jacket signal" values={JACKETS} active={draft.jacket} onChange={(jacket) => patch({ jacket })}/>
             <div className="creator-field"><label>Cyberware</label><div className="choice-grid">{AUGMENTS.map((name, i) => <button key={name} className={draft.augment === i ? "active" : ""} onClick={() => patch({ augment: i })}>{name}</button>)}</div></div>
           </div>}
-          {step === 2 && <div className="creator-pane role-list">{ROLES.map((role) => <button key={role.id} className={draft.role === role.id ? "active" : ""} onClick={() => patch({ role: role.id })}><b>{role.name}</b><span>{role.text}</span></button>)}</div>}
+          {step === 2 && <div className="creator-pane role-list">{ROLES.map((role) => <button key={role.id} className={(draft.archetype || draft.role) === role.id ? "active" : ""} onClick={() => patch({ role: role.id, archetype: role.id })}><b>{role.name}</b><span>{role.text}</span></button>)}</div>}
           <footer><button className="back" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0}>Back</button>{step < 2 ? <button className="continue" onClick={() => setStep((s) => s + 1)} disabled={!validName}>Continue</button> : <button className="continue forge" onClick={() => onSave(draft)} disabled={!validName || saving}>{saving ? "Forging identity…" : "Enter Neo-Tokyo"}</button>}</footer>
         </div>
       </section>

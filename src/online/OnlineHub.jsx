@@ -2,10 +2,12 @@ import { cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef, 
 import { App } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
+import CharacterCreation from "../game/CharacterCreation.jsx";
 import { onlineConfigured, supabase } from "./supabase.js";
-import CharacterCreator, { RunnerPortrait } from "./CharacterCreator.jsx";
+import AppearanceEditor, { RunnerPortrait } from "./CharacterCreator.jsx";
 import Inventory, { getArmoryBonuses, normalizeInventory } from "./Inventory.jsx";
 import { migrateAccountSave, SAVE_KEY, serializeAccountSave } from "./accountSave.js";
+import { validateRunnerIdentity } from "./progressionRules.js";
 import "./online-hub.css";
 import "./account-gate.css";
 import "./visual-v3-overlays.css";
@@ -24,6 +26,8 @@ export default function OnlineHub({ children }) {
   const [inventoryState, setInventoryState] = useState(null);
   const [accountSave, setAccountSave] = useState(null);
   const [armoryAuthority, setArmoryAuthority] = useState(false);
+  const [campaignAuthority, setCampaignAuthority] = useState(false);
+  const [campaignProgress, setCampaignProgress] = useState({ serverState: "not_started", serverStage: 0 });
   const [busy, setBusy] = useState(false);
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
@@ -61,7 +65,7 @@ export default function OnlineHub({ children }) {
 
   const commitSections = useCallback(async (patch) => {
     if (!accountRef.current) return;
-    await persistAccount({ ...accountRef.current, ...patch, meta: { ...(accountRef.current.meta || {}), updatedAt: Date.now() } });
+    await persistAccount({ ...accountRef.current, ...patch, meta: { ...(accountRef.current.meta || {}), ...(patch.meta || {}), updatedAt: Date.now() } });
   }, [persistAccount]);
 
   useEffect(() => {
@@ -69,7 +73,7 @@ export default function OnlineHub({ children }) {
     let appUrlListener;
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setBooting(false); });
     const { data: auth } = supabase.auth.onAuthStateChange((_event, next) => {
-      if (!next?.user) { window.storage.setUser(null); accountRef.current = null; setAccountSave(null); setArmoryAuthority(false); setAccountReady(false); setCharacterProfile(null); setEditingCharacter(false); setInventoryOpen(false); setInventoryState(null); }
+      if (!next?.user) { window.storage.setUser(null); accountRef.current = null; setAccountSave(null); setArmoryAuthority(false); setCampaignAuthority(false); setCampaignProgress({ serverState: "not_started", serverStage: 0 }); setAccountReady(false); setCharacterProfile(null); setEditingCharacter(false); setInventoryOpen(false); setInventoryState(null); }
       setSession(next); setBooting(false);
     });
     if (Capacitor.isNativePlatform()) {
@@ -112,6 +116,23 @@ export default function OnlineHub({ children }) {
       const { data: serverArmory, error: armoryError } = await supabase.rpc("get_armory_state");
       if (!armoryError && serverArmory) { nextSave.armory = normalizeInventory(serverArmory); setArmoryAuthority(true); }
       else setArmoryAuthority(false);
+      const localCampaign = nextSave.meta?.districtOne || {};
+      let nextCampaign = { ...localCampaign, serverState: localCampaign.serverState || "not_started", serverStage: localCampaign.serverStage || 0 };
+      const { data: serverCampaign, error: campaignError } = await supabase.rpc("get_my_campaign_progress");
+      if (!campaignError) {
+        setCampaignAuthority(true);
+        if (serverCampaign) nextCampaign = { ...localCampaign, serverState: serverCampaign.state, serverStage: serverCampaign.stage, completedAt: serverCampaign.completedAt, rewardClaimedAt: serverCampaign.rewardClaimedAt, receipt: serverCampaign.receipt };
+        else if (nextSave.character) {
+          const role = nextSave.character.archetype || nextSave.character.role || "striker";
+          const identity = validateRunnerIdentity({ codename: nextSave.character.codename, role });
+          if (identity.ok) {
+            const { error: identityError } = await supabase.rpc("set_my_runner_identity", {
+              p_codename: identity.value.codename, p_role: identity.value.role,
+            });
+            if (!identityError) nextCampaign = { ...localCampaign, serverState: "not_started", serverStage: 0 };
+          }
+        }
+      } else setCampaignAuthority(false);
       const identityName = nextSave.character?.codename || nextSave.core?.name || displayName;
       const { error: profileError } = await supabase.from("profiles").upsert({
         id: user.id, display_name: identityName.slice(0, 32),
@@ -121,7 +142,7 @@ export default function OnlineHub({ children }) {
       if (profileError) { setStatus(profileError.message); return; }
       nextSave.core = { ...nextSave.core, handle: nextSave.character?.codename || nextSave.core?.handle || handle, name: identityName.slice(0, 24), onlineUserId: user.id };
       await persistAccount(nextSave);
-      if (!cancelled) { setCharacterProfile(nextSave.character || null); setInventoryState(nextSave.armory); setAccountReady(true); setStatus("Online · account save synced"); }
+      if (!cancelled) { setCharacterProfile(nextSave.character || null); setInventoryState(nextSave.armory); setCampaignProgress(nextCampaign); setAccountReady(true); setStatus("Online · account save synced"); }
     })();
     return () => { cancelled = true; };
   }, [userId, persistAccount]);
@@ -164,7 +185,27 @@ export default function OnlineHub({ children }) {
     if (!user || busy) return;
     setBusy(true);
     try {
-      await commitSections({ character: profile, core: { ...(accountRef.current?.core || {}), handle: profile.codename, name: profile.codename, onlineUserId: user.id } });
+      const role = profile.archetype || profile.role || "striker";
+      const identity = validateRunnerIdentity({ codename: profile.codename, role });
+      if (!identity.ok) throw new Error(identity.error);
+      if (campaignAuthority) {
+        const { error: identityError } = await supabase.rpc("set_my_runner_identity", {
+          p_codename: identity.value.codename, p_role: identity.value.role,
+        });
+        if (identityError) throw identityError;
+      }
+      const existingCore = accountRef.current?.core || {};
+      const starterStats = {
+        striker: { str: 8, def: 5, spd: 7, dex: 3 },
+        guardian: { str: 5, def: 9, spd: 4, dex: 5 },
+        technician: { str: 4, def: 5, spd: 6, dex: 9 },
+      }[role] || { str: 5, def: 5, spd: 5, dex: 5 };
+      const core = {
+        ...existingCore,
+        ...(!characterProfile && !existingCore.stats ? { stats: starterStats } : {}),
+        handle: profile.codename, name: profile.codename, onlineUserId: user.id,
+      };
+      await commitSections({ character: profile, core, meta: { districtOne: campaignProgress } });
       const { error } = await supabase.from("profiles").update({ display_name: profile.codename, last_seen_at: new Date().toISOString() }).eq("id", user.id);
       if (error) throw error;
       setCharacterProfile(profile);
@@ -182,6 +223,27 @@ export default function OnlineHub({ children }) {
       setStatus("Loadout synced");
     } catch (error) { setStatus(error.message || "Loadout sync paused"); }
   };
+
+  const saveCampaign = useCallback(async (next) => {
+    setCampaignProgress(next);
+    try { await commitSections({ meta: { districtOne: next } }); }
+    catch (error) { setStatus(error.message || "Campaign sync paused"); }
+  }, [commitSections]);
+
+  const completeCampaign = useCallback(async (next, reward) => {
+    const current = accountRef.current;
+    if (!current || current.meta?.districtOneGranted) return;
+    const core = { ...(current.core || {}) };
+    core.money = Math.max(0, Number(core.money) || 0) + Math.max(0, Number(reward?.credits) || 0);
+    core.xp = Math.max(0, Number(core.xp) || 0) + Math.max(0, Number(reward?.xp) || 0);
+    core.level = Math.max(1, Number(core.level) || 1);
+    core.statPoints = Math.max(0, Number(core.statPoints) || 0);
+    while (core.xp >= core.level * 100) {
+      core.xp -= core.level * 100; core.level += 1; core.statPoints += 5;
+    }
+    await commitSections({ core, meta: { districtOne: next, districtOneGranted: true } });
+    setStatus("District One complete · city progression unlocked");
+  }, [commitSections]);
 
   const saveCore = useCallback(async (core) => {
     if (!accountRef.current) return;
@@ -203,6 +265,63 @@ export default function OnlineHub({ children }) {
     if (error) throw error;
     return data;
   }, [armoryAuthority]);
+
+  const startDistrictOne = useCallback(async () => {
+    if (campaignAuthority) {
+      const { data, error } = await supabase.rpc("start_district_one");
+      if (error) throw error;
+      const next = { ...campaignProgress, serverState: data?.state || "active", serverStage: data?.stage || 0, serverToken: data?.token || campaignProgress.serverToken || null };
+      setCampaignProgress(next);
+      return next;
+    }
+    const legacy = await startDistrictRun();
+    const next = { ...campaignProgress, serverState: "active", serverStage: 0, serverToken: legacy?.token || null, compatibilityMode: true };
+    setCampaignProgress(next);
+    await commitSections({ meta: { districtOne: next } });
+    return next;
+  }, [campaignAuthority, campaignProgress, commitSections, startDistrictRun]);
+
+  const advanceDistrictOne = useCallback(async (token, checkpoint) => {
+    if (campaignAuthority) {
+      const { data, error } = await supabase.rpc("advance_district_one", { p_token: token, p_checkpoint: checkpoint });
+      if (error) throw error;
+      const next = { ...campaignProgress, serverState: data?.state || "active", serverStage: data?.stage || 0, serverToken: token };
+      setCampaignProgress(next);
+      return next;
+    }
+    const stage = { arrival: 1, skirmish: 2, boss: 3 }[checkpoint] || 0;
+    if (!stage || stage !== Number(campaignProgress.serverStage || 0) + 1) throw new Error("Campaign checkpoint out of order");
+    const next = { ...campaignProgress, serverState: stage === 3 ? "completed" : "active", serverStage: stage, serverToken: token };
+    setCampaignProgress(next);
+    await commitSections({ meta: { districtOne: next } });
+    return next;
+  }, [campaignAuthority, campaignProgress, commitSections]);
+
+  const claimDistrictOne = useCallback(async (token, weaponId = null) => {
+    if (campaignAuthority) {
+      const { data, error } = await supabase.rpc("claim_first_campaign_reward", { p_token: token, p_weapon_id: weaponId });
+      if (error) throw error;
+      const nextArmory = normalizeInventory(data?.armoryState || inventoryState);
+      const next = { ...campaignProgress, serverState: "reward_claimed", serverStage: 3, rewardClaimedAt: Date.now(), receipt: data?.receipt || null };
+      setInventoryState(nextArmory); setCampaignProgress(next);
+      await commitSections({ armory: nextArmory, meta: { districtOne: next } });
+      setStatus("District One secured · reward synced");
+      return { ...data, state: next, armoryState: nextArmory };
+    }
+    const result = await completeDistrictRun(token);
+    const rewardItemId = weaponId || result?.drop?.id;
+    const compatibilityArmory = normalizeInventory(result?.state || inventoryState);
+    const nextArmory = normalizeInventory({
+      ...compatibilityArmory,
+      equipped: { ...compatibilityArmory.equipped, weapon: rewardItemId },
+      tutorialStep: Math.max(Number(compatibilityArmory.tutorialStep || 0), 2),
+    });
+    const next = { ...campaignProgress, serverState: "reward_claimed", serverStage: 3, rewardClaimedAt: Date.now(), compatibilityMode: true };
+    setInventoryState(nextArmory); setCampaignProgress(next);
+    await commitSections({ armory: nextArmory, meta: { districtOne: next } });
+    setStatus("District One secured · reward synced");
+    return { reward: { itemId: rewardItemId }, state: next, armoryState: nextArmory, drop: result?.drop };
+  }, [campaignAuthority, campaignProgress, commitSections, completeDistrictRun, inventoryState]);
 
   const saveArmoryLoadout = useCallback(async (equipped, tutorialStep) => {
     if (!armoryAuthority) return null;
@@ -242,7 +361,8 @@ export default function OnlineHub({ children }) {
 
   if (!accountReady) return <main className="account-gate"><div className="gate-card"><span className="gate-mark pulse">雲</span><small>NEO GRID</small><h1>Loading your cloud identity…</h1></div></main>;
 
-  if (!characterProfile || editingCharacter) return <CharacterCreator initial={characterProfile} onSave={saveCharacter} onCancel={characterProfile ? () => setEditingCharacter(false) : null} saving={busy} />;
+  if (!characterProfile) return <CharacterCreation initial={null} onComplete={saveCharacter} busy={busy} />;
+  if (editingCharacter) return <AppearanceEditor initial={characterProfile} onSave={saveCharacter} onCancel={() => setEditingCharacter(false)} saving={busy} />;
 
   return (
     <>
@@ -254,7 +374,7 @@ export default function OnlineHub({ children }) {
         onOpenArmory: () => { setOpen(false); setInventoryOpen(true); },
         onOpenSocial: () => { setInventoryOpen(false); setOpen(true); },
       }) : children}
-      {inventoryOpen && <Inventory profile={characterProfile} value={inventoryState} onChange={saveInventory} onClose={() => setInventoryOpen(false)} onStartRun={armoryAuthority ? startDistrictRun : null} onCompleteRun={armoryAuthority ? completeDistrictRun : null} onSaveLoadout={armoryAuthority ? saveArmoryLoadout : null} onEnhanceItem={armoryAuthority ? enhanceArmoryItem : null} />}
+      {inventoryOpen && <Inventory profile={characterProfile} value={inventoryState} onChange={saveInventory} onClose={() => setInventoryOpen(false)} onStartRun={armoryAuthority ? startDistrictRun : null} onCompleteRun={armoryAuthority ? completeDistrictRun : null} onSaveLoadout={armoryAuthority ? saveArmoryLoadout : null} onEnhanceItem={armoryAuthority ? enhanceArmoryItem : null} campaignValue={campaignProgress} onCampaignChange={saveCampaign} onStartCampaign={startDistrictOne} onCampaignCheckpoint={advanceDistrictOne} onClaimCampaign={claimDistrictOne} onCalibrateCampaign={armoryAuthority ? enhanceArmoryItem : null} onCampaignComplete={completeCampaign} />}
       <button className="online-orb" onClick={() => setOpen((v) => !v)} aria-label="Open online hub">
         <RunnerPortrait profile={characterProfile} compact />
         <i className={user ? "online" : ""} />
