@@ -1,14 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { App } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
 import { onlineConfigured, supabase } from "./supabase.js";
 import CharacterCreator, { RunnerPortrait } from "./CharacterCreator.jsx";
-import Inventory, { ItemArt, LOOT, normalizeInventory } from "./Inventory.jsx";
+import Inventory, { getArmoryBonuses, normalizeInventory } from "./Inventory.jsx";
+import { migrateAccountSave, SAVE_KEY, serializeAccountSave } from "./accountSave.js";
 import "./online-hub.css";
 import "./account-gate.css";
 
-const SAVE_KEY = "ntu-save-v1";
 const LEGACY_OWNER_KEY = "ntu:legacy-save-owner";
 const nativeRedirect = "com.neotokyo.underworld://auth/callback";
 
@@ -21,13 +21,18 @@ export default function OnlineHub({ children }) {
   const [editingCharacter, setEditingCharacter] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [inventoryState, setInventoryState] = useState(null);
+  const [accountSave, setAccountSave] = useState(null);
+  const [armoryAuthority, setArmoryAuthority] = useState(false);
   const [busy, setBusy] = useState(false);
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState(onlineConfigured ? "Connecting…" : "Online mode needs configuration");
   const listEnd = useRef(null);
+  const accountRef = useRef(null);
+  const saveQueue = useRef(Promise.resolve());
 
   const user = session?.user;
+  const userId = user?.id;
 
   const loadMessages = useCallback(async () => {
     if (!supabase || !user) return;
@@ -38,20 +43,32 @@ export default function OnlineHub({ children }) {
       .order("created_at", { ascending: false })
       .limit(60);
     if (!error) setMessages((data || []).reverse());
-  }, [user]);
+  }, [userId]);
 
-  const syncSave = useCallback(async () => {
-    if (!user || window.storage.getUser() !== user.id) return;
-    const save = await window.storage.get(SAVE_KEY);
-    if (save?.value) await window.storage.set(SAVE_KEY, save.value);
-  }, [user]);
+  const persistAccount = useCallback(async (next) => {
+    if (!userId) return;
+    const clean = { ...next, core: { ...(next.core || {}), onlineUserId: userId } };
+    accountRef.current = clean;
+    setAccountSave(clean);
+    saveQueue.current = saveQueue.current.catch(() => undefined).then(async () => {
+      await window.storage.set(SAVE_KEY, serializeAccountSave(clean));
+      const { error } = await supabase.from("player_saves").upsert({ user_id: userId, save_data: clean });
+      if (error) throw error;
+    });
+    await saveQueue.current;
+  }, [userId]);
+
+  const commitSections = useCallback(async (patch) => {
+    if (!accountRef.current) return;
+    await persistAccount({ ...accountRef.current, ...patch, meta: { ...(accountRef.current.meta || {}), updatedAt: Date.now() } });
+  }, [persistAccount]);
 
   useEffect(() => {
     if (!supabase) return undefined;
     let appUrlListener;
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setBooting(false); });
     const { data: auth } = supabase.auth.onAuthStateChange((_event, next) => {
-      if (!next?.user) { window.storage.setUser(null); setAccountReady(false); setCharacterProfile(null); setEditingCharacter(false); setInventoryOpen(false); setInventoryState(null); }
+      if (!next?.user) { window.storage.setUser(null); accountRef.current = null; setAccountSave(null); setArmoryAuthority(false); setAccountReady(false); setCharacterProfile(null); setEditingCharacter(false); setInventoryOpen(false); setInventoryState(null); }
       setSession(next); setBooting(false);
     });
     if (Capacitor.isNativePlatform()) {
@@ -80,42 +97,43 @@ export default function OnlineHub({ children }) {
     setAccountReady(false);
     (async () => {
       window.storage.setUser(user.id);
-      const existing = await window.storage.get(SAVE_KEY);
-      let player = existing?.value ? JSON.parse(existing.value) : {};
-      if (player.onlineUserId && player.onlineUserId !== user.id) player = {};
-      if (!player.onlineUserId && Object.keys(player).length) {
+      const { data: remoteSave, error: remoteError } = await supabase.from("player_saves").select("save_data").eq("user_id", user.id).maybeSingle();
+      const existing = remoteSave?.save_data ? null : await window.storage.get(SAVE_KEY);
+      let raw = remoteSave?.save_data || (existing?.value ? JSON.parse(existing.value) : {});
+      if (raw.onlineUserId && raw.onlineUserId !== user.id) raw = {};
+      if (!raw.onlineUserId && !raw.schemaVersion && Object.keys(raw).length) {
         const legacyOwner = localStorage.getItem(LEGACY_OWNER_KEY);
-        if (legacyOwner && legacyOwner !== user.id) player = {};
+        if (legacyOwner && legacyOwner !== user.id) raw = {};
         else localStorage.setItem(LEGACY_OWNER_KEY, user.id);
       }
-      const identityName = player.characterProfile?.codename || displayName;
+      if (remoteError && !existing?.value) setStatus(`Cloud save unavailable: ${remoteError.message}`);
+      const nextSave = migrateAccountSave(raw, user, displayName);
+      const { data: serverArmory, error: armoryError } = await supabase.rpc("get_armory_state");
+      if (!armoryError && serverArmory) { nextSave.armory = normalizeInventory(serverArmory); setArmoryAuthority(true); }
+      else setArmoryAuthority(false);
+      const identityName = nextSave.character?.codename || nextSave.core?.name || displayName;
       const { error: profileError } = await supabase.from("profiles").upsert({
         id: user.id, display_name: identityName.slice(0, 32),
         avatar_url: metadata.avatar_url || metadata.picture || null,
         last_seen_at: new Date().toISOString(),
       });
       if (profileError) { setStatus(profileError.message); return; }
-      player.handle = player.characterProfile?.codename || handle;
-      player.name = identityName.slice(0, 24);
-      player.onlineUserId = user.id;
-      player.inventory = normalizeInventory(player.inventory);
-      delete player.cloudKey;
-      await window.storage.set(SAVE_KEY, JSON.stringify(player));
-      if (!cancelled) { setCharacterProfile(player.characterProfile || null); setInventoryState(player.inventory); setAccountReady(true); }
+      nextSave.core = { ...nextSave.core, handle: nextSave.character?.codename || nextSave.core?.handle || handle, name: identityName.slice(0, 24), onlineUserId: user.id };
+      await persistAccount(nextSave);
+      if (!cancelled) { setCharacterProfile(nextSave.character || null); setInventoryState(nextSave.armory); setAccountReady(true); setStatus("Online · account save synced"); }
     })();
     return () => { cancelled = true; };
-  }, [user]);
+  }, [userId, persistAccount]);
 
   useEffect(() => {
     if (!supabase || !user || !accountReady) return undefined;
     loadMessages();
-    syncSave();
     const channel = supabase.channel("world-chat")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages" }, loadMessages)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "chat_messages" }, loadMessages)
       .subscribe((state) => setStatus(state === "SUBSCRIBED" ? "Live · Shibuya channel" : "Connecting…"));
     return () => { supabase.removeChannel(channel); };
-  }, [accountReady, loadMessages, syncSave, user]);
+  }, [accountReady, loadMessages, user]);
 
   useEffect(() => { if (open) listEnd.current?.scrollIntoView({ block: "end" }); }, [messages, open]);
 
@@ -145,12 +163,7 @@ export default function OnlineHub({ children }) {
     if (!user || busy) return;
     setBusy(true);
     try {
-      const existing = await window.storage.get(SAVE_KEY);
-      const player = existing?.value ? JSON.parse(existing.value) : {};
-      const next = { ...player, handle: profile.codename, name: profile.codename, onlineUserId: user.id, characterProfile: profile };
-      await window.storage.set(SAVE_KEY, JSON.stringify(next));
-      const { error: saveError } = await supabase.from("player_saves").upsert({ user_id: user.id, save_data: next });
-      if (saveError) throw saveError;
+      await commitSections({ character: profile, core: { ...(accountRef.current?.core || {}), handle: profile.codename, name: profile.codename, onlineUserId: user.id } });
       const { error } = await supabase.from("profiles").update({ display_name: profile.codename, last_seen_at: new Date().toISOString() }).eq("id", user.id);
       if (error) throw error;
       setCharacterProfile(profile);
@@ -164,15 +177,47 @@ export default function OnlineHub({ children }) {
     if (!user) return;
     setInventoryState(inventory);
     try {
-      const existing = await window.storage.get(SAVE_KEY);
-      const player = existing?.value ? JSON.parse(existing.value) : {};
-      const next = { ...player, inventory, onlineUserId: user.id };
-      await window.storage.set(SAVE_KEY, JSON.stringify(next));
-      const { error } = await supabase.from("player_saves").upsert({ user_id: user.id, save_data: next });
-      if (error) throw error;
+      await commitSections({ armory: normalizeInventory(inventory) });
       setStatus("Loadout synced");
     } catch (error) { setStatus(error.message || "Loadout sync paused"); }
   };
+
+  const saveCore = useCallback(async (core) => {
+    if (!accountRef.current) return;
+    const { armoryBonuses: _derived, ...persistedCore } = core;
+    try { await commitSections({ core: { ...persistedCore, onlineUserId: user.id } }); }
+    catch (error) { setStatus(error.message || "Progress sync paused"); }
+  }, [commitSections, user]);
+
+  const startDistrictRun = useCallback(async () => {
+    if (!armoryAuthority) return null;
+    const { data, error } = await supabase.rpc("start_district_run");
+    if (error) throw error;
+    return data;
+  }, [armoryAuthority]);
+
+  const completeDistrictRun = useCallback(async (token) => {
+    if (!armoryAuthority) return null;
+    const { data, error } = await supabase.rpc("complete_district_run", { p_token: token });
+    if (error) throw error;
+    return data;
+  }, [armoryAuthority]);
+
+  const saveArmoryLoadout = useCallback(async (equipped, tutorialStep) => {
+    if (!armoryAuthority) return null;
+    const { data, error } = await supabase.rpc("save_armory_loadout", { p_equipped: equipped, p_tutorial_step: tutorialStep || 0 });
+    if (error) throw error;
+    return normalizeInventory(data);
+  }, [armoryAuthority]);
+
+  const enhanceArmoryItem = useCallback(async (itemId) => {
+    if (!armoryAuthority) return null;
+    const { data, error } = await supabase.rpc("enhance_armory_item", { p_item_id: itemId });
+    if (error) throw error;
+    return data;
+  }, [armoryAuthority]);
+
+  const armoryBonuses = useMemo(() => getArmoryBonuses(inventoryState, characterProfile), [inventoryState, characterProfile]);
 
   if (!onlineConfigured) return (
     <main className="account-gate gate-error">
@@ -200,14 +245,18 @@ export default function OnlineHub({ children }) {
 
   return (
     <>
-      {children}
-      {inventoryOpen && <Inventory profile={characterProfile} value={inventoryState} onChange={saveInventory} onClose={() => setInventoryOpen(false)} />}
+      {isValidElement(children) ? cloneElement(children, {
+        initialPlayer: accountSave?.core || null,
+        armoryBonuses,
+        armoryProgress: inventoryState?.tutorialStep || 0,
+        onPlayerChange: saveCore,
+        onOpenArmory: () => { setOpen(false); setInventoryOpen(true); },
+        onOpenSocial: () => { setInventoryOpen(false); setOpen(true); },
+      }) : children}
+      {inventoryOpen && <Inventory profile={characterProfile} value={inventoryState} onChange={saveInventory} onClose={() => setInventoryOpen(false)} onStartRun={armoryAuthority ? startDistrictRun : null} onCompleteRun={armoryAuthority ? completeDistrictRun : null} onSaveLoadout={armoryAuthority ? saveArmoryLoadout : null} onEnhanceItem={armoryAuthority ? enhanceArmoryItem : null} />}
       <button className="online-orb" onClick={() => setOpen((v) => !v)} aria-label="Open online hub">
         <RunnerPortrait profile={characterProfile} compact />
         <i className={user ? "online" : ""} />
-      </button>
-      <button className="inventory-orb" onClick={() => { setOpen(false); setInventoryOpen(true); }} aria-label="Open runner loadout">
-        <ItemArt item={LOOT.find((item) => item.id === inventoryState?.equipped?.weapon)} level={inventoryState?.enhancement?.[inventoryState?.equipped?.weapon] || 0} small/><span>LOADOUT</span>
       </button>
       {open && <aside className="online-hub" aria-label="Neo-Tokyo online hub">
         <header><div><b>NEO GRID</b><small>{status}</small></div><button onClick={() => setOpen(false)}>×</button></header>
