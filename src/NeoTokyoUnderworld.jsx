@@ -151,7 +151,7 @@ const RECIPES = [
 
 
 /* ============ HACK & SLASH ARENA ============ */
-function Brawl({ stats, enemy, onEnd }) {
+export function Brawl({ stats, enemy, onEnd }) {
   const cvs = useRef(null);
   const wrap = useRef(null);
   const flags = useRef({ atk: false, dash: false });
@@ -569,6 +569,7 @@ const rollGear = (lvl, boss) => {
 const isGearId = (id) => typeof id === "string" && id.startsWith("g:");
 const gearOf = (p, uid) => (p.gear || []).find((g) => g.uid === uid);
 const equipPower = (p, slot) => {
+  if (p.armoryBonuses) return 0;
   const id = p[slot];
   if (isGearId(id)) { const g = gearOf(p, id); return g ? gearPower(g) : 0; }
   return (itemById(id) || {}).power || 0;
@@ -579,7 +580,9 @@ const equipInfo = (p, slot) => {
   const it = itemById(id); return it ? { name: it.name, power: it.power, rarity: it.rarity } : null;
 };
 const gearBonuses = (p) => {
-  const b = { str: 0, def: 0, spd: 0, dex: 0, hp: 0, crit: 0, loot: 0, xp: 0 };
+  const a = p.armoryBonuses || {};
+  const b = { str: a.str || 0, def: a.def || 0, spd: a.spd || 0, dex: a.dex || 0, hp: a.hp || 0, crit: a.crit || 0, loot: a.loot || 0, xp: a.xp || 0 };
+  if (p.armoryBonuses) return b;
   ["weapon", "armor"].forEach((s) => {
     const id = p[s];
     if (isGearId(id)) { const g = gearOf(p, id); if (g) g.subs.forEach(({ k, v }) => { b[k] += v; }); }
@@ -1512,7 +1515,8 @@ const Panel = ({ title, kanji, children }) => (
   </section>
 );
 
-export default function NeoTokyoUnderworld() {
+export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses = null, armoryProgress = 0, onPlayerChange = null, onOpenArmory = null, onOpenSocial = null }) {
+  const initialPlayerRef = useRef(initialPlayer);
   const [p, setP] = useState(newPlayer);
   const [screen, setScreen] = useState("home");
   const [log, setLog] = useState([{ t: "system", msg: "Welcome to Neo-Tokyo. The night is yours." }]);
@@ -1622,7 +1626,8 @@ export default function NeoTokyoUnderworld() {
   useEffect(() => {
     (async () => {
       try {
-        const r = await window.storage.get("ntu-save-v1");
+        const seededPlayer = initialPlayerRef.current;
+        const r = seededPlayer ? { value: JSON.stringify(seededPlayer) } : await window.storage.get("ntu-save-v1");
         if (r && r.value) {
           const s = JSON.parse(r.value);
           const merged = processDay({ ...newPlayer(), ...s, stats: { ...newPlayer().stats, ...s.stats }, counters: { ...newPlayer().counters, ...s.counters } }, pushLog);
@@ -1649,12 +1654,20 @@ export default function NeoTokyoUnderworld() {
     })();
   }, [pushLog]);
 
+  useEffect(() => {
+    if (!armoryBonuses) return;
+    setP((player) => ({ ...player, armoryBonuses }));
+  }, [armoryBonuses]);
+
   /* ---------- autosave ---------- */
   useEffect(() => {
     if (!loaded) return;
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
-      try { await window.storage.set("ntu-save-v1", JSON.stringify(p)); } catch (e) { /* offline */ }
+      try {
+        if (onPlayerChange) await onPlayerChange(p);
+        else await window.storage.set("ntu-save-v1", JSON.stringify(p));
+      } catch (e) { /* retry on next mutation */ }
       if (p.handle && sharedOK.current && now() - lbPushAt.current > 30000) {
         lbPushAt.current = now();
         try {
@@ -1671,7 +1684,7 @@ export default function NeoTokyoUnderworld() {
         } catch (e) { /* retry next save */ }
       }
     }, 800);
-  }, [p, loaded]);
+  }, [p, loaded, onPlayerChange]);
 
   /* ---------- regen tick ---------- */
   useEffect(() => {
@@ -1853,14 +1866,6 @@ export default function NeoTokyoUnderworld() {
           addItem(q, "star", 1); addItem(q, "oni", 2); drops += " · 星×1 · 鬼×2";
           q.flags = Array.from(new Set([...(q.flags || []), "boss_slain"]));
         }
-        if (e.drop && !q.inventory[e.drop.id] && q.weapon !== e.drop.id && q.armor !== e.drop.id && Math.random() < e.drop.chance) {
-          addItem(q, e.drop.id, 1);
-          const di = itemById(e.drop.id);
-          lines.push({ t: `✦ RARE DROP — ${di.name}!`, kind: "crit", myHp: Math.max(1, myHp), foeHp: 0 });
-          float(`✦ ${di.name}!`, RARITY_COLOR[di.rarity]);
-        }
-        const gmsg = tryGearDrop(q, e);
-        if (gmsg) lines.push({ t: gmsg, kind: "crit", myHp: Math.max(1, myHp), foeHp: 0 });
         lines.push({ t: `VICTORY — you take ${fmt(pay)}. Loot: ${drops}`, kind: "win", myHp: q.hp, foeHp: 0 });
         pushLog(`Defeated ${e.name} and looted ${fmt(pay)} (${drops}).`, "good");
         float(`+${fmt(pay)}`, "#00A377"); float(`+ ${drops}`, "#D98600");
@@ -1900,13 +1905,6 @@ export default function NeoTokyoUnderworld() {
           addItem(q, "star", 1); addItem(q, "oni", 2); drops += " · 星×1 · 鬼×2";
           q.flags = Array.from(new Set([...(q.flags || []), "boss_slain"]));
         }
-        if (e.drop && !q.inventory[e.drop.id] && q.weapon !== e.drop.id && q.armor !== e.drop.id && Math.random() < e.drop.chance) {
-          addItem(q, e.drop.id, 1);
-          const di = itemById(e.drop.id);
-          pushLog(`✦ RARE DROP from the brawl — ${di.name}!`, "system");
-          float(`✦ ${di.name}!`, RARITY_COLOR[di.rarity]);
-        }
-        tryGearDrop(q, e);
         pushLog(`Brawl won vs ${e.name} — ${fmt(pay)} (+25% brawl bonus) and ${drops}.`, "good");
         float(`+${fmt(pay)}`, "#00A377"); float(`+ ${drops}`, "#D98600");
       } else {
@@ -2898,9 +2896,8 @@ export default function NeoTokyoUnderworld() {
 
 
   const NAV = [
-    ["home", "Home", "家"], ["gym", "Stats", "力"], ["crimes", "Crimes", "罪"], ["fights", "Fights", "闘"],
-    ["hearts", "Hearts", "恋"], ["chat", "Chat", "話"], ["board", "Ranks", "位"],
-    ["shop", "Shop", "店"], ["items", "Items", "袋"], ["forge", "Forge", "鍛"], ["job", "Job", "職"], ["casino", "Casino", "賭"], ["missions", "Missions", "命"],
+    ["home", "City", "都"], ["fights", "Combat", "斬"], ["loadout", "Loadout", "装"],
+    ["activities", "Activities", "路"], ["social", "Social", "網"],
   ];
 
   const screenBody = () => {
@@ -2920,8 +2917,27 @@ export default function NeoTokyoUnderworld() {
     );
 
     switch (screen) {
+      case "activities": return (
+        <Panel title="Choose Your Night" kanji="路">
+          <p className="flavor">Build your runner through training, work, contracts, relationships and city events. Equipment lives only in Loadout.</p>
+          <div className="activity-grid">
+            {[
+              ["gym", "Train", "力", "Spend energy to shape your base stats."],
+              ["crimes", "Contracts", "罪", "Risk nerve for money and reputation."],
+              ["job", "Work", "職", "Earn steady income and unlock careers."],
+              ["missions", "Story", "命", "Long-term objectives and city progression."],
+              ["hearts", "Bonds", "恋", "Build relationships and earn unique perks."],
+              ["shop", "Supplies", "店", "Buy recovery items and gifts."],
+              ["items", "Bag", "袋", "Manage consumables and crafting materials."],
+              ["forge", "Workshop", "鍛", "Craft field supplies; gear is enhanced in Loadout."],
+              ["casino", "Arcade", "遊", "Optional side games and high-risk rewards."],
+            ].map(([id, label, kanji, desc]) => <button key={id} className="activity-card" onClick={() => setScreen(id)}><span>{kanji}</span><b>{label}</b><small>{desc}</small></button>)}
+          </div>
+        </Panel>
+      );
       case "home": return (
         <Panel title={`${p.name}${(p.evo || 0) > 0 ? " " + "★".repeat(Math.min(p.evo, 5)) : ""} — Level ${p.level}`} kanji="家">
+          {armoryProgress < 3 && <div className="progression-callout"><small>RUNNER INITIATION · {armoryProgress + 1}/3</small><b>{armoryProgress === 0 ? "Survive your first District Run" : armoryProgress === 1 ? "Equip the weapon you extracted" : "Enhance that weapon to +1"}</b><span>{armoryProgress === 0 ? "Live combat earns your first real item and 12 Nano Shards." : armoryProgress === 1 ? "Your visible loadout directly increases arena power." : "Enhancement makes the item permanently stronger, up to +20."}</span><button className="chip" onClick={onOpenArmory}>Continue initiation</button></div>}
           {p.title && <p className="flavor" style={{ marginTop: -6 }}><span style={{ color: "#D98600" }}>「{p.title}」</span> · 🔥 {p.streak || 1}-day streak</p>}
           {(p.statPoints || 0) > 0 && (
             <p className="flavor" style={{ color: "#D98600" }}>You have {p.statPoints} unspent stat points — visit the Stats screen to grow stronger.</p>
@@ -2932,8 +2948,8 @@ export default function NeoTokyoUnderworld() {
             <div className="stat-card"><span className="k">速</span><div><b>Speed</b><em>{p.stats.spd}</em></div></div>
             <div className="stat-card"><span className="k">技</span><div><b>Dexterity</b><em>{p.stats.dex}</em></div></div>
           </div>
-          <div className="kv"><span>Weapon</span><b style={{ color: equipInfo(p, "weapon") ? RARITY_COLOR[equipInfo(p, "weapon").rarity] : undefined }}>{equipInfo(p, "weapon") ? `${equipInfo(p, "weapon").name} (+${equipInfo(p, "weapon").power})` : "Bare fists"}</b></div>
-          <div className="kv"><span>Armor</span><b style={{ color: equipInfo(p, "armor") ? RARITY_COLOR[equipInfo(p, "armor").rarity] : undefined }}>{equipInfo(p, "armor") ? `${equipInfo(p, "armor").name} (+${equipInfo(p, "armor").power})` : "Street clothes"}</b></div>
+          <div className="kv"><span>Loadout power</span><b style={{ color: "#0C93CC" }}>{p.armoryBonuses?.score || 0} gear score</b></div>
+          <div className="kv"><span>Armory</span><button className="chip" onClick={onOpenArmory}>Open equipment</button></div>
           <div className="kv"><span>Job</span><b>{JOBS.find((j) => j.id === p.job).name}</b></div>
           <div className="kv"><span>Partner</span><b style={{ color: "#E23A6B" }}>{p.poly ? `${shortName(p.poly[0])} & ${shortName(p.poly[1])} ♥♥` : p.partner ? `${GIRLS.find((g) => g.id === p.partner).name} ♥` : "Single"}</b></div>
           <div className="kv"><span>Record</span><b>{p.counters.fightsWon} wins · {p.counters.crimesDone} crimes</b></div>
@@ -3066,7 +3082,7 @@ export default function NeoTokyoUnderworld() {
         }
         return (
         <Panel title="Street Fights" kanji="喧嘩">
-          <p className="flavor">8 energy per fight. Lose and you eat hospital jello for 45 seconds. Legendary pity: {p.pity || 0}/40 gear drops.</p>
+          <p className="flavor">8 energy per fight. Your equipped Armory pieces, enhancement levels, role and set bonuses determine your real combat power.</p>
           <div className="bet-row">
             <button className={`chip ${combatMode === "brawl" ? "on" : ""}`} onClick={() => setCombatMode("brawl")}>⚔ Live brawl (+25% pay)</button>
             <button className={`chip ${combatMode === "quick" ? "on" : ""}`} onClick={() => setCombatMode("quick")}>Quick fight (auto)</button>
@@ -3133,7 +3149,7 @@ export default function NeoTokyoUnderworld() {
       }
       case "shop": return (
         <Panel title="Don Quixote After Dark" kanji="商店">
-          {["weapon", "armor", "consume"].map((t) => (
+          {["consume"].map((t) => (
             <div key={t}>
               <h3 className="sub">{t === "weapon" ? "Weapons" : t === "armor" ? "Armor" : "Consumables"}</h3>
               {SHOP.filter((s) => s.type === t).map((s) => (
@@ -3149,7 +3165,7 @@ export default function NeoTokyoUnderworld() {
         </Panel>
       );
       case "items": {
-        const inv = Object.entries(p.inventory);
+        const inv = Object.entries(p.inventory).filter(([id]) => !["weapon", "armor"].includes(itemById(id)?.type));
         const det = selItem && !isGearId(selItem) && p.inventory[selItem] ? itemById(selItem) : null;
         const gdet = selItem && isGearId(selItem) ? gearOf(p, selItem) : null;
         const EquipSlot = ({ slot, label }) => {
@@ -3168,15 +3184,7 @@ export default function NeoTokyoUnderworld() {
         };
         return (
           <Panel title="Equipment & Bag" kanji="装備">
-            <div className="grid2">
-              <EquipSlot slot="weapon" label="WEAPON" />
-              <EquipSlot slot="armor" label="ARMOR" />
-            </div>
-            <div className="bet-row">
-              <button className={`chip ${p.autoSalvage ? "on" : ""}`} onClick={() => setP((pl) => ({ ...pl, autoSalvage: !pl.autoSalvage }))}>
-                Auto-salvage common drops: {p.autoSalvage ? "ON" : "OFF"}
-              </button>
-            </div>
+            <div className="bag-intro"><b>Supplies only</b><span>Weapons, armor, sets and +20 enhancement now live in one place.</span><button className="chip" onClick={onOpenArmory}>Open Loadout</button></div>
             <h3 className="sub">Bag — {inv.length} kinds</h3>
             {inv.length === 0 && <p className="muted">Empty. The shop sells supplies; crimes and fights drop crafting materials.</p>}
             <div className="inv-grid">
@@ -3194,8 +3202,7 @@ export default function NeoTokyoUnderworld() {
                 );
               })}
             </div>
-            {(p.gear || []).length > 0 && <h3 className="sub">Rolled gear — drops from fights</h3>}
-            <div className="inv-grid">
+            {false && <div className="inv-grid">
               {[...(p.gear || [])].sort((a, b) => (RAR_IDX[b.rarity] - RAR_IDX[a.rarity]) || (gearPower(b) - gearPower(a))).map((g) => {
                 const eq = p.weapon === g.uid || p.armor === g.uid;
                 return (
@@ -3207,8 +3214,8 @@ export default function NeoTokyoUnderworld() {
                   </div>
                 );
               })}
-            </div>
-            {gdet && (() => {
+            </div>}
+            {false && gdet && (() => {
               const ri = RAR_IDX[gdet.rarity];
               const sc = (gdet.plus + 1) * (ri + 1), yen = (gdet.plus + 1) * 400 * (ri + 1);
               const canEnh = gdet.plus < 10 && (p.inventory.scrap || 0) >= sc && p.money >= yen;
@@ -3282,7 +3289,7 @@ export default function NeoTokyoUnderworld() {
               </div>
             ))}
           </div>
-          {RECIPES.map((r) => {
+          {RECIPES.filter((r) => !["weapon", "armor"].includes(itemById(r.out)?.type)).map((r) => {
             const out = itemById(r.out);
             const canMats = Object.entries(r.mats).every(([m, n]) => (p.inventory[m] || 0) >= n);
             const can = canMats && p.money >= r.money;
@@ -3729,12 +3736,12 @@ export default function NeoTokyoUnderworld() {
           --grape:#8C5CF7; --gold:#FFAB00; --gold-deep:#D98600;
           --mint:#00C08A; --mint-deep:#00A377; --red:#F1385C;
         }
-        .ntu{min-height:100vh;background:
+        .ntu{min-height:100vh;padding-bottom:calc(86px + env(safe-area-inset-bottom));background:
           radial-gradient(900px 460px at 85% -8%, rgba(255,77,130,.10), transparent 62%),
           radial-gradient(800px 460px at -5% 15%, rgba(0,174,239,.10), transparent 60%),
           radial-gradient(700px 400px at 50% 115%, rgba(140,92,247,.08), transparent 60%),
           var(--paper);
-          color:var(--ink);font-family:'Nunito',sans-serif;padding-bottom:190px;position:relative}
+          color:var(--ink);font-family:'Nunito',sans-serif;padding-bottom:90px;position:relative}
         .ntu::after{content:"";position:fixed;inset:0;pointer-events:none;
           background:repeating-linear-gradient(0deg,rgba(44,34,64,.012) 0 1px,transparent 1px 3px)}
         .top{position:sticky;top:0;z-index:5;background:rgba(255,246,234,.9);backdrop-filter:blur(8px);
@@ -3747,7 +3754,9 @@ export default function NeoTokyoUnderworld() {
           text-transform:uppercase;color:var(--ink-soft);margin-bottom:3px;font-weight:800}
         .bar-track{height:9px;background:#EFE6F4;border-radius:99px;border:1px solid rgba(44,34,64,.08);overflow:hidden}
         .bar-fill{height:100%;border-radius:99px;transition:width .4s}
-        main{max-width:680px;margin:0 auto;padding:14px}
+        .ntu main{max-width:680px;margin:0 auto;padding:14px}
+        .activity-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.activity-card{min-height:118px;display:grid;grid-template-columns:50px 1fr;grid-template-rows:auto 1fr;gap:2px 10px;padding:13px;border:2px solid rgba(44,34,64,.12);border-radius:16px;background:#fff;color:var(--ink);text-align:left;box-shadow:2px 3px 0 rgba(44,34,64,.12)}.activity-card>span{grid-row:1/3;display:grid;place-items:center;width:48px;height:48px;border-radius:14px;background:linear-gradient(145deg,var(--coral),var(--grape));color:#fff;font:24px 'DotGothic16'}.activity-card>b{font:800 16px 'Baloo 2'}.activity-card>small{color:var(--ink-soft);line-height:1.35}
+        .progression-callout{display:flex;flex-direction:column;gap:5px;margin-bottom:13px;padding:14px;border:2px solid var(--sky);border-radius:16px;background:linear-gradient(135deg,#effbff,#fff);box-shadow:3px 4px 0 rgba(0,174,239,.16)}.progression-callout>small{color:var(--sky-deep);font-weight:900;letter-spacing:.1em}.progression-callout>b{font:800 19px 'Baloo 2'}.progression-callout>span{color:var(--ink-soft);font-size:12px;line-height:1.4}.progression-callout>button{align-self:flex-start;margin:3px 0 0}
         /* ---- sticker-card panel system (the signature device) ---- */
         .panel{position:relative;background:var(--card);border:3px solid var(--ink);border-radius:22px;
           padding:20px 16px 16px;margin-bottom:16px;overflow:visible;
@@ -4020,7 +4029,7 @@ export default function NeoTokyoUnderworld() {
         .brawl-btn:active{transform:scale(.9) translate(1px,1px);box-shadow:1px 1px 0 rgba(44,34,64,.4)}
         @media(hover:hover) and (pointer:fine){.brawl-btn{display:none}}
         /* ---- Simi the guide robot: friendly light chat ---- */
-        .simi-fab{position:fixed;right:14px;bottom:152px;z-index:85;width:58px;height:58px;
+        .simi-fab{position:fixed;right:14px;bottom:78px;z-index:45;width:58px;height:58px;
           background:linear-gradient(160deg,#fff,#FFF0DC);border:3px solid var(--ink);border-radius:20px;
           cursor:pointer;box-shadow:3px 4px 0 rgba(44,34,64,.35);display:flex;flex-direction:column;
           align-items:center;justify-content:center;gap:3px;animation:simiBob 3.2s ease-in-out infinite;padding:0}
@@ -4035,7 +4044,7 @@ export default function NeoTokyoUnderworld() {
         @keyframes simiBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
         @keyframes simiBlink{0%,91%,100%{transform:scaleY(1)}94%{transform:scaleY(.12)}}
         @keyframes antennaPulse{0%,100%{opacity:.6}50%{opacity:1}}
-        .simi-panel{position:fixed;right:10px;bottom:220px;z-index:86;width:min(370px,calc(100vw - 20px));
+        .simi-panel{position:fixed;right:10px;bottom:146px;z-index:46;width:min(370px,calc(100vw - 20px));
           max-height:62vh;display:flex;flex-direction:column;background:var(--card);
           border:4px solid var(--ink);border-radius:24px;box-shadow:5px 6px 0 rgba(44,34,64,.28);
           overflow:hidden;animation:screenIn .25s ease both}
@@ -4077,24 +4086,16 @@ export default function NeoTokyoUnderworld() {
         .log-line.good{border-color:var(--mint-deep);color:var(--mint-deep);background:#EAFAF3}
         .log-line.bad{border-color:var(--coral);color:var(--coral-deep);background:#FFF0F4}
         .log-line.system{border-color:var(--gold-deep);color:var(--gold-deep);background:#FFF8E8}
-        nav{position:fixed;bottom:max(64px,env(safe-area-inset-bottom));left:10px;right:10px;z-index:80;
-          background:rgba(255,255,255,.97);border:3px solid var(--ink);border-radius:20px;
-          display:flex;overflow-x:auto;overflow-y:hidden;justify-content:flex-start;gap:3px;
-          padding:7px 8px;box-shadow:4px 5px 0 rgba(44,34,64,.22);scrollbar-width:none;
-          overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;touch-action:pan-x}
-        nav::-webkit-scrollbar{display:none}
-        nav button{background:none;border:2px solid transparent;border-radius:14px;color:var(--ink-faint);
-          font-family:'Nunito';font-size:10px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;
-          cursor:pointer;display:flex;flex:0 0 64px;min-width:64px;min-height:58px;flex-direction:column;
-          align-items:center;justify-content:center;gap:3px;padding:5px 3px;touch-action:manipulation;
-          -webkit-user-select:none;user-select:none}
-        nav button:active{background:#FFF0F4;transform:scale(.96)}
-        nav button .nk{font-family:'DotGothic16',monospace;font-size:18px;width:32px;height:32px;line-height:32px;
-          border-radius:10px;transition:background .15s,color .15s}
-        nav button.on{color:var(--coral);background:#FFF0F4;border-color:rgba(255,77,130,.28)}
-        nav button.on .nk{background:var(--coral);color:#fff}
+        .ntu>nav{position:fixed;bottom:0;left:0;right:0;z-index:60;background:var(--card);border-top:3px solid var(--ink);
+          display:grid;grid-template-columns:repeat(5,1fr);padding:6px max(4px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left));box-shadow:0 -3px 0 rgba(44,34,64,.05)}
+        .ntu>nav button{min-height:58px;background:none;border:none;color:var(--ink-faint);font-family:'Nunito';font-size:9.5px;font-weight:800;letter-spacing:.3px;
+          text-transform:uppercase;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 2px;touch-action:manipulation}
+        .ntu>nav button .nk{font-family:'DotGothic16',monospace;font-size:18px;width:30px;height:30px;line-height:30px;
+          border-radius:10px;transition:all .15s}
+        .ntu>nav button.on{color:var(--coral)}
+        .ntu>nav button.on .nk{background:var(--coral);color:#fff}
         @media(prefers-reduced-motion:reduce){.bar-fill,.hp-fill{transition:none}.petal,.floater,.screen-in,.fl-line,.battle-banner,.loot-rays,.loot-spark,.loot-glyph,.loot-card,.loot-ov{animation:none}.floater,.loot-ov,.loot-card{opacity:1}}
-        @media(max-width:520px){.bars{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}
+        @media(max-width:520px){.bars{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.activity-grid{grid-template-columns:1fr}.ntu>nav button{font-size:8px}}
       `}</style>
 
       <header className="top">
@@ -4195,7 +4196,7 @@ export default function NeoTokyoUnderworld() {
 
       <nav>
         {NAV.map(([id, label, kanji]) => (
-          <button key={id} className={screen === id ? "on" : ""} onClick={() => { setScreen(id); setFightLog(null); setScene(null); setJealousy(null); setPendingChoice(null); setSelItem(null); if (brawl) { setBrawl(null); pushLog("You slipped out of the arena.", "info"); } }}>
+          <button key={id} className={screen === id ? "on" : ""} onClick={() => { if (id === "loadout") { onOpenArmory?.(); return; } if (id === "social") { onOpenSocial?.(); return; } setScreen(id); setFightLog(null); setScene(null); setJealousy(null); setPendingChoice(null); setSelItem(null); if (brawl) { setBrawl(null); pushLog("You slipped out of the arena.", "info"); } }}>
             <span className="nk">{kanji}</span>{label}
           </button>
         ))}

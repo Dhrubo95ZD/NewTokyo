@@ -110,16 +110,7 @@ export function createStorageBridge({ client } = {}) {
         const { error } = await client.from("chat_messages").insert({ user_id: userId, body: String(payload.m || "").slice(0, 240) });
         if (error) throw error;
       } else if (key.startsWith("lb:")) {
-        const { error } = await client.from("leaderboard_entries").upsert({
-          user_id: userId,
-          display_name: String(payload.h || "Runner").slice(0, 32),
-          level: payload.lvl || 1,
-          money: Math.max(0, Math.floor(payload.money || 0)),
-          wins: Math.max(0, Math.floor(payload.wins || 0)),
-          title: payload.title || null,
-          evolution: Math.max(0, Math.floor(payload.evo || 0)),
-          updated_at: new Date().toISOString(),
-        });
+        const { error } = await client.rpc("sync_my_leaderboard");
         if (error) throw error;
       }
       sharedCache.set(key, value);
