@@ -4,6 +4,7 @@ import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
 import { onlineConfigured, supabase } from "./supabase.js";
 import CharacterCreator, { RunnerPortrait } from "./CharacterCreator.jsx";
+import Inventory, { LOOT, normalizeInventory } from "./Inventory.jsx";
 import "./online-hub.css";
 import "./account-gate.css";
 
@@ -18,6 +19,8 @@ export default function OnlineHub({ children }) {
   const [accountReady, setAccountReady] = useState(false);
   const [characterProfile, setCharacterProfile] = useState(null);
   const [editingCharacter, setEditingCharacter] = useState(false);
+  const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [inventoryState, setInventoryState] = useState(null);
   const [busy, setBusy] = useState(false);
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
@@ -48,7 +51,7 @@ export default function OnlineHub({ children }) {
     let appUrlListener;
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setBooting(false); });
     const { data: auth } = supabase.auth.onAuthStateChange((_event, next) => {
-      if (!next?.user) { window.storage.setUser(null); setAccountReady(false); setCharacterProfile(null); setEditingCharacter(false); }
+      if (!next?.user) { window.storage.setUser(null); setAccountReady(false); setCharacterProfile(null); setEditingCharacter(false); setInventoryOpen(false); setInventoryState(null); }
       setSession(next); setBooting(false);
     });
     if (Capacitor.isNativePlatform()) {
@@ -95,9 +98,10 @@ export default function OnlineHub({ children }) {
       player.handle = player.characterProfile?.codename || handle;
       player.name = identityName.slice(0, 24);
       player.onlineUserId = user.id;
+      player.inventory = normalizeInventory(player.inventory);
       delete player.cloudKey;
       await window.storage.set(SAVE_KEY, JSON.stringify(player));
-      if (!cancelled) { setCharacterProfile(player.characterProfile || null); setAccountReady(true); }
+      if (!cancelled) { setCharacterProfile(player.characterProfile || null); setInventoryState(player.inventory); setAccountReady(true); }
     })();
     return () => { cancelled = true; };
   }, [user]);
@@ -156,6 +160,20 @@ export default function OnlineHub({ children }) {
     setBusy(false);
   };
 
+  const saveInventory = async (inventory) => {
+    if (!user) return;
+    setInventoryState(inventory);
+    try {
+      const existing = await window.storage.get(SAVE_KEY);
+      const player = existing?.value ? JSON.parse(existing.value) : {};
+      const next = { ...player, inventory, onlineUserId: user.id };
+      await window.storage.set(SAVE_KEY, JSON.stringify(next));
+      const { error } = await supabase.from("player_saves").upsert({ user_id: user.id, save_data: next });
+      if (error) throw error;
+      setStatus("Loadout synced");
+    } catch (error) { setStatus(error.message || "Loadout sync paused"); }
+  };
+
   if (!onlineConfigured) return (
     <main className="account-gate gate-error">
       <div className="gate-card"><span className="gate-mark">網</span><small>NEO GRID</small><h1>Online setup required</h1><p>This release requires a Google account. Online services have not been connected to this build yet.</p></div>
@@ -183,14 +201,18 @@ export default function OnlineHub({ children }) {
   return (
     <>
       {children}
+      {inventoryOpen && <Inventory profile={characterProfile} value={inventoryState} onChange={saveInventory} onClose={() => setInventoryOpen(false)} />}
       <button className="online-orb" onClick={() => setOpen((v) => !v)} aria-label="Open online hub">
         <RunnerPortrait profile={characterProfile} compact />
         <i className={user ? "online" : ""} />
       </button>
+      <button className="inventory-orb" onClick={() => { setOpen(false); setInventoryOpen(true); }} aria-label="Open runner loadout">
+        <img src={LOOT.find((item) => item.id === inventoryState?.equipped?.weapon)?.image || "/assets/loot/weapon-0.webp"} alt=""/><span>LOADOUT</span>
+      </button>
       {open && <aside className="online-hub" aria-label="Neo-Tokyo online hub">
         <header><div><b>NEO GRID</b><small>{status}</small></div><button onClick={() => setOpen(false)}>×</button></header>
         <>
-            <div className="hub-profile"><RunnerPortrait profile={characterProfile} compact /><div><b>{characterProfile.codename}</b><small>{user.email}</small></div><button onClick={() => setEditingCharacter(true)}>Edit runner</button><button onClick={() => supabase.auth.signOut()}>Sign out</button></div>
+            <div className="hub-profile"><RunnerPortrait profile={characterProfile} compact /><div><b>{characterProfile.codename}</b><small>{user.email}</small></div><button onClick={() => { setOpen(false); setInventoryOpen(true); }}>Loadout</button><button onClick={() => setEditingCharacter(true)}>Edit</button><button onClick={() => supabase.auth.signOut()}>Exit</button></div>
             <div className="hub-channel"><b>SHIBUYA FREQUENCY</b><span>PUBLIC · LIVE</span></div>
             <div className="hub-messages">{messages.length === 0 && <p className="hub-static">No voices on the frequency yet.</p>}{messages.map((m) => <article key={m.id} className={m.user_id === user.id ? "mine" : ""}><img src={m.profiles?.avatar_url || ""} alt="" /><div><b>{m.profiles?.display_name || "Runner"}</b><p>{m.body}</p></div></article>)}<div ref={listEnd} /></div>
             <div className="hub-compose"><input value={message} maxLength={240} placeholder="Broadcast…" onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} /><button onClick={send} disabled={!message.trim() || busy}>送</button></div>
