@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {
-  DUNGEONS, calculateCombatPower, chooseBestLoadout, dungeonAccess, itemCombatPower,
+  DUNGEONS, afkBattleSnapshot, calculateCombatPower, chooseBestLoadout, dungeonAccess, itemCombatPower,
   progressionObjectives, saleValue, salvageValue,
 } from "../src/online/progressionHubRules.js";
 
@@ -19,5 +19,12 @@ assert.equal(dungeonAccess(DUNGEONS[3], { level: 20, cp: 899 }, "solo").unlocked
 assert.equal(dungeonAccess(DUNGEONS[3], { level: 20, cp: 675 }, "coop").unlocked, true);
 assert.ok(salvageValue(items[1], 5) > salvageValue(items[1], 0));
 assert.ok(saleValue(items[1], 0) > salvageValue(items[1], 0));
+const earlyBattle = afkBattleSnapshot({ startedAt: 0, now: 6200, dungeonLevel: 50 });
+assert.equal(earlyBattle.wave, 2);
+assert.equal(earlyBattle.enemiesPerWave, 5);
+assert.equal(earlyBattle.ready, false);
+const readyBattle = afkBattleSnapshot({ startedAt: 0, now: 600000, dungeonLevel: 99 });
+assert.equal(readyBattle.ready, true);
+assert.equal(readyBattle.rewardMinutes, 0);
 assert.equal(progressionObjectives({ campaignDone: true, inventory: { equipped: { weapon: "x", helmet: "x", armor: "x", boots: "x" }, enhancement: { x: 5 }, dungeon: { bestLevel: 50 } }, cp: 2500, player: { statPoints: 0 } }).every((quest) => quest.done), false);
 console.log("Progression Hub rules smoke tests passed");

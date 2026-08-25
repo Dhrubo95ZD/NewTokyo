@@ -58,6 +58,24 @@ export function saleValue(item, enhancement = 0) {
   return salvageValue(item, enhancement) * 75;
 }
 
+export function afkBattleSnapshot({ startedAt = Date.now(), now = Date.now(), dungeonLevel = 1 } = {}) {
+  const elapsed = Math.max(0, Number(now) - new Date(startedAt).getTime());
+  const waveLength = 6200;
+  const wave = Math.floor(elapsed / waveLength) + 1;
+  const waveProgress = (elapsed % waveLength) / waveLength;
+  const enemiesPerWave = 3 + Math.floor(Math.max(1, Number(dungeonLevel) || 1) / 25);
+  return {
+    elapsed,
+    wave,
+    waveProgress,
+    enemiesPerWave,
+    enemyHp: Math.max(3, Math.round(100 - waveProgress * 100)),
+    defeated: Math.floor(elapsed / waveLength) * enemiesPerWave + Math.min(enemiesPerWave - 1, Math.floor(waveProgress * enemiesPerWave)),
+    ready: elapsed >= 600000,
+    rewardMinutes: elapsed >= 600000 ? 0 : Math.max(1, Math.ceil((600000 - elapsed) / 60000)),
+  };
+}
+
 export function progressionObjectives({ campaignDone = false, inventory = {}, cp = 0, player = {} } = {}) {
   const equipped = Object.values(inventory.equipped || {}).filter(Boolean).length;
   const maxEnhancement = Math.max(0, ...Object.values(inventory.enhancement || {}).map(Number));
