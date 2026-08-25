@@ -153,7 +153,7 @@ export default function TradingTerminal({ open, balance = 0, onClose, onWalletCh
   if (!open) return null;
   return (
     <div className="nx-overlay" role="dialog" aria-modal="true" aria-label="Neo Exchange trading terminal">
-      <section className="nx-terminal">
+      <section className={`nx-terminal ${ticketOpen ? "ticket-open" : ""}`}>
         <header className="nx-head">
           <div className="nx-brand"><i>金</i><div><small>{sourceView.desk}</small><b>NEO EXCHANGE</b></div></div>
           <div className={`nx-feed ${health} ${sourceView.simulated ? "simulated" : ""}`}><i />{health === "live" ? `${sourceView.badge} · ${Math.round(age)}ms` : health === "stale" ? "STALE · ORDERS LOCKED" : "ENGINE OFFLINE"}</div>
@@ -185,16 +185,24 @@ export default function TradingTerminal({ open, balance = 0, onClose, onWalletCh
           </div>
 
           <aside className={`nx-ticket ${ticketOpen ? "open" : ""}`}>
-            <button className="nx-ticket-grab" onClick={() => setTicketOpen(false)} aria-label="Close trade ticket" />
-            <div className="nx-side-tabs"><button className={side === "buy" ? "buy on" : "buy"} onClick={() => setSide("buy")}>BUY</button><button className={side === "sell" ? "sell on" : "sell"} onClick={() => setSide("sell")}>SELL</button></div>
-            <label className="nx-field"><span>Risk from wallet</span><div><b>¥</b><input inputMode="numeric" value={margin} onChange={(event) => setMargin(Math.max(0, Math.floor(Number(event.target.value) || 0)))} /></div></label>
-            <div className="nx-percent-row">{[10, 25, 50, 100].map((pct) => <button key={pct} onClick={() => setMargin(Math.max(MIN_MARGIN_YEN, Math.floor(account.balance * pct / 100)))}>{pct}%</button>)}</div>
-            <label className="nx-label">Risk multiplier</label>
-            <div className="nx-leverage">{LEVERAGE_OPTIONS.map((value) => <button key={value} className={leverage === value ? "on" : ""} onClick={() => setLeverage(value)}>{value}×</button>)}</div>
-            <div className="nx-preview"><span>Exposure <b>{fmtYen(preview.exposureYen)}</b></span><span>Est. entry <b>{fmtPrice(preview.entryPrice)}</b></span><span>Liquidation <b>{fmtPrice(preview.liquidationPrice)}</b></span></div>
-            <button className="nx-advanced-toggle" onClick={() => setAdvanced((value) => !value)}>{advanced ? "Hide protection" : "Add stop-loss / take-profit"}<span>{advanced ? "−" : "+"}</span></button>
-            {advanced && <div className="nx-protection"><label>Stop loss<input inputMode="decimal" placeholder="Optional price" value={stopLoss} onChange={(e) => setStopLoss(e.target.value)} /></label><label>Take profit<input inputMode="decimal" placeholder="Optional price" value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} /></label></div>}
-            <button className={`nx-submit ${side}`} disabled={!validation.ok || busy || !ready} onClick={submit}>{busy ? "VERIFYING…" : `${side === "buy" ? "BUY" : "SELL"} ${sourceView.instrument}`}<small>{validation.ok ? `Risk ${fmtYen(margin)} at ${leverage}×` : validation.error}</small></button>
+            <header className="nx-ticket-head">
+              <button className="nx-ticket-grab" onClick={() => setTicketOpen(false)} aria-label="Hide trade ticket" />
+              <div><small>ORDER TICKET</small><b>{side === "buy" ? "Buy" : "Sell"} {sourceView.instrument}</b></div>
+              <button className="nx-ticket-hide" onClick={() => setTicketOpen(false)} aria-label="Hide trade ticket">Hide <span>⌄</span></button>
+            </header>
+            <div className="nx-ticket-scroll">
+              <div className="nx-side-tabs"><button className={side === "buy" ? "buy on" : "buy"} onClick={() => setSide("buy")}>BUY</button><button className={side === "sell" ? "sell on" : "sell"} onClick={() => setSide("sell")}>SELL</button></div>
+              <label className="nx-field"><span>Risk from wallet</span><div><b>¥</b><input inputMode="numeric" value={margin} onChange={(event) => setMargin(Math.max(0, Math.floor(Number(event.target.value) || 0)))} /></div></label>
+              <div className="nx-percent-row">{[10, 25, 50, 100].map((pct) => <button key={pct} onClick={() => setMargin(Math.max(MIN_MARGIN_YEN, Math.floor(account.balance * pct / 100)))}>{pct}%</button>)}</div>
+              <label className="nx-label">Risk multiplier</label>
+              <div className="nx-leverage">{LEVERAGE_OPTIONS.map((value) => <button key={value} className={leverage === value ? "on" : ""} onClick={() => setLeverage(value)}>{value}×</button>)}</div>
+              <div className="nx-preview"><span>Exposure <b>{fmtYen(preview.exposureYen)}</b></span><span>Est. entry <b>{fmtPrice(preview.entryPrice)}</b></span><span>Liquidation <b>{fmtPrice(preview.liquidationPrice)}</b></span></div>
+              <button className="nx-advanced-toggle" onClick={() => setAdvanced((value) => !value)}>{advanced ? "Hide protection" : "Add stop-loss / take-profit"}<span>{advanced ? "−" : "+"}</span></button>
+              {advanced && <div className="nx-protection"><label>Stop loss<input inputMode="decimal" placeholder="Optional price" value={stopLoss} onChange={(e) => setStopLoss(e.target.value)} /></label><label>Take profit<input inputMode="decimal" placeholder="Optional price" value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} /></label></div>}
+            </div>
+            <footer className="nx-ticket-footer">
+              <button className={`nx-submit ${side}`} disabled={!validation.ok || busy || !ready} onClick={submit}>{busy ? "VERIFYING…" : `${side === "buy" ? "BUY" : "SELL"} ${sourceView.instrument}`}<small>{validation.ok ? `Risk ${fmtYen(margin)} at ${leverage}×` : validation.error}</small></button>
+            </footer>
           </aside>
         </main>
 
