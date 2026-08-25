@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Brawl } from "../NeoTokyoUnderworld.jsx";
 import DistrictCampaign from "../game/DistrictCampaign.jsx";
+import BaseCommand from "./BaseCommand.jsx";
 import { RunnerPortrait } from "./CharacterCreator.jsx";
 import {
   LOOT, RARITIES, RARITY_ORDER, SETS, SLOT_ORDER, ItemArt,
@@ -22,6 +23,9 @@ export default function ProgressionHub({
   profile, player = {}, value, onChange, onPlayerChange, onClose,
   onStartRun, onCompleteRun, onEnhanceItem, progressionState, onManageArmory,
   onStartAfk, onClaimAfk, onQueueCoop, onLeaveCoop, onClaimCoop, onRefreshProgression,
+  onCreateCoopRoom, onJoinCoopRoom, onListCoopRooms,
+  gridholdState, onRefreshGridhold, onClaimGridholdIncome, onMoveGridholdBuilding,
+  onUpgradeGridholdBuilding, onConstructGridholdBuilding, onFindGridholdOpponents, onAttackGridhold,
   campaignValue, onCampaignChange, onStartCampaign, onCampaignCheckpoint,
   onClaimCampaign, onCalibrateCampaign, onCampaignComplete,
 }) {
@@ -38,6 +42,7 @@ export default function ProgressionHub({
   const [runToken, setRunToken] = useState(null);
   const [drop, setDrop] = useState(null);
   const [afkBattleOpen, setAfkBattleOpen] = useState(false);
+  const [coopBrowserOpen, setCoopBrowserOpen] = useState(false);
   const [, tick] = useState(0);
 
   useEffect(() => {
@@ -172,7 +177,7 @@ export default function ProgressionHub({
       <div className="v2-resources"><span>YEN <b>¥{Number(player.money || 0).toLocaleString()}</b></span><span>SHARDS <b>{inventory.shards}</b></span></div>
       <button onClick={onClose} aria-label="Close progression hub">×</button>
     </header>
-    <nav className="v2-tabs progression-tabs">{[["journey","Journey"],["character","Character"],["vault","Inventory"],["enhance","Forge"]].map(([id,label]) => <button key={id} className={tab === id ? "active" : ""} onClick={() => { setTab(id); if (id !== "enhance") setSelectedId(null); }}>{label}{id === "character" && Number(player.statPoints || 0) > 0 && <i>{player.statPoints}</i>}{id === "vault" && <i>{inventory.owned.length}</i>}</button>)}</nav>
+    <nav className="v2-tabs progression-tabs">{[["journey","Journey"],["character","Character"],["vault","Inventory"],["enhance","Forge"],["base","Gridhold"]].map(([id,label]) => <button key={id} className={tab === id ? "active" : ""} onClick={() => { setTab(id); if (id !== "enhance") setSelectedId(null); }}>{label}{id === "character" && Number(player.statPoints || 0) > 0 && <i>{player.statPoints}</i>}{id === "vault" && <i>{inventory.owned.length}</i>}</button>)}</nav>
     {notice && <button className="hub-notice" onClick={() => setNotice("")}>{notice}<b>×</b></button>}
 
     {tab === "journey" && !campaignDone && <DistrictCampaign profile={profile} value={campaignValue} onChange={onCampaignChange} onBegin={onStartCampaign} onCheckpoint={onCampaignCheckpoint} onClaim={onClaimCampaign} onCalibrate={onCalibrateCampaign} onComplete={onCampaignComplete} onExit={() => setTab("character")}/>} 
@@ -186,7 +191,7 @@ export default function ProgressionHub({
         <header><div><small>SELECTED OPERATION · LV {selectedDungeon.level}</small><h2>{selectedDungeon.name}</h2><p>Target: {selectedDungeon.boss} · {selectedDungeon.rarity} loot</p></div><div className="cp-gate"><span>YOUR CP <b>{combatPower.toLocaleString()}</b></span><span>SOLO <b>{selectedDungeon.cp.toLocaleString()}</b></span><span>CO-OP <b>{Math.ceil(selectedDungeon.cp*.75).toLocaleString()}</b></span></div></header>
         <div className="operation-modes">
           <article className="afk-mode-card"><small>AFK AUTO-BATTLE</small><h3>{afk ? "Horde battle active" : "Choose a grind zone"}</h3>{afk ? <><p>Your runner is visibly fighting waves in {DUNGEONS.find((d) => d.id === afk.dungeonId)?.name || afk.dungeonId}. Rewards stack for up to 8 hours.</p><button className="watch-battle" onClick={openAfkBattle}>Watch auto-battle</button></> : <><p>Select any unlocked dungeon, preview its horde and rewards, then watch your runner auto-fight.</p><button disabled={busy || !onStartAfk} onClick={openAfkBattle}>Choose location</button></>}</article>
-          <article className="coop-card"><small>2–3 RUNNER CO-OP</small><h3>Power-Link Expedition</h3>{party ? <><p>{party.state === "waiting" ? "Waiting for enough combined party power." : party.state === "active" ? `Expedition completes at ${formatTime(party.completes_at)}.` : "Expedition complete."}</p><div className="party-roster">{(party.roster || []).map((member) => <span key={member.userId}><b>{member.name}</b>{Number(member.cp).toLocaleString()} CP</span>)}</div>{party.state === "waiting" ? <button onClick={() => act(onLeaveCoop,"Left co-op queue")}>Leave queue</button> : <button disabled={!coopReady || busy} onClick={() => act(onClaimCoop,"Co-op rewards claimed")}>{coopReady ? "Claim team loot" : "Expedition active"}</button>}</> : <><p>Enter below solo CP. The team’s combined power must meet the full requirement.</p><button disabled={!dungeonAccess(selectedDungeon,{level:player.level,cp:combatPower},"coop").unlocked || busy || !onQueueCoop} onClick={() => act(() => onQueueCoop(selectedDungeon.id),"Co-op queue joined")}>Find co-op team</button></>}</article>
+          <article className="coop-card"><small>2–3 RUNNER CO-OP</small><h3>Power-Link Expedition</h3>{party ? <><p>{party.state === "waiting" ? "Room is open. Share its code or wait for Quick Match runners." : party.state === "active" ? `Expedition completes at ${formatTime(party.completes_at)}.` : "Expedition complete."}</p>{party.room_code&&<div className="coop-room-code"><small>ROOM CODE</small><b>{party.room_code}</b></div>}<div className="party-roster">{(party.roster || []).map((member) => <span key={member.userId}><b>{member.name}</b>{Number(member.cp).toLocaleString()} CP</span>)}</div>{party.state === "waiting" ? <><button onClick={()=>setCoopBrowserOpen(true)}>Open room lobby</button><button onClick={() => act(onLeaveCoop,"Left co-op room")}>Leave room</button></> : <button disabled={!coopReady || busy} onClick={() => act(onClaimCoop,"Co-op rewards claimed")}>{coopReady ? "Claim team loot" : "Expedition active"}</button>}</> : <><p>Quick Match fills a public room. Or create a room and share its code with friends.</p><div className="coop-actions"><button disabled={!dungeonAccess(selectedDungeon,{level:player.level,cp:combatPower},"coop").unlocked || busy || !onQueueCoop} onClick={() => act(() => onQueueCoop(selectedDungeon.id),"Quick Match started")}>Quick Match</button><button disabled={busy||!onCreateCoopRoom} onClick={()=>act(()=>onCreateCoopRoom(selectedDungeon.id,"public"),"Co-op room created")}>Create Room</button><button disabled={!onListCoopRooms} onClick={()=>setCoopBrowserOpen(true)}>Browse Rooms</button></div></>}</article>
           <article><small>ACTIVE PLAY</small><h3>Manual District Sweep</h3>{running ? <Brawl stats={{hp:110+(totals.def||0)*2,maxHp:110+(totals.def||0)*2,str:12+(totals.str||0),def:6+(totals.def||0),spd:8+(totals.spd||0),dex:8+(totals.dex||0),crit:2,wPow:0,aPow:0}} enemy={{id:"sentinel",name:selectedDungeon.boss,kanji:"守",lvl:selectedDungeon.level,hp:Math.max(70,selectedDungeon.cp/8),atk:12+selectedDungeon.level*.8}} onEnd={finishRun}/> : <><p>Skill-based combat gives an immediate equipment roll. Start with an accessible operation.</p><button disabled={!dungeonAccess(selectedDungeon,{level:player.level,cp:combatPower},"solo").unlocked || busy || !onStartRun} onClick={startRun}>Enter manually</button></>}</article>
         </div>
       </div>
@@ -206,9 +211,23 @@ export default function ProgressionHub({
 
     {tab === "enhance" && <section className="forge-v3">{!selected||!owned.has(selected.id)?<div className="forge-empty"><h2>Select equipment to enhance</h2><p>Enhancement raises item stats and Combat Power up to +20.</p><button onClick={()=>setTab("vault")}>Choose from inventory</button></div>:<><div className={`forge-art tier-${selected.rarity}`} style={{"--tier":RARITIES[selected.rarity].color}}><ItemArt item={selected} level={inventory.enhancement[selected.id]||0}/><div className="forge-rings"/></div><div className="forge-console"><small style={{color:RARITIES[selected.rarity].color}}>{RARITIES[selected.rarity].label} · {selected.setName}</small><h2>{selected.name}</h2><div className="enhance-level"><span>Enhancement</span><b>+{inventory.enhancement[selected.id]||0}</b><em>/ +20</em></div><div className="enhance-track">{Array.from({length:20},(_,i)=><i key={i} className={i<(inventory.enhancement[selected.id]||0)?"on":""}/>)}</div><p>Failures consume shards but never destroy or downgrade gear. Salvaging enhanced gear returns extra material.</p><button className="enhance-action" disabled={busy||(inventory.enhancement[selected.id]||0)>=20} onClick={enhance}>Enhance · {RARITIES[selected.rarity].enhance*((inventory.enhancement[selected.id]||0)+1)} shards</button></div><div className="forge-list">{ownedItems.map((item)=><button key={item.id} className={selected.id===item.id?"active":""} onClick={()=>setSelectedId(item.id)}><ItemArt item={item} level={inventory.enhancement[item.id]||0} small/><span>{item.name}</span></button>)}</div></>}</section>}
 
+    {tab === "base" && <BaseCommand value={gridholdState} busy={busy} onRefresh={onRefreshGridhold} onClaimIncome={onClaimGridholdIncome} onMove={onMoveGridholdBuilding} onUpgrade={onUpgradeGridholdBuilding} onConstruct={onConstructGridholdBuilding} onFindOpponents={onFindGridholdOpponents} onAttack={onAttackGridhold}/>} 
+
     {afkBattleOpen && <AfkBattleScreen profile={profile} player={player} combatPower={combatPower} selected={selectedDungeon} active={afk} busy={busy} onSelect={(dungeon)=>setSelectedDungeonId(dungeon.id)} onStart={startAfkBattle} onClaim={claimAfkReward} onClose={()=>setAfkBattleOpen(false)}/>} 
+    {coopBrowserOpen && <CoopRoomBrowser dungeon={selectedDungeon} party={party} busy={busy} onList={onListCoopRooms} onCreate={onCreateCoopRoom} onJoin={onJoinCoopRoom} onClose={()=>setCoopBrowserOpen(false)} onDone={async()=>{await onRefreshProgression?.();setCoopBrowserOpen(false)}}/>}
     {drop && <div className="v2-reveal"><div className={`v2-reveal-card tier-${drop.item.rarity}`} style={{"--tier":RARITIES[drop.item.rarity].color}}><small>{drop.duplicate?`DUPLICATE · +${drop.shards} SHARDS`:"NEW EQUIPMENT"}</small><ItemArt item={drop.item}/><h2>{drop.item.name}</h2>{!drop.duplicate&&<><button onClick={()=>{equip(drop.item);setDrop(null);setTab("character")}}>Equip upgrade</button>{inventory.equipped[drop.item.slot]&&<button onClick={()=>{equip(drop.item,true);setDrop(null);setTab("character")}}>Equip + salvage replaced</button>}</>}<button onClick={()=>{setDrop(null);setTab("vault")}}>Keep in inventory</button></div></div>}
   </main>;
+}
+
+function CoopRoomBrowser({ dungeon, party, busy, onList, onCreate, onJoin, onClose, onDone }) {
+  const [rooms,setRooms]=useState([]);
+  const [code,setCode]=useState("");
+  const [loading,setLoading]=useState(false);
+  const [error,setError]=useState("");
+  const load=async()=>{setLoading(true);setError("");try{setRooms(await onList?.(dungeon.id)||[])}catch(problem){setError(problem.message)}finally{setLoading(false)}};
+  useEffect(()=>{load()},[dungeon.id]);
+  const run=async(work)=>{setLoading(true);setError("");try{await work();await onDone()}catch(problem){setError(problem.message)}finally{setLoading(false)}};
+  return <div className="coop-browser-overlay" role="dialog" aria-modal="true" aria-label="Co-op room browser" onPointerDown={(event)=>{if(event.target===event.currentTarget)onClose()}}><section className="coop-browser"><header><div><small>POWER-LINK LOBBY</small><h2>{dungeon.name}</h2></div><button onClick={onClose}>×</button></header>{error&&<p className="coop-error">{error}</p>}{party?<div className="current-coop-room"><small>YOUR ROOM</small><b>{party.room_code||"MATCHING"}</b><span>{party.member_count||party.roster?.length||1}/3 runners</span></div>:<><div className="coop-room-actions"><button disabled={busy||loading} onClick={()=>run(()=>onCreate(dungeon.id,"public"))}>＋ Create public room</button><div><input value={code} maxLength={6} onChange={(event)=>setCode(event.target.value.toUpperCase().replace(/[^A-Z0-9]/g,""))} placeholder="ROOM CODE"/><button disabled={code.length<4||loading} onClick={()=>run(()=>onJoin(code))}>Join</button></div></div><div className="room-list-head"><b>OPEN ROOMS</b><button disabled={loading} onClick={load}>{loading?"Scanning…":"Refresh"}</button></div><div className="coop-room-list">{!loading&&!rooms.length&&<p>No public rooms yet. Create one and become the leader.</p>}{rooms.map((room)=><button key={room.roomCode} disabled={room.memberCount>=3} onClick={()=>run(()=>onJoin(room.roomCode))}><span><b>{room.leader}</b><small>{room.roomCode} · {room.memberCount}/3 runners</small></span><em>{Number(room.combinedCp||0).toLocaleString()} CP</em></button>)}</div></>}</section></div>;
 }
 
 function ItemInspector({ item, inventory, onClose, onEquip, onEquipRecycle, onEnhance, onSalvage, onSell }) {
