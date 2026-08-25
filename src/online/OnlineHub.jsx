@@ -5,7 +5,7 @@ import { Capacitor } from "@capacitor/core";
 import CharacterCreation from "../game/CharacterCreation.jsx";
 import { onlineConfigured, supabase } from "./supabase.js";
 import AppearanceEditor, { RunnerPortrait } from "./CharacterCreator.jsx";
-import Inventory, { getArmoryBonuses, normalizeInventory } from "./Inventory.jsx";
+import Inventory, { getArmoryBonuses, normalizeInventory } from "./ProgressionHub.jsx";
 import TradingTerminal from "../trading/TradingTerminal.jsx";
 import { migrateAccountSave, SAVE_KEY, serializeAccountSave } from "./accountSave.js";
 import { validateRunnerIdentity } from "./progressionRules.js";
@@ -34,6 +34,8 @@ export default function OnlineHub({ children }) {
   const [inventoryState, setInventoryState] = useState(null);
   const [accountSave, setAccountSave] = useState(null);
   const [armoryAuthority, setArmoryAuthority] = useState(false);
+  const [progressionAuthority, setProgressionAuthority] = useState(false);
+  const [progressionState, setProgressionState] = useState(null);
   const [campaignAuthority, setCampaignAuthority] = useState(false);
   const [campaignProgress, setCampaignProgress] = useState({ serverState: "not_started", serverStage: 0 });
   const [busy, setBusy] = useState(false);
@@ -81,7 +83,7 @@ export default function OnlineHub({ children }) {
     let appUrlListener;
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setBooting(false); });
     const { data: auth } = supabase.auth.onAuthStateChange((_event, next) => {
-      if (!next?.user) { window.storage.setUser(null); accountRef.current = null; setAccountSave(null); setArmoryAuthority(false); setCampaignAuthority(false); setWalletAuthority(false); setWalletBalance(null); setCampaignProgress({ serverState: "not_started", serverStage: 0 }); setAccountReady(false); setCharacterProfile(null); setEditingCharacter(false); setInventoryOpen(false); setExchangeOpen(false); setInventoryState(null); }
+      if (!next?.user) { window.storage.setUser(null); accountRef.current = null; setAccountSave(null); setArmoryAuthority(false); setProgressionAuthority(false); setProgressionState(null); setCampaignAuthority(false); setWalletAuthority(false); setWalletBalance(null); setCampaignProgress({ serverState: "not_started", serverStage: 0 }); setAccountReady(false); setCharacterProfile(null); setEditingCharacter(false); setInventoryOpen(false); setExchangeOpen(false); setInventoryState(null); }
       setSession(next); setBooting(false);
     });
     if (Capacitor.isNativePlatform()) {
@@ -124,6 +126,9 @@ export default function OnlineHub({ children }) {
       const { data: serverArmory, error: armoryError } = await supabase.rpc("get_armory_state");
       if (!armoryError && serverArmory) { nextSave.armory = normalizeInventory(serverArmory); setArmoryAuthority(true); }
       else setArmoryAuthority(false);
+      const { data: serverProgression, error: progressionError } = await supabase.rpc("get_my_progression_state");
+      if (!progressionError && serverProgression) { setProgressionState(serverProgression); setProgressionAuthority(true); }
+      else { setProgressionState(null); setProgressionAuthority(false); }
       const localCampaign = nextSave.meta?.districtOne || {};
       let nextCampaign = { ...localCampaign, serverState: localCampaign.serverState || "not_started", serverStage: localCampaign.serverStage || 0 };
       const { data: serverCampaign, error: campaignError } = await supabase.rpc("get_my_campaign_progress");
@@ -380,6 +385,51 @@ export default function OnlineHub({ children }) {
     return data;
   }, [armoryAuthority]);
 
+  const refreshProgression = useCallback(async () => {
+    if (!progressionAuthority) return null;
+    const { data, error } = await supabase.rpc("get_my_progression_state");
+    if (error) throw error;
+    setProgressionState(data);
+    return data;
+  }, [progressionAuthority]);
+
+  const manageArmory = useCallback(async (equipped, itemIds = [], mode = "equip") => {
+    if (!progressionAuthority) throw new Error("Run the Progression Hub migration in Supabase first");
+    const { data, error } = await supabase.rpc("manage_my_armory", { p_equipped: equipped, p_item_ids: itemIds, p_mode: mode });
+    if (error) throw error;
+    const nextArmory = normalizeInventory(data?.state || inventoryState);
+    setInventoryState(nextArmory);
+    const patch = { armory: nextArmory };
+    if (data?.balance != null && accountRef.current) {
+      const balance = Math.max(0, Number(data.balance) || 0);
+      patch.core = { ...(accountRef.current.core || {}), money: balance };
+      setWalletBalance(balance);
+    }
+    await commitSections(patch);
+    await refreshProgression();
+    setStatus(mode === "salvage" ? `Recovered ${data?.shards || 0} Nano Shards` : mode === "sell" ? `Sold gear for ¥${Number(data?.yen || 0).toLocaleString()}` : "Best loadout equipped");
+    return { ...data, state: nextArmory };
+  }, [commitSections, inventoryState, progressionAuthority, refreshProgression]);
+
+  const runProgressionAction = useCallback(async (rpc, args = {}) => {
+    if (!progressionAuthority) throw new Error("Run the Progression Hub migration in Supabase first");
+    const { data, error } = await supabase.rpc(rpc, args);
+    if (error) throw error;
+    if (data?.state) {
+      const nextArmory = normalizeInventory(data.state);
+      setInventoryState(nextArmory);
+      await commitSections({ armory: nextArmory });
+    }
+    await refreshProgression();
+    return data;
+  }, [commitSections, progressionAuthority, refreshProgression]);
+
+  const startAfkDungeon = useCallback((dungeonId) => runProgressionAction("start_afk_dungeon", { p_dungeon_id: dungeonId }), [runProgressionAction]);
+  const claimAfkDungeon = useCallback(() => runProgressionAction("claim_afk_dungeon"), [runProgressionAction]);
+  const queueCoopDungeon = useCallback((dungeonId) => runProgressionAction("queue_coop_dungeon", { p_dungeon_id: dungeonId }), [runProgressionAction]);
+  const leaveCoopDungeon = useCallback(() => runProgressionAction("leave_coop_dungeon"), [runProgressionAction]);
+  const claimCoopDungeon = useCallback(() => runProgressionAction("claim_coop_dungeon"), [runProgressionAction]);
+
   const armoryBonuses = useMemo(() => getArmoryBonuses(inventoryState, characterProfile), [inventoryState, characterProfile]);
 
   if (!onlineConfigured) return (
@@ -420,7 +470,7 @@ export default function OnlineHub({ children }) {
         walletBalance,
       }) : children}
       <TradingTerminal open={exchangeOpen} balance={walletBalance ?? accountSave?.core?.money ?? 0} onClose={() => setExchangeOpen(false)} onWalletChange={acceptExchangeBalance} />
-      {inventoryOpen && <Inventory profile={characterProfile} value={inventoryState} onChange={saveInventory} onClose={() => setInventoryOpen(false)} onStartRun={armoryAuthority ? startDistrictRun : null} onCompleteRun={armoryAuthority ? completeDistrictRun : null} onSaveLoadout={armoryAuthority ? saveArmoryLoadout : null} onEnhanceItem={armoryAuthority ? enhanceArmoryItem : null} campaignValue={campaignProgress} onCampaignChange={saveCampaign} onStartCampaign={startDistrictOne} onCampaignCheckpoint={advanceDistrictOne} onClaimCampaign={claimDistrictOne} onCalibrateCampaign={armoryAuthority ? enhanceArmoryItem : null} onCampaignComplete={completeCampaign} />}
+      {inventoryOpen && <Inventory profile={characterProfile} player={accountSave?.core || {}} value={inventoryState} onChange={saveInventory} onPlayerChange={saveCore} onClose={() => setInventoryOpen(false)} onStartRun={armoryAuthority ? startDistrictRun : null} onCompleteRun={armoryAuthority ? completeDistrictRun : null} onSaveLoadout={armoryAuthority ? saveArmoryLoadout : null} onEnhanceItem={armoryAuthority ? enhanceArmoryItem : null} progressionState={progressionState} onManageArmory={progressionAuthority ? manageArmory : null} onStartAfk={progressionAuthority ? startAfkDungeon : null} onClaimAfk={progressionAuthority ? claimAfkDungeon : null} onQueueCoop={progressionAuthority ? queueCoopDungeon : null} onLeaveCoop={progressionAuthority ? leaveCoopDungeon : null} onClaimCoop={progressionAuthority ? claimCoopDungeon : null} onRefreshProgression={progressionAuthority ? refreshProgression : null} campaignValue={campaignProgress} onCampaignChange={saveCampaign} onStartCampaign={startDistrictOne} onCampaignCheckpoint={advanceDistrictOne} onClaimCampaign={claimDistrictOne} onCalibrateCampaign={armoryAuthority ? enhanceArmoryItem : null} onCampaignComplete={completeCampaign} />}
       <button className="online-orb" onClick={() => setOpen((v) => !v)} aria-label="Open online hub">
         <RunnerPortrait profile={characterProfile} compact />
         <i className={user ? "online" : ""} />
