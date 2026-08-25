@@ -7,7 +7,7 @@ import {
   getArmoryBonuses, normalizeInventory,
 } from "./Inventory.jsx";
 import {
-  DUNGEONS, calculateCombatPower, chooseBestLoadout, dungeonAccess,
+  DUNGEONS, afkBattleSnapshot, calculateCombatPower, chooseBestLoadout, dungeonAccess,
   itemCombatPower, progressionObjectives, salvageValue, saleValue,
 } from "./progressionHubRules.js";
 import "./inventory.css";
@@ -27,7 +27,7 @@ export default function ProgressionHub({
 }) {
   const inventory = normalizeInventory(value);
   const [tab, setTab] = useState("journey");
-  const [selectedId, setSelectedId] = useState(inventory.owned[0] || null);
+  const [selectedId, setSelectedId] = useState(null);
   const [slotFilter, setSlotFilter] = useState("all");
   const [rarityFilter, setRarityFilter] = useState("all");
   const [selectedDungeonId, setSelectedDungeonId] = useState("street-drain");
@@ -37,12 +37,23 @@ export default function ProgressionHub({
   const [running, setRunning] = useState(false);
   const [runToken, setRunToken] = useState(null);
   const [drop, setDrop] = useState(null);
+  const [afkBattleOpen, setAfkBattleOpen] = useState(false);
   const [, tick] = useState(0);
 
   useEffect(() => {
     const timer = setInterval(() => tick((n) => n + 1), 30000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const dismiss = (event) => {
+      if (event.key !== "Escape") return;
+      if (selectedId) setSelectedId(null);
+      else if (afkBattleOpen) setAfkBattleOpen(false);
+    };
+    window.addEventListener("keydown", dismiss);
+    return () => window.removeEventListener("keydown", dismiss);
+  }, [selectedId, afkBattleOpen]);
 
   const ownedItems = useMemo(() => inventory.owned.map(byId).filter(Boolean), [inventory.owned]);
   const owned = useMemo(() => new Set(inventory.owned), [inventory.owned]);
@@ -135,6 +146,22 @@ export default function ProgressionHub({
     setRunToken(null); setRunning(false); await onRefreshProgression?.();
   });
 
+  const openAfkBattle = () => setAfkBattleOpen(true);
+  const startAfkBattle = (dungeon) => act(async () => {
+    if (!onStartAfk) throw new Error("AFK service is not ready");
+    await onStartAfk(dungeon.id);
+    setSelectedDungeonId(dungeon.id);
+    setAfkBattleOpen(true);
+  }, `${dungeon.name} auto-battle started`);
+  const claimAfkReward = () => act(async () => {
+    if (!onClaimAfk) throw new Error("AFK service is not ready");
+    const result = await onClaimAfk();
+    const item = byId(result?.drop?.id);
+    if (item) { setSelectedId(null); setDrop({ item, duplicate: result.drop?.duplicate, shards: result.drop?.shards || 0 }); }
+    setAfkBattleOpen(false);
+    return result;
+  }, "AFK rewards claimed");
+
   const routeObjective = () => setTab(nextObjective.route === "enhance" ? "enhance" : nextObjective.route);
   const selectDungeon = (dungeon) => { setSelectedDungeonId(dungeon.id); document.querySelector(".dungeon-command")?.scrollIntoView({ behavior: "smooth", block: "center" }); };
 
@@ -145,7 +172,7 @@ export default function ProgressionHub({
       <div className="v2-resources"><span>YEN <b>¥{Number(player.money || 0).toLocaleString()}</b></span><span>SHARDS <b>{inventory.shards}</b></span></div>
       <button onClick={onClose} aria-label="Close progression hub">×</button>
     </header>
-    <nav className="v2-tabs progression-tabs">{[["journey","Journey"],["character","Character"],["vault","Inventory"],["enhance","Forge"]].map(([id,label]) => <button key={id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}>{label}{id === "character" && Number(player.statPoints || 0) > 0 && <i>{player.statPoints}</i>}{id === "vault" && <i>{inventory.owned.length}</i>}</button>)}</nav>
+    <nav className="v2-tabs progression-tabs">{[["journey","Journey"],["character","Character"],["vault","Inventory"],["enhance","Forge"]].map(([id,label]) => <button key={id} className={tab === id ? "active" : ""} onClick={() => { setTab(id); if (id !== "enhance") setSelectedId(null); }}>{label}{id === "character" && Number(player.statPoints || 0) > 0 && <i>{player.statPoints}</i>}{id === "vault" && <i>{inventory.owned.length}</i>}</button>)}</nav>
     {notice && <button className="hub-notice" onClick={() => setNotice("")}>{notice}<b>×</b></button>}
 
     {tab === "journey" && !campaignDone && <DistrictCampaign profile={profile} value={campaignValue} onChange={onCampaignChange} onBegin={onStartCampaign} onCheckpoint={onCampaignCheckpoint} onClaim={onClaimCampaign} onCalibrate={onCalibrateCampaign} onComplete={onCampaignComplete} onExit={() => setTab("character")}/>} 
@@ -158,7 +185,7 @@ export default function ProgressionHub({
       <div className="dungeon-command">
         <header><div><small>SELECTED OPERATION · LV {selectedDungeon.level}</small><h2>{selectedDungeon.name}</h2><p>Target: {selectedDungeon.boss} · {selectedDungeon.rarity} loot</p></div><div className="cp-gate"><span>YOUR CP <b>{combatPower.toLocaleString()}</b></span><span>SOLO <b>{selectedDungeon.cp.toLocaleString()}</b></span><span>CO-OP <b>{Math.ceil(selectedDungeon.cp*.75).toLocaleString()}</b></span></div></header>
         <div className="operation-modes">
-          <article><small>AFK GRIND</small><h3>Background Sweep</h3>{afk ? <><p>Running {DUNGEONS.find((d) => d.id === afk.dungeonId)?.name || afk.dungeonId} since {formatTime(afk.startedAt)}. Rewards stack for up to 8 hours.</p><button disabled={!afkReady || busy} onClick={() => act(onClaimAfk, "AFK rewards claimed")}>{afkReady ? "Claim loot" : "Ready after 10 minutes"}</button></> : <><p>Earn shards and one equipment roll while away. Higher levels improve rarity access.</p><button disabled={!dungeonAccess(selectedDungeon,{level:player.level,cp:combatPower},"solo").unlocked || busy || !onStartAfk} onClick={() => act(() => onStartAfk(selectedDungeon.id), `${selectedDungeon.name} AFK grind started`)}>Start AFK grind</button></>}</article>
+          <article className="afk-mode-card"><small>AFK AUTO-BATTLE</small><h3>{afk ? "Horde battle active" : "Choose a grind zone"}</h3>{afk ? <><p>Your runner is visibly fighting waves in {DUNGEONS.find((d) => d.id === afk.dungeonId)?.name || afk.dungeonId}. Rewards stack for up to 8 hours.</p><button className="watch-battle" onClick={openAfkBattle}>Watch auto-battle</button></> : <><p>Select any unlocked dungeon, preview its horde and rewards, then watch your runner auto-fight.</p><button disabled={busy || !onStartAfk} onClick={openAfkBattle}>Choose location</button></>}</article>
           <article className="coop-card"><small>2–3 RUNNER CO-OP</small><h3>Power-Link Expedition</h3>{party ? <><p>{party.state === "waiting" ? "Waiting for enough combined party power." : party.state === "active" ? `Expedition completes at ${formatTime(party.completes_at)}.` : "Expedition complete."}</p><div className="party-roster">{(party.roster || []).map((member) => <span key={member.userId}><b>{member.name}</b>{Number(member.cp).toLocaleString()} CP</span>)}</div>{party.state === "waiting" ? <button onClick={() => act(onLeaveCoop,"Left co-op queue")}>Leave queue</button> : <button disabled={!coopReady || busy} onClick={() => act(onClaimCoop,"Co-op rewards claimed")}>{coopReady ? "Claim team loot" : "Expedition active"}</button>}</> : <><p>Enter below solo CP. The team’s combined power must meet the full requirement.</p><button disabled={!dungeonAccess(selectedDungeon,{level:player.level,cp:combatPower},"coop").unlocked || busy || !onQueueCoop} onClick={() => act(() => onQueueCoop(selectedDungeon.id),"Co-op queue joined")}>Find co-op team</button></>}</article>
           <article><small>ACTIVE PLAY</small><h3>Manual District Sweep</h3>{running ? <Brawl stats={{hp:110+(totals.def||0)*2,maxHp:110+(totals.def||0)*2,str:12+(totals.str||0),def:6+(totals.def||0),spd:8+(totals.spd||0),dex:8+(totals.dex||0),crit:2,wPow:0,aPow:0}} enemy={{id:"sentinel",name:selectedDungeon.boss,kanji:"守",lvl:selectedDungeon.level,hp:Math.max(70,selectedDungeon.cp/8),atk:12+selectedDungeon.level*.8}} onEnd={finishRun}/> : <><p>Skill-based combat gives an immediate equipment roll. Start with an accessible operation.</p><button disabled={!dungeonAccess(selectedDungeon,{level:player.level,cp:combatPower},"solo").unlocked || busy || !onStartRun} onClick={startRun}>Enter manually</button></>}</article>
         </div>
@@ -174,20 +201,63 @@ export default function ProgressionHub({
     {tab === "vault" && <section className="vault-v3">
       <div className="inventory-toolbar"><div><b>{inventory.owned.length}/200 ITEMS</b><span>{unequippedIds.length} unequipped</span></div><button disabled={!canImprove||busy} onClick={equipBest}>⚡ Best Equip</button><button className={confirmAction==="salvage"?"confirm":""} disabled={!unequippedIds.length||busy} onClick={() => bulkAction("salvage")}>⚙ Salvage Unequipped</button><button className={confirmAction==="sell"?"confirm sell":"sell"} disabled={!unequippedIds.length||busy} onClick={() => bulkAction("sell")}>¥ Sell Unequipped</button></div>
       <div className="v2-filters"><div>{["all",...SLOT_ORDER].map((slot)=><button key={slot} className={slotFilter===slot?"active":""} onClick={()=>setSlotFilter(slot)}>{slot}</button>)}</div><div>{["all",...RARITY_ORDER].map((rarity)=><button key={rarity} className={rarityFilter===rarity?"active":""} onClick={()=>setRarityFilter(rarity)}>{rarity}</button>)}</div></div>
-      {!ownedItems.length ? <div className="empty-vault"><h2>No equipment yet</h2><p>Open Journey and clear District One to earn your first item.</p><button onClick={()=>setTab("journey")}>Open Journey</button></div> : <div className="inventory-workspace"><div className="v2-grid">{filtered.map((item)=>{ const equipped=inventory.equipped[item.slot]===item.id; const power=itemCombatPower(item,inventory.enhancement[item.id]||0); return <button key={item.id} className={`v2-card tier-${item.rarity} ${selectedId===item.id?"selected":""} ${equipped?"equipped":""}`} style={{"--tier":RARITIES[item.rarity].color}} onClick={()=>setSelectedId(item.id)}><ItemArt item={item} level={inventory.enhancement[item.id]||0}/><b>{item.name}</b><span>{power} CP {equipped?"· EQUIPPED":""}</span></button>})}</div>{selected&&owned.has(selected.id)&&<ItemInspector item={selected} inventory={inventory} onEquip={()=>equip(selected)} onEquipRecycle={()=>equip(selected,true)} onEnhance={()=>setTab("enhance")} onSalvage={()=>act(()=>saveLoadout(inventory.equipped,[selected.id],"salvage"),"Item salvaged")} onSell={()=>act(()=>saveLoadout(inventory.equipped,[selected.id],"sell"),"Item sold")}/>}</div>}
+      {!ownedItems.length ? <div className="empty-vault"><h2>No equipment yet</h2><p>Open Journey and clear District One to earn your first item.</p><button onClick={()=>setTab("journey")}>Open Journey</button></div> : <div className="inventory-workspace"><div className="v2-grid">{filtered.map((item)=>{ const equipped=inventory.equipped[item.slot]===item.id; const power=itemCombatPower(item,inventory.enhancement[item.id]||0); return <button key={item.id} className={`v2-card tier-${item.rarity} ${selectedId===item.id?"selected":""} ${equipped?"equipped":""}`} style={{"--tier":RARITIES[item.rarity].color}} onClick={()=>setSelectedId((current)=>current===item.id?null:item.id)}><ItemArt item={item} level={inventory.enhancement[item.id]||0}/><b>{item.name}</b><span>{power} CP {equipped?"· EQUIPPED":""}</span></button>})}</div>{selected&&owned.has(selected.id)&&<div className="item-inspector-layer" onPointerDown={(event)=>{if(event.target===event.currentTarget)setSelectedId(null)}}><ItemInspector item={selected} inventory={inventory} onClose={()=>setSelectedId(null)} onEquip={()=>equip(selected)} onEquipRecycle={()=>equip(selected,true)} onEnhance={()=>setTab("enhance")} onSalvage={()=>act(()=>saveLoadout(inventory.equipped,[selected.id],"salvage"),"Item salvaged")} onSell={()=>act(()=>saveLoadout(inventory.equipped,[selected.id],"sell"),"Item sold")}/></div>}</div>}
     </section>}
 
     {tab === "enhance" && <section className="forge-v3">{!selected||!owned.has(selected.id)?<div className="forge-empty"><h2>Select equipment to enhance</h2><p>Enhancement raises item stats and Combat Power up to +20.</p><button onClick={()=>setTab("vault")}>Choose from inventory</button></div>:<><div className={`forge-art tier-${selected.rarity}`} style={{"--tier":RARITIES[selected.rarity].color}}><ItemArt item={selected} level={inventory.enhancement[selected.id]||0}/><div className="forge-rings"/></div><div className="forge-console"><small style={{color:RARITIES[selected.rarity].color}}>{RARITIES[selected.rarity].label} · {selected.setName}</small><h2>{selected.name}</h2><div className="enhance-level"><span>Enhancement</span><b>+{inventory.enhancement[selected.id]||0}</b><em>/ +20</em></div><div className="enhance-track">{Array.from({length:20},(_,i)=><i key={i} className={i<(inventory.enhancement[selected.id]||0)?"on":""}/>)}</div><p>Failures consume shards but never destroy or downgrade gear. Salvaging enhanced gear returns extra material.</p><button className="enhance-action" disabled={busy||(inventory.enhancement[selected.id]||0)>=20} onClick={enhance}>Enhance · {RARITIES[selected.rarity].enhance*((inventory.enhancement[selected.id]||0)+1)} shards</button></div><div className="forge-list">{ownedItems.map((item)=><button key={item.id} className={selected.id===item.id?"active":""} onClick={()=>setSelectedId(item.id)}><ItemArt item={item} level={inventory.enhancement[item.id]||0} small/><span>{item.name}</span></button>)}</div></>}</section>}
 
+    {afkBattleOpen && <AfkBattleScreen profile={profile} player={player} combatPower={combatPower} selected={selectedDungeon} active={afk} busy={busy} onSelect={(dungeon)=>setSelectedDungeonId(dungeon.id)} onStart={startAfkBattle} onClaim={claimAfkReward} onClose={()=>setAfkBattleOpen(false)}/>} 
     {drop && <div className="v2-reveal"><div className={`v2-reveal-card tier-${drop.item.rarity}`} style={{"--tier":RARITIES[drop.item.rarity].color}}><small>{drop.duplicate?`DUPLICATE · +${drop.shards} SHARDS`:"NEW EQUIPMENT"}</small><ItemArt item={drop.item}/><h2>{drop.item.name}</h2>{!drop.duplicate&&<><button onClick={()=>{equip(drop.item);setDrop(null);setTab("character")}}>Equip upgrade</button>{inventory.equipped[drop.item.slot]&&<button onClick={()=>{equip(drop.item,true);setDrop(null);setTab("character")}}>Equip + salvage replaced</button>}</>}<button onClick={()=>{setDrop(null);setTab("vault")}}>Keep in inventory</button></div></div>}
   </main>;
 }
 
-function ItemInspector({ item, inventory, onEquip, onEquipRecycle, onEnhance, onSalvage, onSell }) {
+function ItemInspector({ item, inventory, onClose, onEquip, onEquipRecycle, onEnhance, onSalvage, onSell }) {
   const level=inventory.enhancement[item.id]||0;
   const equipped=inventory.equipped[item.slot]===item.id;
   const current=byId(inventory.equipped[item.slot]);
   const power=itemCombatPower(item,level);
   const currentPower=itemCombatPower(current,inventory.enhancement[current?.id]||0);
-  return <aside className="item-inspector"><ItemArt item={item} level={level}/><small style={{color:RARITIES[item.rarity].color}}>{RARITIES[item.rarity].label} · {item.slot}</small><h2>{item.name}</h2><span>{item.setName}</span><div className={`power-compare ${power>currentPower?"upgrade":""}`}><b>{power} CP</b><small>{equipped?"Currently equipped":`${power-currentPower>=0?"+":""}${power-currentPower} vs equipped`}</small></div><p>{item.lore}</p><div className="inspector-actions"><button disabled={equipped} onClick={onEquip}>{equipped?"Equipped":"Equip"}</button>{!equipped&&current&&<button onClick={onEquipRecycle}>Equip + salvage old</button>}<button onClick={onEnhance}>Enhance +{level}</button>{!equipped&&<><button className="danger" onClick={onSalvage}>Salvage · {salvageValue(item,level)} shards</button><button className="sell" onClick={onSell}>Sell · ¥{saleValue(item,level).toLocaleString()}</button></>}</div></aside>;
+  return <aside className="item-inspector" role="dialog" aria-modal="true" aria-label={`${item.name} details`}><button className="inspector-close" onClick={onClose} aria-label="Close item details">×</button><ItemArt item={item} level={level}/><small style={{color:RARITIES[item.rarity].color}}>{RARITIES[item.rarity].label} · {item.slot}</small><h2>{item.name}</h2><span>{item.setName}</span><div className={`power-compare ${power>currentPower?"upgrade":""}`}><b>{power} CP</b><small>{equipped?"Currently equipped":`${power-currentPower>=0?"+":""}${power-currentPower} vs equipped`}</small></div><p>{item.lore}</p><div className="inspector-actions"><button disabled={equipped} onClick={onEquip}>{equipped?"Equipped":"Equip"}</button>{!equipped&&current&&<button onClick={onEquipRecycle}>Equip + salvage old</button>}<button onClick={onEnhance}>Enhance +{level}</button>{!equipped&&<><button className="danger" onClick={onSalvage}>Salvage · {salvageValue(item,level)} shards</button><button className="sell" onClick={onSell}>Sell · ¥{saleValue(item,level).toLocaleString()}</button></>}</div></aside>;
+}
+
+function AfkBattleScreen({ profile, player, combatPower, selected, active, busy, onSelect, onStart, onClaim, onClose }) {
+  const [frame, setFrame] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setFrame((value) => value + 1), 700);
+    return () => clearInterval(timer);
+  }, []);
+  const dungeon = active ? DUNGEONS.find((entry) => entry.id === active.dungeonId) || selected : selected;
+  const started = active ? new Date(active.startedAt).getTime() : Date.now();
+  const snapshot = afkBattleSnapshot({ startedAt: started, dungeonLevel: dungeon.level });
+  const { elapsed, wave, enemyHp, enemiesPerWave } = snapshot;
+  const waveProgress = active ? snapshot.waveProgress : 0;
+  const defeated = active ? snapshot.defeated : 0;
+  const playerHp = active ? 88 + Math.round(Math.sin(frame * .8) * 8) : 100;
+  const ready = active && snapshot.ready;
+  const access = dungeonAccess(dungeon, { level: player.level, cp: combatPower }, "solo");
+  const damage = Math.max(12, Math.round(combatPower / Math.max(6, dungeon.level + 5)) + (frame % 4) * 7);
+  const enemyNames = ["Ward Drone", "Grid Stalker", "Signal Guard", dungeon.boss];
+  const nextRewardMinutes = snapshot.rewardMinutes;
+
+  return <div className="afk-battle-overlay" role="dialog" aria-modal="true" aria-label="AFK auto-battle">
+    <section className="afk-battle-screen">
+      <header><div><small>NEO GRID // AUTONOMOUS OPERATION</small><h2>{active ? "Auto-Battle Live" : "Select Grind Zone"}</h2></div><div className={`afk-live ${active ? "on" : ""}`}><i/>{active ? "FIGHTING" : "READY"}</div><button onClick={onClose} aria-label="Close auto-battle">×</button></header>
+      {!active && <div className="afk-location-strip" aria-label="AFK locations">{DUNGEONS.map((entry) => { const unlocked = dungeonAccess(entry, { level: player.level, cp: combatPower }, "solo").unlocked; return <button key={entry.id} disabled={!unlocked} className={entry.id === selected.id ? "selected" : ""} onClick={() => onSelect(entry)}><small>LV {entry.level}</small><b>{entry.name}</b><span>{entry.cp.toLocaleString()} CP</span></button>; })}</div>}
+      <div className={`afk-arena zone-${Math.min(5, Math.floor(dungeon.level/20))} ${active ? "active" : "preview"}`}>
+        <div className="afk-sky"><i/><i/><i/></div><div className="afk-city"><i/><i/><i/><i/><i/></div>
+        <div className="afk-combat-hud"><div><span>{profile.codename}</span><b>{playerHp}%</b><i><em style={{width:`${playerHp}%`}}/></i></div><strong>WAVE {active ? wave : "—"}</strong><div className="enemy-health"><span>{enemyNames[(wave-1)%enemyNames.length]}</span><b>{active ? enemyHp : 100}%</b><i><em style={{width:`${active ? enemyHp : 100}%`}}/></i></div></div>
+        <div className="afk-runner"><div className="runner-aura"/><RunnerPortrait profile={profile}/><i className="slash-one"/><i className="slash-two"/>{active && <b key={frame}>-{damage}</b>}</div>
+        <div className="enemy-horde">{Array.from({length:enemiesPerWave},(_,index)=><div key={index} className={`horde-unit unit-${index} ${active&&index<Math.floor(waveProgress*enemiesPerWave)?"defeated":""}`}><i>{index===enemiesPerWave-1&&wave%5===0?"王":"影"}</i><b>{index===enemiesPerWave-1&&wave%5===0?dungeon.boss:"Hostile"}</b></div>)}</div>
+        <div className="afk-ground"><i/><i/><i/></div>
+        {active && <div className="battle-callout" key={`call-${frame}`}>{frame%3===0?"CRITICAL":frame%3===1?"CHAIN STRIKE":"AUTO SKILL"}</div>}
+      </div>
+      <div className="afk-readout">
+        <div><small>LOCATION</small><b>{dungeon.name}</b><span>{dungeon.district}</span></div>
+        <div><small>POWER CHECK</small><b className={access.unlocked?"good":"bad"}>{combatPower.toLocaleString()} / {dungeon.cp.toLocaleString()}</b><span>{access.unlocked?"Ready to dominate":"Increase Combat Power"}</span></div>
+        <div><small>HOARD DEFEATED</small><b>{defeated.toLocaleString()}</b><span>{active?`Wave ${wave} in progress`:"Starts when deployed"}</span></div>
+        <div><small>REWARD ACCESS</small><b>{dungeon.rarity}</b><span>~{dungeon.shardsPerHour} shards/hour</span></div>
+      </div>
+      <footer><p>{active ? (ready ? "Loot cache ready. Claiming ends this run and rolls one equipment drop." : `First loot cache in about ${nextRewardMinutes} min. You may close this screen—the battle continues online.`) : `Deploy to ${dungeon.name}. The server owns elapsed time and rewards even when the app is closed.`}</p>{active ? <><button className="afk-secondary" onClick={onClose}>Hide battle · keep grinding</button><button className="afk-primary" disabled={!ready||busy} onClick={onClaim}>{ready?"Claim loot cache":`Claim in ${nextRewardMinutes} min`}</button></> : <button className="afk-primary" disabled={!access.unlocked||busy} onClick={()=>onStart(dungeon)}>{access.unlocked?`Deploy to ${dungeon.name}`:`Need ${access.missingCp.toLocaleString()} more CP`}</button>}</footer>
+    </section>
+  </div>;
 }

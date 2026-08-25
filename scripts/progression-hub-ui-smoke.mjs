@@ -5,8 +5,9 @@ const hub = fs.readFileSync(new URL("../src/online/OnlineHub.jsx", import.meta.u
 
 for (const contract of [
   "Quick Best Equip", "Salvage Unequipped", "Sell Unequipped", "STAT ALLOCATION",
-  "ALL QUESTS + DUNGEONS", "AFK GRIND", "2–3 RUNNER CO-OP", "Power-Link Expedition",
-  "Equip + salvage old", "progressionObjectives", "dungeonAccess",
+  "ALL QUESTS + DUNGEONS", "AFK AUTO-BATTLE", "2–3 RUNNER CO-OP", "Power-Link Expedition",
+  "Equip + salvage old", "progressionObjectives", "dungeonAccess", "item-inspector-layer",
+  "Select Grind Zone", "Watch auto-battle", "Hide battle · keep grinding", "enemy-horde",
 ]) {
   if (!ui.includes(contract)) throw new Error(`Progression Hub UI contract missing: ${contract}`);
 }
