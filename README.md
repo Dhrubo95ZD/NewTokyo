@@ -16,15 +16,15 @@ npm run dev
 3. Run `supabase/20260825_neo_exchange.sql`.
 4. Run `supabase/20260826_neo_exchange_simulator.sql`.
 5. Run `supabase/20260827_progression_hub.sql` to enable Combat Power, equipment recycling, AFK dungeons and co-op expeditions.
-6. Run `supabase/20260828_gridhold_pvp.sql` to enable co-op rooms and server-authoritative Gridhold base PvP.
+6. Run `supabase/20260828_gridhold_pvp.sql` to enable co-op room creation, room codes, browsing and Quick Match. The historical filename is retained so existing installations do not need a replacement migration.
 7. Copy `.env.example` to `.env` and add the project URL and public publishable/anon key.
 8. Enable Google in Supabase Auth and configure the Google OAuth client and redirect URL.
 
-## Gridhold PvP
-
-Gridhold is an original asynchronous sci-fi base mode. Players collect Alloy and Energy Cells, place and upgrade structures on an 8×8 base, scout real player layouts, select an entry tactic and earn rating. The server owns resources, legal placement, battle outcomes, trophies and rewards. Rank milestones unlock neutral titles and futuristic base decorations.
-
 Co-op supports Quick Match, public room browsing and shareable room codes. A room starts when its combined runner power satisfies the dungeon requirement.
+
+## Combat Mastery
+
+Mastery is a dedicated main-navigation progression screen with Vanguard, Pathfinder and Engineer branches. Players gain a point every two levels and invest in permanent combat, survival, loot and XP upgrades. The selected ranks are stored in the player's Google-account cloud save and apply directly to Combat Power and manual combat.
 
 The app requires a verified Google session. Progress, inventory, wallet, chat and rankings are account-owned; a different Google account receives a different character.
 

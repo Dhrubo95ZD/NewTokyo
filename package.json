@@ -11,8 +11,9 @@
     "test:campaign": "node scripts/district-campaign-smoke.mjs",
     "test:combat": "node scripts/reactive-combat-smoke.mjs",
     "test:trading": "node scripts/trading-rules-smoke.mjs && node scripts/exchange-simulator-contract-smoke.mjs && node scripts/trading-ui-contract-smoke.mjs",
-    "test:base": "node scripts/base-building-smoke.mjs && node scripts/gridhold-server-contract-smoke.mjs && node scripts/gridhold-ui-contract-smoke.mjs",
-    "test": "npm run test:ichi && npm run test:progression && npm run test:campaign && npm run test:combat && npm run test:trading && npm run test:base",
+    "test:coop": "node scripts/coop-rooms-contract-smoke.mjs",
+    "test:mastery": "node scripts/mastery-smoke.mjs && node scripts/mastery-ui-contract-smoke.mjs",
+    "test": "npm run test:ichi && npm run test:progression && npm run test:campaign && npm run test:combat && npm run test:trading && npm run test:coop && npm run test:mastery",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"
