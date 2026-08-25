@@ -3077,7 +3077,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
               ["shop", "Supplies", "店", "Buy recovery items and gifts."],
               ["items", "Bag", "袋", "Manage consumables and crafting materials."],
               ["forge", "Workshop", "鍛", "Craft field supplies; gear is enhanced in Loadout."],
-              ["exchange", "Neo Exchange", "金", "Trade live XAU/USD with the same yen earned across the city."],
+              ["exchange", "Neo Exchange", "金", "Trade a realistic server-run gold simulation with the same yen earned across the city."],
               ["casino", "Arcade", "遊", "Optional side games and high-risk rewards."],
             ].map(([id, label, kanji, desc]) => <button key={id} className="activity-card" onClick={() => id === "exchange" ? onOpenTrading?.() : setScreen(id)}><span>{kanji}</span><b>{label}</b><small>{desc}</small></button>)}
           </div>

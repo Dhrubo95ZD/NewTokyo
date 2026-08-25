@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {
-  liquidationPrice, normalizeCandle, orderPreview, positionPnl, quoteHealth, validateOrder,
+  liquidationPrice, marketSourceView, normalizeCandle, normalizeQuote, orderPreview, positionPnl, quoteHealth, validateOrder,
 } from "../src/trading/tradingRules.js";
 
 const now = Date.now();
@@ -8,6 +8,14 @@ const live = { price: 2400, source_at: new Date(now - 250).toISOString() };
 assert.equal(quoteHealth(live, now), "live");
 assert.equal(quoteHealth({ ...live, source_at: new Date(now - 4000).toISOString() }, now), "stale");
 assert.equal(quoteHealth(null, now), "offline");
+
+const simulated = { ...live, source_kind: "simulated", source_at: new Date(now - 4000).toISOString() };
+assert.equal(quoteHealth(simulated, now), "live", "the two-second simulator must tolerate scheduler jitter");
+assert.equal(quoteHealth({ ...simulated, source_at: new Date(now - 10000).toISOString() }, now), "stale");
+assert.equal(quoteHealth({ ...simulated, source_at: new Date(now - 20000).toISOString() }, now), "offline");
+assert.equal(marketSourceView(simulated).badge, "SIM");
+assert.equal(marketSourceView({ ...live, source_kind: "live" }).badge, "LIVE");
+assert.equal(normalizeQuote({ price: "2385.12", source_kind: "simulated", spread_bps: "2.25" }).spread_bps, 2.25);
 
 assert.equal(validateOrder({ side: "buy", marginYen: 5000, leverage: 5, availableYen: 9000, quote: live, now }).ok, true);
 assert.equal(validateOrder({ side: "buy", marginYen: 10000, leverage: 5, availableYen: 9000, quote: live, now }).ok, false);

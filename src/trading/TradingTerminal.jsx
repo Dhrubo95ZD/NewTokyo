@@ -3,7 +3,7 @@ import { supabase } from "../online/supabase.js";
 import TradingChart from "./TradingChart.jsx";
 import {
   EXCHANGE_SYMBOL, LEVERAGE_OPTIONS, MIN_MARGIN_YEN, normalizeQuote, orderPreview,
-  positionPnl, quoteAge, quoteHealth, validateOrder,
+  marketSourceView, positionPnl, quoteAge, quoteHealth, validateOrder,
 } from "./tradingRules.js";
 import "./trading-terminal.css";
 
@@ -30,6 +30,7 @@ export default function TradingTerminal({ open, balance = 0, onClose, onWalletCh
   const [quote, setQuote] = useState(null);
   const [candles, setCandles] = useState([]);
   const [positions, setPositions] = useState([]);
+  const [marketEvent, setMarketEvent] = useState(null);
   const [account, setAccount] = useState({ balance: Number(balance) || 0, reserved: 0, realizedPnl: 0 });
   const [timeframe, setTimeframe] = useState("1min");
   const [side, setSide] = useState("buy");
@@ -40,7 +41,7 @@ export default function TradingTerminal({ open, balance = 0, onClose, onWalletCh
   const [stopLoss, setStopLoss] = useState("");
   const [takeProfit, setTakeProfit] = useState("");
   const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState("Connecting to the live gold gateway…");
+  const [notice, setNotice] = useState("Connecting to the Neo Exchange simulation…");
   const [ready, setReady] = useState(false);
   const [clock, setClock] = useState(Date.now());
   const reloadTimer = useRef(null);
@@ -60,26 +61,29 @@ export default function TradingTerminal({ open, balance = 0, onClose, onWalletCh
   }, [balance, onWalletChange]);
 
   const loadMarket = useCallback(async (interval = timeframe) => {
-    const [{ data: quoteData, error: quoteError }, { data: candleData, error: candleError }] = await Promise.all([
-      supabase.from("market_quotes").select("symbol,price,source_at,received_at,sequence,status").eq("symbol", EXCHANGE_SYMBOL).maybeSingle(),
+    const [{ data: quoteData, error: quoteError }, { data: candleData, error: candleError }, { data: eventData, error: eventError }] = await Promise.all([
+      supabase.from("market_quotes").select("symbol,price,source_at,received_at,sequence,status,source_kind,source_name,regime,event_title,spread_bps").eq("symbol", EXCHANGE_SYMBOL).maybeSingle(),
       supabase.from("market_candles").select("bucket_at,open,high,low,close").eq("symbol", EXCHANGE_SYMBOL).eq("interval", interval).order("bucket_at", { ascending: false }).limit(180),
+      supabase.from("market_events").select("id,title,direction,intensity,started_at,ends_at").eq("symbol", EXCHANGE_SYMBOL).gt("ends_at", new Date().toISOString()).order("started_at", { ascending: false }).limit(1).maybeSingle(),
     ]);
     if (quoteError) throw quoteError;
     if (candleError) throw candleError;
+    if (eventError && eventError.code !== "PGRST205") throw eventError;
     setQuote(normalizeQuote(quoteData));
     setCandles((candleData || []).reverse());
+    setMarketEvent(eventData || null);
   }, [timeframe]);
 
   const boot = useCallback(async () => {
-    setReady(false); setNotice("Verifying market gateway…");
+    setReady(false); setNotice("Verifying the market engine…");
     try {
       await Promise.all([loadAccount(), loadMarket()]);
-      setReady(true); setNotice("Live market connected");
+      setReady(true); setNotice("Market engine connected");
     } catch (error) {
       setReady(false);
       setNotice(error?.message?.includes("get_my_exchange_state") || error?.code === "PGRST202"
         ? "Neo Exchange server migration is not installed yet."
-        : `Exchange unavailable: ${error?.message || "gateway not configured"}`);
+        : `Exchange unavailable: ${error?.message || "market engine not configured"}`);
     }
   }, [loadAccount, loadMarket]);
 
@@ -89,12 +93,17 @@ export default function TradingTerminal({ open, balance = 0, onClose, onWalletCh
     const channel = supabase.channel(`neo-exchange-${makeId()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "market_quotes", filter: `symbol=eq.${EXCHANGE_SYMBOL}` }, ({ new: value }) => {
         const next = normalizeQuote(value);
-        if (next) { setQuote(next); setNotice("Live market connected"); }
+        if (next) {
+          setQuote(next);
+          if (!next.event_title) setMarketEvent(null);
+          setNotice(next.source_kind === "simulated" ? "Simulation engine online" : "Licensed market connected");
+        }
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "market_candles", filter: `symbol=eq.${EXCHANGE_SYMBOL}` }, () => {
         clearTimeout(reloadTimer.current); reloadTimer.current = setTimeout(() => loadMarket(), 250);
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "exchange_positions" }, () => loadAccount())
+      .on("postgres_changes", { event: "*", schema: "public", table: "market_events" }, () => loadMarket())
       .subscribe();
     const timer = setInterval(() => setClock(Date.now()), 250);
     return () => { clearInterval(timer); clearTimeout(reloadTimer.current); supabase.removeChannel(channel); };
@@ -109,6 +118,7 @@ export default function TradingTerminal({ open, balance = 0, onClose, onWalletCh
 
   const health = quoteHealth(quote, clock);
   const age = quoteAge(quote, clock);
+  const sourceView = useMemo(() => marketSourceView(quote), [quote]);
   const totalPnl = useMemo(() => positions.reduce((sum, position) => sum + positionPnl(position, quote), 0), [positions, quote]);
   const preview = useMemo(() => orderPreview({ side, marginYen: margin, leverage, quote }), [side, margin, leverage, quote]);
   const validation = validateOrder({ side, marginYen: margin, leverage, availableYen: account.balance, quote, now: clock });
@@ -133,7 +143,7 @@ export default function TradingTerminal({ open, balance = 0, onClose, onWalletCh
   };
 
   const closePosition = async (positionId) => {
-    setBusy(true); setNotice("Closing against the verified live quote…");
+    setBusy(true); setNotice(`Closing against the verified ${sourceView.simulated ? "simulation" : "live"} quote…`);
     const { data, error } = await supabase.rpc("close_my_exchange_position", { p_position_id: positionId, p_client_close_id: makeId() });
     if (error) setNotice(error.message);
     else { setNotice(`Position closed · ${Number(data?.pnlYen) >= 0 ? "+" : ""}${fmtYen(data?.pnlYen)}.`); await loadAccount(); }
@@ -142,31 +152,36 @@ export default function TradingTerminal({ open, balance = 0, onClose, onWalletCh
 
   if (!open) return null;
   return (
-    <div className="nx-overlay" role="dialog" aria-modal="true" aria-label="Neo Exchange live trading terminal">
+    <div className="nx-overlay" role="dialog" aria-modal="true" aria-label="Neo Exchange trading terminal">
       <section className="nx-terminal">
         <header className="nx-head">
-          <div className="nx-brand"><i>金</i><div><small>WARD 09 · LIVE COMMODITIES</small><b>NEO EXCHANGE</b></div></div>
-          <div className={`nx-feed ${health}`}><i />{health === "live" ? `LIVE · ${Math.round(age)}ms` : health === "stale" ? "STALE · ORDERS LOCKED" : "FEED OFFLINE"}</div>
+          <div className="nx-brand"><i>金</i><div><small>{sourceView.desk}</small><b>NEO EXCHANGE</b></div></div>
+          <div className={`nx-feed ${health} ${sourceView.simulated ? "simulated" : ""}`}><i />{health === "live" ? `${sourceView.badge} · ${Math.round(age)}ms` : health === "stale" ? "STALE · ORDERS LOCKED" : "ENGINE OFFLINE"}</div>
           <button className="nx-close" onClick={onClose} aria-label="Close exchange">×</button>
         </header>
 
         <div className="nx-wallet">
           <div><small>AVAILABLE</small><b>{fmtYen(account.balance)}</b></div>
           <div><small>IN POSITIONS</small><b>{fmtYen(account.reserved)}</b></div>
-          <div><small>LIVE P&amp;L</small><b className={totalPnl >= 0 ? "up" : "down"}>{totalPnl >= 0 ? "+" : ""}{fmtYen(totalPnl)}</b></div>
+          <div><small>OPEN P&amp;L</small><b className={totalPnl >= 0 ? "up" : "down"}>{totalPnl >= 0 ? "+" : ""}{fmtYen(totalPnl)}</b></div>
           <div><small>REALIZED</small><b className={account.realizedPnl >= 0 ? "up" : "down"}>{account.realizedPnl >= 0 ? "+" : ""}{fmtYen(account.realizedPnl)}</b></div>
         </div>
 
         <div className="nx-marketbar">
-          <div><span className="nx-gold-dot" /><b>XAU/USD</b><small>Gold · US Dollar</small></div>
+          <div><span className="nx-gold-dot" /><b>{sourceView.instrument}</b><small>{sourceView.subtitle}</small></div>
           <strong className={quote?.price >= candles[candles.length - 1]?.open ? "up" : "down"}>{quote ? fmtPrice(quote.price) : "—"}</strong>
           <nav>{[["1min", "1M"], ["5min", "5M"], ["15min", "15M"], ["1h", "1H"]].map(([value, label]) => <button key={value} className={timeframe === value ? "on" : ""} onClick={() => setTimeframe(value)}>{label}</button>)}</nav>
+        </div>
+        <div className="nx-market-context">
+          <span><small>REGIME</small><b>{String(quote?.regime || "starting").replaceAll("_", " ")}</b></span>
+          <span><small>SPREAD</small><b>{Number(quote?.spread_bps || 0).toFixed(2)} bps</b></span>
+          <span className={marketEvent ? `event ${marketEvent.direction}` : "event"}><small>{marketEvent ? "MARKET EVENT" : "MARKET DESK"}</small><b>{marketEvent?.title || "Monitoring city order flow"}</b></span>
         </div>
 
         <main className="nx-workspace">
           <div className="nx-chart-column">
-            <TradingChart candles={candles} quote={quote} positions={positions} />
-            <div className={`nx-notice ${health}`}>{notice}<span>Provider timestamp is authoritative. No client-generated prices.</span></div>
+            <TradingChart candles={candles} quote={quote} positions={positions} sourceView={sourceView} />
+            <div className={`nx-notice ${health}`}>{notice}<span>{sourceView.authority}</span></div>
           </div>
 
           <aside className={`nx-ticket ${ticketOpen ? "open" : ""}`}>
@@ -179,12 +194,12 @@ export default function TradingTerminal({ open, balance = 0, onClose, onWalletCh
             <div className="nx-preview"><span>Exposure <b>{fmtYen(preview.exposureYen)}</b></span><span>Est. entry <b>{fmtPrice(preview.entryPrice)}</b></span><span>Liquidation <b>{fmtPrice(preview.liquidationPrice)}</b></span></div>
             <button className="nx-advanced-toggle" onClick={() => setAdvanced((value) => !value)}>{advanced ? "Hide protection" : "Add stop-loss / take-profit"}<span>{advanced ? "−" : "+"}</span></button>
             {advanced && <div className="nx-protection"><label>Stop loss<input inputMode="decimal" placeholder="Optional price" value={stopLoss} onChange={(e) => setStopLoss(e.target.value)} /></label><label>Take profit<input inputMode="decimal" placeholder="Optional price" value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} /></label></div>}
-            <button className={`nx-submit ${side}`} disabled={!validation.ok || busy || !ready} onClick={submit}>{busy ? "VERIFYING…" : `${side === "buy" ? "BUY" : "SELL"} XAU/USD`}<small>{validation.ok ? `Risk ${fmtYen(margin)} at ${leverage}×` : validation.error}</small></button>
+            <button className={`nx-submit ${side}`} disabled={!validation.ok || busy || !ready} onClick={submit}>{busy ? "VERIFYING…" : `${side === "buy" ? "BUY" : "SELL"} ${sourceView.instrument}`}<small>{validation.ok ? `Risk ${fmtYen(margin)} at ${leverage}×` : validation.error}</small></button>
           </aside>
         </main>
 
-        <section className="nx-positions"><header><b>OPEN POSITIONS</b><span>{positions.length}</span></header>{positions.length ? positions.map((position) => <PositionRow key={position.id} position={position} quote={quote} busy={busy} onClose={closePosition} />) : <p>No open positions. Your combat earnings are ready when the feed is live.</p>}</section>
-        <button className="nx-mobile-trade" disabled={health !== "live" || !ready} onClick={() => setTicketOpen(true)}>TRADE XAU/USD</button>
+        <section className="nx-positions"><header><b>OPEN POSITIONS</b><span>{positions.length}</span></header>{positions.length ? positions.map((position) => <PositionRow key={position.id} position={position} quote={quote} busy={busy} onClose={closePosition} />) : <p>No open positions. Your city earnings are ready when the market engine is online.</p>}</section>
+        <button className="nx-mobile-trade" disabled={health !== "live" || !ready} onClick={() => setTicketOpen(true)}>TRADE {sourceView.instrument}</button>
       </section>
     </div>
   );

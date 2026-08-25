@@ -3,7 +3,7 @@ import { finiteNumber, normalizeCandle } from "./tradingRules.js";
 
 const compactPrice = (value) => finiteNumber(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-export default function TradingChart({ candles = [], quote = null, positions = [] }) {
+export default function TradingChart({ candles = [], quote = null, positions = [], sourceView = null }) {
   const canvasRef = useRef(null);
   const wrapRef = useRef(null);
   const [size, setSize] = useState({ width: 800, height: 450 });
@@ -62,10 +62,10 @@ export default function TradingChart({ candles = [], quote = null, positions = [
       ctx.fillStyle = "#26324a";
       ctx.font = "800 16px system-ui";
       ctx.textAlign = "center";
-      ctx.fillText("Waiting for verified live candles", width / 2, height / 2 - 5);
+      ctx.fillText(sourceView?.simulated ? "Starting the market simulation" : "Waiting for verified live candles", width / 2, height / 2 - 5);
       ctx.fillStyle = "#778197";
       ctx.font = "12px system-ui";
-      ctx.fillText("Trading stays locked until the gateway is healthy.", width / 2, height / 2 + 19);
+      ctx.fillText(sourceView?.simulated ? "Trading unlocks after the first server ticks." : "Trading stays locked until the gateway is healthy.", width / 2, height / 2 + 19);
       return;
     }
 
@@ -143,7 +143,7 @@ export default function TradingChart({ candles = [], quote = null, positions = [
       ctx.fillStyle = "rgba(36,49,73,.9)"; ctx.fillRect(12, 12, labelWidth, 25);
       ctx.fillStyle = "#fff"; ctx.fillText(label, 21, 28);
     }
-  }, [cursor, positions, quote, series, size]);
+  }, [cursor, positions, quote, series, size, sourceView]);
 
   const move = (event) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -152,8 +152,7 @@ export default function TradingChart({ candles = [], quote = null, positions = [
 
   return (
     <div className="nx-chart" ref={wrapRef}>
-      <canvas ref={canvasRef} onPointerMove={move} onPointerDown={move} onPointerLeave={() => setCursor(null)} aria-label="Live XAU USD candlestick chart" />
+      <canvas ref={canvasRef} onPointerMove={move} onPointerDown={move} onPointerLeave={() => setCursor(null)} aria-label={`${sourceView?.simulated ? "Simulated" : "Live"} XAU USD candlestick chart`} />
     </div>
   );
 }
-
