@@ -10,7 +10,7 @@
     "test:progression": "node scripts/progression-rules-smoke.mjs",
     "test:campaign": "node scripts/district-campaign-smoke.mjs",
     "test:combat": "node scripts/reactive-combat-smoke.mjs",
-    "test:trading": "node scripts/trading-rules-smoke.mjs",
+    "test:trading": "node scripts/trading-rules-smoke.mjs && node scripts/exchange-simulator-contract-smoke.mjs",
     "test": "npm run test:ichi && npm run test:progression && npm run test:campaign && npm run test:combat && npm run test:trading",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
