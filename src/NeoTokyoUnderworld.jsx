@@ -1686,7 +1686,7 @@ const Panel = ({ title, kanji, children }) => (
   </section>
 );
 
-export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses = null, armoryProgress = 0, walletBalance = null, onPlayerChange = null, onOpenArmory = null, onOpenSocial = null, onOpenTrading = null }) {
+export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses = null, armoryProgress = 0, walletBalance = null, onPlayerChange = null, onOpenArmory = null, onOpenMastery = null, onOpenSocial = null, onOpenTrading = null }) {
   const initialPlayerRef = useRef(initialPlayer);
   const [p, setP] = useState(newPlayer);
   const [screen, setScreen] = useState("home");
@@ -3044,7 +3044,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
 
   const NAV = [
     ["home", "City", "都"], ["fights", "Combat", "斬"], ["loadout", "Loadout", "装"],
-    ["activities", "Activities", "路"], ["social", "Social", "網"],
+    ["mastery", "Mastery", "技"], ["activities", "Activities", "路"], ["social", "Social", "網"],
   ];
 
   const screenBody = () => {
@@ -4207,7 +4207,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
         .log-line.bad{border-color:var(--coral);color:var(--coral-deep);background:#FFF0F4}
         .log-line.system{border-color:var(--gold-deep);color:var(--gold-deep);background:#FFF8E8}
         .ntu>nav{position:fixed;bottom:0;left:0;right:0;z-index:60;background:var(--card);border-top:3px solid var(--ink);
-          display:grid;grid-template-columns:repeat(5,1fr);padding:6px max(4px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left));box-shadow:0 -3px 0 rgba(44,34,64,.05)}
+          display:grid;grid-template-columns:repeat(6,1fr);padding:6px max(4px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left));box-shadow:0 -3px 0 rgba(44,34,64,.05)}
         .ntu>nav button{min-height:58px;background:none;border:none;color:var(--ink-faint);font-family:'Nunito';font-size:9.5px;font-weight:800;letter-spacing:.3px;
           text-transform:uppercase;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 2px;touch-action:manipulation}
         .ntu>nav button .nk{font-family:'DotGothic16',monospace;font-size:18px;width:30px;height:30px;line-height:30px;
@@ -4315,7 +4315,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
 
       <nav>
         {NAV.map(([id, label, kanji]) => (
-          <button key={id} className={screen === id ? "on" : ""} onClick={() => { if (id === "loadout") { onOpenArmory?.(); return; } if (id === "social") { onOpenSocial?.(); return; } setScreen(id); setFightLog(null); setScene(null); setJealousy(null); setPendingChoice(null); setSelItem(null); if (brawl) { setBrawl(null); pushLog("You slipped out of the arena.", "info"); } }}>
+          <button key={id} className={screen === id ? "on" : ""} onClick={() => { if (id === "loadout") { onOpenArmory?.(); return; } if (id === "mastery") { onOpenMastery?.(); return; } if (id === "social") { onOpenSocial?.(); return; } setScreen(id); setFightLog(null); setScene(null); setJealousy(null); setPendingChoice(null); setSelItem(null); if (brawl) { setBrawl(null); pushLog("You slipped out of the arena.", "info"); } }}>
             <span className="nk">{kanji}</span>{label}
           </button>
         ))}
