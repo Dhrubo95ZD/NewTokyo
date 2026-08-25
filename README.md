@@ -15,6 +15,7 @@ npm run dev
 2. Run `supabase/20260824_district_one_progression.sql`.
 3. Run `supabase/20260825_neo_exchange.sql`.
 4. Run `supabase/20260826_neo_exchange_simulator.sql`.
+5. Run `supabase/20260827_progression_hub.sql` to enable Combat Power, equipment recycling, AFK dungeons and co-op expeditions.
 5. Copy `.env.example` to `.env` and add the project URL and public publishable/anon key.
 6. Enable Google in Supabase Auth and configure the Google OAuth client and redirect URL.
 
