@@ -28,8 +28,9 @@ npm run dev
 5. Run `supabase/20260827_progression_hub.sql` to enable Combat Power, equipment recycling, AFK dungeons and co-op expeditions.
 6. Run `supabase/20260828_gridhold_pvp.sql` to enable co-op room creation, room codes, browsing and Quick Match. The historical filename is retained so existing installations do not need a replacement migration.
 7. Run `supabase/20260829_raid_specializations.sql` to add specializations, four-slot raid rooms, phased raid actions and optional bot filling. Bot-assisted rooms receive exactly 50% equipment-drop chance and 50% material yield.
-8. Copy `.env.example` to `.env` and add the project URL and public publishable/anon key.
-9. Enable Google in Supabase Auth and configure the Google OAuth client and redirect URL.
+8. Run `supabase/20260830_neo_economy.sql` to add the Auction House, secure escrow, Life Skills, 80 crafting recipes, expanded side-grade sets and Megachip drops.
+9. Copy `.env.example` to `.env` and add the project URL and public publishable/anon key.
+10. Enable Google in Supabase Auth and configure the Google OAuth client and redirect URL.
 
 Co-op supports Quick Match, public room browsing and shareable room codes. A room starts when its combined runner power satisfies the dungeon requirement.
 
