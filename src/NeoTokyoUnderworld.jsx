@@ -3067,7 +3067,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
 
   const NAV = [
     ["home", "City", "都"], ["fights", "Battle", "斬"], ["loadout", "Loadout", "装"],
-    ["economy", "Economy", "環"], ["social", "Social", "網"],
+    ["arcade", "Arcade", "遊"], ["social", "Social", "網"],
   ];
 
   const screenBody = () => {
@@ -3087,6 +3087,21 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
     );
 
     switch (screen) {
+      case "arcade": return (
+        <Panel title="Neon Arcade" kanji="遊">
+          <div className="arcade-hero"><small>WARD 09 // PLAY + TRADE</small><b>One deck. Every side activity.</b><span>Quick-launch games, the Neo Exchange and the player economy without hunting through City menus.</span></div>
+          <div className="arcade-launch-grid">
+            <button className="arcade-launch blackjack" onClick={() => { setBjMode("blackjack"); setScreen("casino"); }}><i>♠</i><span><small>TABLE GAME</small><b>Blackjack</b><em>Hit · stand · double</em></span></button>
+            <button className="arcade-launch ichi" onClick={() => { setBjMode("ichi"); setScreen("casino"); }}><i>一</i><span><small>CARD ARENA</small><b>ICHI</b><em>Four-seat shedding game</em></span></button>
+            <button className="arcade-launch cricket" onClick={() => { setBjMode("cricket"); setScreen("casino"); }}><i>🏏</i><span><small>SKILL GAME</small><b>Street Cricket</b><em>One-over showdown</em></span></button>
+            <button className="arcade-launch slots" onClick={() => { setBjMode("classic"); setScreen("casino"); }}><i>777</i><span><small>ARCADE CLASSICS</small><b>Slots + Coin</b><em>Fast optional games</em></span></button>
+            <button className="arcade-launch exchange featured" onClick={() => onOpenTrading?.()}><i>金</i><span><small>MARKET TERMINAL</small><b>XAU/USD SIM</b><em>Trade with your game yen</em></span><strong>OPEN</strong></button>
+            <button className="arcade-launch auction" onClick={() => onOpenEconomy?.("auction")}><i>競</i><span><small>PLAYER MARKET</small><b>Auction House</b><em>Buy and list equipment</em></span></button>
+            <button className="arcade-launch crafting" onClick={() => onOpenEconomy?.("crafting")}><i>鍛</i><span><small>WORKSHOP</small><b>Crafting</b><em>Build gear and Megachips</em></span></button>
+            <button className="arcade-launch lifeskills" onClick={() => onOpenEconomy?.("lifeskills")}><i>技</i><span><small>PROFESSIONS</small><b>Life Skills</b><em>Gather crafting materials</em></span></button>
+          </div>
+        </Panel>
+      );
       case "activities": return (
         <Panel title="Choose Your Night" kanji="路">
           <p className="flavor">Build your runner through training, work, contracts, relationships and city events. Equipment lives only in Loadout.</p>
@@ -4342,7 +4357,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
 
       <nav>
         {NAV.map(([id, label, kanji]) => (
-          <button key={id} className={screen === id ? "on" : ""} onClick={() => { onNavigate?.(id); if (id === "fights" && onOpenBattle) { onOpenBattle(); return; } if (id === "loadout") { onOpenArmory?.(); return; } if (id === "economy") { onOpenEconomy?.("auction"); return; } if (id === "social") { onOpenSocial?.(); return; } setScreen(id); setFightLog(null); setScene(null); setJealousy(null); setPendingChoice(null); setSelItem(null); if (brawl) { setBrawl(null); pushLog("You slipped out of the arena.", "info"); } }}>
+          <button key={id} className={screen === id || (id === "arcade" && screen === "casino") ? "on" : ""} onClick={() => { onNavigate?.(id); if (id === "fights" && onOpenBattle) { onOpenBattle(); return; } if (id === "loadout") { onOpenArmory?.(); return; } if (id === "social") { onOpenSocial?.(); return; } setScreen(id); setFightLog(null); setScene(null); setJealousy(null); setPendingChoice(null); setSelItem(null); if (brawl) { setBrawl(null); pushLog("You slipped out of the arena.", "info"); } }}>
             <span className="nk">{kanji}</span>{label}
           </button>
         ))}
