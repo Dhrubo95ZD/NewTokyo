@@ -4,7 +4,8 @@ import DistrictCampaign from "../game/DistrictCampaign.jsx";
 import { RunnerPortrait } from "./CharacterCreator.jsx";
 import "./inventory.css";
 
-export const SLOT_ORDER = ["weapon", "helmet", "armor", "boots"];
+export const GEAR_SLOTS = ["weapon", "helmet", "armor", "boots"];
+export const SLOT_ORDER = [...GEAR_SLOTS, "megachip"];
 export const RARITY_ORDER = ["green", "blue", "yellow", "orange", "prismatic"];
 export const RARITIES = {
   green: { label: "Green", color: "#43df72", weight: 60, shard: 4, enhance: 2 },
@@ -25,13 +26,24 @@ export const SETS = [
   { id: "solar-shogun", name: "Solar Shogun", atlas: "/assets/loot-v2/solar-shogun.webp", pieces: ["Sun Nodachi", "Solar Crown", "Shogun Radiance", "Jet Greaves"], two: "+10 Attack", four: "+15 Attack" },
   { id: "glacier-viper", name: "Glacier Viper", atlas: "/assets/loot-v2/glacier-viper.webp", pieces: ["Cryo Chainblade", "Viper Helm", "Frostscale Coat", "Ice Talons"], two: "+8 Defense", four: "+15 Defense" },
   { id: "storm-circuit", name: "Storm Circuit", atlas: "/assets/loot-v2/storm-circuit.webp", pieces: ["Rail Sword", "Racer Helm", "Circuit Armor", "Turbine Boots"], two: "+12 Speed", four: "+18 Speed" },
+  { id: "kinetic-courier", name: "Kinetic Courier", atlas: "/assets/loot-v2/street-ronin.webp", pieces: ["Vector Edge", "Courier Lens", "Slipstream Coat", "Kinetic Treads"], two: "Dash Momentum", four: "Moving attacks build Overdrive" },
+  { id: "signal-bastion", name: "Signal Bastion", atlas: "/assets/loot-v2/neon-sentinel.webp", pieces: ["Ward Cutter", "Signal Crown", "Bastion Shell", "Anchor Boots"], two: "Adaptive Barrier", four: "Guard shares a team shield" },
+  { id: "foundry-breaker", name: "Foundry Breaker", atlas: "/assets/loot-v2/crimson-oni.webp", pieces: ["Impact Maul", "Forge Visor", "Breaker Plate", "Piston Greaves"], two: "Increased stagger", four: "Broken targets take bonus damage" },
+  { id: "aurora-relay", name: "Aurora Relay", atlas: "/assets/loot-v2/ghost-protocol.webp", pieces: ["Relay Blade", "Aurora Scope", "Signal Mantle", "Pulse Steps"], two: "Skill recovery", four: "Technique use empowers allies" },
+  { id: "flux-weaver", name: "Flux Weaver", atlas: "/assets/loot-v2/biohazard-lotus.webp", pieces: ["Flux Needle", "Weaver Mask", "Phase Weave", "Lattice Boots"], two: "Status duration", four: "Status combinations cause Flux Burst" },
+  { id: "crown-circuit", name: "Crown Circuit", atlas: "/assets/loot-v2/storm-circuit.webp", pieces: ["Crown Saber", "Circuit Halo", "Crown Harness", "Royal Drives"], two: "Highest two attributes +8%", four: "Hybrid bonuses are 50% stronger" },
 ];
+export const SET_TAGS = Object.freeze({
+  "street-ronin":"tempo","neon-sentinel":"guard","void-reaver":"assault","crimson-oni":"assault","ghost-protocol":"tech",
+  "chrome-wraith":"guard","biohazard-lotus":"sustain","solar-shogun":"assault","glacier-viper":"control","storm-circuit":"tempo",
+  "kinetic-courier":"tempo","signal-bastion":"guard","foundry-breaker":"control","aurora-relay":"tech","flux-weaver":"sustain","crown-circuit":"hybrid",
+});
 
 const TIER_WORDS = ["Street", "Tuned", "Elite", "Apex", "Prismatic"];
 const SLOT_BASE = { weapon: { attack: 7 }, helmet: { defense: 3, tech: 2 }, armor: { defense: 8 }, boots: { speed: 5, defense: 1 } };
 const TIER_POWER = [1, 1.7, 2.8, 4.5, 7.5];
 
-export const LOOT = SETS.flatMap((set, setIndex) => RARITY_ORDER.flatMap((rarity, rarityIndex) => SLOT_ORDER.map((slot, slotIndex) => ({
+const SET_GEAR = SETS.flatMap((set, setIndex) => RARITY_ORDER.flatMap((rarity, rarityIndex) => GEAR_SLOTS.map((slot, slotIndex) => ({
   id: `${set.id}:${rarity}:${slot}`, setId: set.id, setName: set.name, slot, rarity,
   name: `${TIER_WORDS[rarityIndex]} ${set.pieces[slotIndex]}`, atlas: set.atlas,
   atlasX: slotIndex, atlasY: rarityIndex,
@@ -39,8 +51,30 @@ export const LOOT = SETS.flatMap((set, setIndex) => RARITY_ORDER.flatMap((rarity
   stats: Object.fromEntries(Object.entries(SLOT_BASE[slot]).map(([key, value]) => [key, Math.round(value * TIER_POWER[rarityIndex] * (1 + setIndex * .025))])),
 }))));
 
+export const CHIP_TIERS = [
+  { id:"standard", name:"Standard", rarity:"blue", scale:1 },
+  { id:"prototype", name:"Prototype", rarity:"yellow", scale:2 },
+  { id:"relic", name:"Relic", rarity:"orange", scale:4 },
+  { id:"apex", name:"Apex", rarity:"prismatic", scale:8 },
+];
+const CHIP_FAMILIES = [
+  ["redline", "Redline Matrix", "crit", 8], ["abundance", "Abundance Kernel", "loot", 18],
+  ["bastion", "Bastion Lattice", "defense", 10], ["velocity", "Velocity Loop", "speed", 9],
+  ["overclock", "Overclock Node", "tech", 9], ["assault", "Assault Driver", "attack", 10],
+  ["vital", "Vitality Grid", "hp", 24], ["insight", "Insight Engine", "xp", 14],
+  ["null-clock", "Null Clock", "tech", 7], ["echo", "Echo Relay", "speed", 7],
+  ["guardian", "Guardian Core", "defense", 8], ["prism", "Prism Router", "attack", 8],
+];
+export const MEGACHIPS = CHIP_FAMILIES.flatMap(([family,name,stat,base],familyIndex)=>CHIP_TIERS.map((tier,tierIndex)=>({
+  id:`chip-${family}:${tier.id}:megachip`, family, slot:"megachip", rarity:tier.rarity, chipTier:tier.id,
+  setId:null, setName:`${tier.name} Megachip`, name:`${tier.name} ${name}`, chipGlyph:["◇","⬡","✦","◆"][tierIndex],
+  lore:tier.id==="apex"&&family==="redline"?"+200% Critical Rating. Critical overcap converts into critical damage.":tier.id==="apex"&&family==="abundance"?"+500% normal equipment find. This never modifies Megachip odds.":`${tier.name} circuit architecture tuned for ${stat}.`,
+  stats:{[stat]:tier.id==="apex"&&family==="redline"?200:tier.id==="apex"&&family==="abundance"?500:Math.round(base*tier.scale*(1+familyIndex*.01))},
+})));
+export const LOOT = [...SET_GEAR, ...MEGACHIPS];
+
 export const starterInventory = () => ({
-  version: 2, owned: [], equipped: { weapon: null, helmet: null, armor: null, boots: null },
+  version: 2, owned: [], equipped: { weapon: null, helmet: null, armor: null, boots: null, megachip: null },
   enhancement: {}, shards: 0, runs: 0, prismPity: 0, history: [], tutorialStep: 0,
 });
 
@@ -75,6 +109,7 @@ export function getArmoryBonuses(value, profile = {}) {
       "street-ronin": [0, 0, 8, 0], "neon-sentinel": [0, 10, 0, 0], "void-reaver": [8, 0, 0, 0],
       "crimson-oni": [12, 0, 0, 0], "ghost-protocol": [0, 0, 0, 10], "chrome-wraith": [0, 8, 0, 0],
       "biohazard-lotus": [0, 0, 0, 10], "solar-shogun": [10, 0, 0, 0], "glacier-viper": [0, 8, 0, 0], "storm-circuit": [0, 0, 12, 0],
+      "kinetic-courier":[0,0,12,0],"signal-bastion":[0,12,0,0],"foundry-breaker":[10,6,0,0],"aurora-relay":[0,0,4,12],"flux-weaver":[0,0,5,10],"crown-circuit":[6,6,6,6],
     }[setId] || [0, 0, 0, 0];
     totals.attack += setStats[0]; totals.defense += setStats[1]; totals.speed += setStats[2]; totals.tech += setStats[3];
     if (count >= 4) {
@@ -88,8 +123,21 @@ export function getArmoryBonuses(value, profile = {}) {
       if (setId === "solar-shogun") totals.attack += 15;
       if (setId === "glacier-viper") totals.defense += 15;
       if (setId === "storm-circuit") totals.speed += 18;
+      if (setId === "kinetic-courier") { totals.speed += 18; totals.crit += 8; }
+      if (setId === "signal-bastion") { totals.defense += 20; totals.hp += 35; }
+      if (setId === "foundry-breaker") totals.attack += 25;
+      if (setId === "aurora-relay") { totals.tech += 20; totals.xp += 12; }
+      if (setId === "flux-weaver") { totals.tech += 18; totals.crit += 6; }
+      if (setId === "crown-circuit") { totals.attack += 10; totals.defense += 10; totals.speed += 10; totals.tech += 10; }
     }
   }
+  const activeTags=[...new Set(Object.entries(setCounts).filter(([,count])=>count>=2).map(([setId])=>SET_TAGS[setId]).filter(Boolean))];
+  const has=(a,b)=>activeTags.includes(a)&&activeTags.includes(b);
+  if(has("assault","tempo")){totals.attack+=12;totals.speed+=12;}
+  if(has("guard","tech")){totals.defense+=14;totals.tech+=10;totals.hp+=20;}
+  if(has("control","assault")){totals.attack+=16;totals.crit+=6;}
+  if(has("sustain","tempo")){totals.speed+=10;totals.hp+=28;}
+  if(has("tech","control")){totals.tech+=18;totals.crit+=5;}
   const role = profile?.archetype || profile?.role || "ghost";
   if (role === "striker" || role === "samurai") { totals.attack = Math.round(totals.attack * 1.1); totals.hp += 15; }
   if (role === "guardian") { totals.defense = Math.round(totals.defense * 1.12); totals.hp += 24; }
@@ -106,8 +154,8 @@ export function getArmoryBonuses(value, profile = {}) {
 export function ItemArt({ item, level = 0, small = false, locked = false }) {
   if (!item) return <span className="v2-empty-art">＋</span>;
   const rarity = RARITIES[item.rarity];
-  return <div className={`v2-item-art tier-${item.rarity} ${small ? "small" : ""} ${locked ? "locked" : ""}`} style={{ "--tier": rarity.color }}>
-    <div className="atlas-sprite" style={{ backgroundImage: `url(${item.atlas})`, backgroundSize: "400% 500%", backgroundPosition: `${item.atlasX * 100 / 3}% ${item.atlasY * 100 / 4}%` }}/>
+  return <div className={`v2-item-art tier-${item.rarity} ${item.slot==="megachip"?"megachip-art":""} ${small ? "small" : ""} ${locked ? "locked" : ""}`} style={{ "--tier": rarity.color }}>
+    {item.slot==="megachip"?<div className="megachip-core"><i/><b>{item.chipGlyph}</b><em/></div>:<div className="atlas-sprite" style={{ backgroundImage: `url(${item.atlas})`, backgroundSize: "400% 500%", backgroundPosition: `${item.atlasX * 100 / 3}% ${item.atlasY * 100 / 4}%` }}/>} 
     {level > 0 && <b>+{level}</b>}<i />
   </div>;
 }

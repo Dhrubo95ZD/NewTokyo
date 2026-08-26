@@ -1,0 +1,12 @@
+import {strict as assert} from "node:assert";
+import {CHIP_DROP_TIERS,LIFE_SKILLS,RECIPES,canCraft,normalizeEconomyState} from "../src/economy/economyRules.js";
+import fs from "node:fs";
+const inventory=fs.readFileSync(new URL("../src/online/Inventory.jsx",import.meta.url),"utf8");
+assert.equal(RECIPES.length,80,"Expected 80 recipes");
+assert.equal(LIFE_SKILLS.length,4,"Expected four life skills");
+for(const token of ['export const SLOT_ORDER = [...GEAR_SLOTS, "megachip"]','export const MEGACHIPS','export const LOOT = [...SET_GEAR, ...MEGACHIPS]','"crown-circuit"'])assert(inventory.includes(token),`Missing inventory expansion: ${token}`);
+assert.equal(CHIP_DROP_TIERS.find(t=>t.id==="apex").odds,"1 / 10,000");
+assert(!/singularity/i.test(inventory),"Removed name must not return");
+const recipe=RECIPES[0]; assert(canCraft(recipe,Object.fromEntries(Object.entries(recipe.cost).map(([k,v])=>[k,v]))));
+assert.equal(normalizeEconomyState(null).authority,false);
+console.log("Neo Economy rules smoke passed");
