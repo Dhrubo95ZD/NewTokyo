@@ -77,7 +77,7 @@ export function afkBattleSnapshot({ startedAt = Date.now(), now = Date.now(), du
 }
 
 export function progressionObjectives({ campaignDone = false, inventory = {}, cp = 0, player = {} } = {}) {
-  const equipped = Object.values(inventory.equipped || {}).filter(Boolean).length;
+  const equipped = ["weapon","helmet","armor","boots"].filter((slot)=>inventory.equipped?.[slot]).length;
   const maxEnhancement = Math.max(0, ...Object.values(inventory.enhancement || {}).map(Number));
   const bestLevel = Math.max(0, Number(inventory.dungeon?.bestLevel) || 0);
   return [
