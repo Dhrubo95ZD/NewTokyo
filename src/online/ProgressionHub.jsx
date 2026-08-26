@@ -4,7 +4,7 @@ import DistrictCampaign from "../game/DistrictCampaign.jsx";
 import RaidCommand from "../game/RaidCommand.jsx";
 import { RunnerPortrait } from "./CharacterCreator.jsx";
 import {
-  LOOT, RARITIES, RARITY_ORDER, SETS, SLOT_ORDER, ItemArt,
+  GEAR_SLOTS, LOOT, RARITIES, RARITY_ORDER, SETS, SLOT_ORDER, ItemArt,
   getArmoryBonuses, normalizeInventory,
 } from "./Inventory.jsx";
 import {
@@ -85,10 +85,10 @@ export default function ProgressionHub({
   const filtered = ownedItems.filter((item) => (slotFilter === "all" || item.slot === slotFilter) && (rarityFilter === "all" || item.rarity === rarityFilter));
   const totals = getArmoryBonuses(inventory, profile);
   const combatTotals = Object.fromEntries(["str","def","spd","dex","hp","crit","loot","xp"].map((key) => [key, Number(totals[key] || 0) + Number(masteryStats[key] || 0)]));
-  const equippedCount = Object.values(inventory.equipped).filter(Boolean).length;
+  const equippedCount = GEAR_SLOTS.filter((slot)=>inventory.equipped[slot]).length;
   const best = chooseBestLoadout(ownedItems, inventory.enhancement);
   const canImprove = SLOT_ORDER.some((slot) => best[slot]?.id && best[slot].id !== inventory.equipped[slot]);
-  const setCounts = useMemo(() => Object.values(equipment).filter(Boolean).reduce((counts, item) => ({ ...counts, [item.setId]: (counts[item.setId] || 0) + 1 }), {}), [equipment]);
+  const setCounts = useMemo(() => Object.values(equipment).filter((item)=>item?.setId).reduce((counts, item) => ({ ...counts, [item.setId]: (counts[item.setId] || 0) + 1 }), {}), [equipment]);
   const activeSets = Object.entries(setCounts).map(([setId, count]) => ({ set: SETS.find((entry) => entry.id === setId), count })).filter((entry) => entry.set).sort((a,b) => b.count-a.count);
   const afk = progressionState?.afk;
   const party = progressionState?.party;
@@ -203,6 +203,7 @@ export default function ProgressionHub({
     <nav className="v2-tabs progression-tabs">{[["journey","Battle"],["character","Character"],["vault","Inventory"],["enhance","Forge"],["skills","Skills"]].map(([id,label]) => <button key={id} className={tab === id ? "active" : ""} onClick={() => { setTab(id); if (id !== "enhance") setSelectedId(null); }}>{label}{id === "character" && Number(player.statPoints || 0) > 0 && <i>{player.statPoints}</i>}{id === "vault" && <i>{inventory.owned.length}</i>}</button>)}</nav>
     {notice && <button className="hub-notice" onClick={() => setNotice("")}>{notice}<b>×</b></button>}
 
+
     {tab === "skills" && <section className="combat-skills-v3">
       <header><div><small>ACTIVE COMBAT SYSTEM</small><h2>Technique Loadout</h2><p>Equip three techniques. They appear in the arena with live cooldowns and immediate effects.</p></div><button onClick={()=>setTab("journey")}>Enter Battle</button></header>
       <div className="skill-slots">{[0,1,2].map((slot)=>{const skill=combatSkillById(skillLoadout.equipped[slot]);return <div key={slot} className={skill?"filled":""} style={{"--skill":skill?.color||"#91a0b6"}}><small>SLOT {slot+1}</small><b>{skill?.glyph||"＋"}</b><span>{skill?.name||"Empty"}</span></div>})}</div>
@@ -230,7 +231,7 @@ export default function ProgressionHub({
     {tab === "character" && <section className="character-v4">
       <header className="loadout-command">
         <div><small>NEO GRID // LOADOUT DECK</small><h2>Character Equipment</h2><p>See your build, upgrades and set powers without leaving one screen.</p></div>
-        <div className="loadout-power"><small>COMBAT POWER</small><b>{combatPower.toLocaleString()}</b><span>LV {Number(player.level || 1)} · {equippedCount}/4 SLOTS</span></div>
+        <div className="loadout-power"><small>COMBAT POWER</small><b>{combatPower.toLocaleString()}</b><span>LV {Number(player.level || 1)} · {equippedCount}/4 GEAR · {inventory.equipped.megachip?"CHIP ONLINE":"NO CHIP"}</span></div>
         <button className="quick-equip-all" disabled={!canImprove || busy} onClick={equipBest}>⚡ {canImprove ? "Equip Best" : "Best Equipped"}</button>
         <button className="open-vault" onClick={() => setTab("vault")}>Inventory</button>
       </header>
@@ -278,7 +279,7 @@ export default function ProgressionHub({
           <header><small>EQUIPMENT BONUSES</small><h3>Loadout Effects</h3></header>
           <div className="gear-bonus-grid"><span>Attack <b>+{Number(totals.str || 0)}</b></span><span>Defense <b>+{Number(totals.def || 0)}</b></span><span>Speed <b>+{Number(totals.spd || 0)}</b></span><span>Tech <b>+{Number(totals.dex || 0)}</b></span></div>
           <div className="set-bonus-v4"><h4>Set Protocols</h4>{!activeSets.length && <p>Match two pieces from one equipment set to activate its first protocol.</p>}{activeSets.map(({set, count}) => <article key={set.id}><div><b>{set.name}</b><span>{count}/4 pieces</span></div><i style={{width:`${count * 25}%`}}/><small className={count >= 2 ? "active" : ""}>2 PIECES · {set.two}</small><small className={count >= 4 ? "active" : ""}>4 PIECES · {set.four}</small></article>)}</div>
-          <div className="slot-legend-v4"><h4>Slot Roles</h4><span><b>Weapon</b>Primary damage</span><span><b>Helmet</b>Defense + tech</span><span><b>Armor</b>Core protection</span><span><b>Boots</b>Speed + mobility</span></div>
+          <div className="slot-legend-v4"><h4>Slot Roles</h4><span><b>Weapon</b>Primary damage</span><span><b>Helmet</b>Defense + tech</span><span><b>Armor</b>Core protection</span><span><b>Boots</b>Speed + mobility</span><span><b>Megachip</b>Build-changing circuit</span></div>
           <button onClick={() => setTab("vault")}>Manage all equipment</button>
         </aside>
       </div>
