@@ -1,5 +1,11 @@
 # Neo-Tokyo Underworld — Android
 
+## Battle command and active techniques
+
+The bottom **Battle** tab is now the single home for story operations, quests, dungeons, manual combat, AFK auto-battle, and co-op rooms. **Loadout** opens character equipment directly, so combat activities and gear management no longer compete for the same entry point.
+
+Manual battles include a cloud-saved three-slot Technique Loadout. Six level-gated techniques provide area damage, defense, mobility, recovery, crowd control, and a timed damage/attack-speed boost, each with an in-arena cooldown display.
+
 Android-first React/Capacitor game with Google-only accounts, account-owned cloud progress, live chat/rankings, reactive combat, character equipment and the Neo Exchange server-run market simulator.
 
 ## Local web test

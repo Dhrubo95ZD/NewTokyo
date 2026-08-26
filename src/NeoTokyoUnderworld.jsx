@@ -152,10 +152,11 @@ const RECIPES = [
 
 
 /* ============ HACK & SLASH ARENA ============ */
-export function Brawl({ stats, enemy, onEnd }) {
+export function Brawl({ stats, enemy, onEnd, techniques = [] }) {
   const cvs = useRef(null);
   const wrap = useRef(null);
-  const flags = useRef({ atk: false, dash: false });
+  const flags = useRef({ atk: false, dash: false, skill: null });
+  const [skillHud, setSkillHud] = useState(() => techniques.map((skill) => ({ ...skill, remaining: 0 })));
 
   useEffect(() => {
     const canvas = cvs.current;
@@ -189,7 +190,7 @@ export function Brawl({ stats, enemy, onEnd }) {
     const S = {
       last: performance.now(), shake: 0, wave: -1, mobs: [], parts: [], dmgs: [], rings: [], trail: [], t: 0,
       p: { x: W / 2, y: H / 2, r: 14, hp: stats.hp, face: 0, atkCd: 0, dashCd: 0, dashT: 0, ifr: 0, swing: 0, mvx: 0, mvy: 0 },
-      keys: {}, joy: null, banner: "", bannerT: 0, done: false, raf: 0,
+      keys: {}, joy: null, banner: "", bannerT: 0, done: false, raf: 0, skillCd: {}, overdrive: 0, hudAt: 0,
     };
     const nextWave = () => {
       S.wave++;
@@ -210,7 +211,7 @@ export function Brawl({ stats, enemy, onEnd }) {
     const doAttack = () => {
       const p = S.p;
       if (p.atkCd > 0 || S.done) return;
-      p.atkCd = 0.36; p.swing = 0.18;
+      p.atkCd = S.overdrive > 0 ? 0.2 : 0.36; p.swing = 0.18;
       const range = 56, arc = 1.25;
       /* auto-face the nearest enemy so taps always connect */
       let nearest = null, nd = 1e9;
@@ -220,7 +221,7 @@ export function Brawl({ stats, enemy, onEnd }) {
         const dx = m.x - p.x, dy = m.y - p.y, d = Math.hypot(dx, dy);
         if (d < range + m.r && Math.abs(Math.atan2(Math.sin(Math.atan2(dy, dx) - p.face), Math.cos(Math.atan2(dy, dx) - p.face))) < arc) {
           const crit = Math.random() < critCh;
-          const dmg = Math.round((stats.str + stats.wPow) * (0.9 + Math.random() * 0.4) * (crit ? 1.7 : 1));
+          const dmg = Math.round((stats.str + stats.wPow) * (0.9 + Math.random() * 0.4) * (crit ? 1.7 : 1) * (S.overdrive > 0 ? 1.55 : 1));
           m.hp -= dmg; m.hit = 0.12;
           const kb = 90; m.x += (dx / (d || 1)) * kb * 0.16; m.y += (dy / (d || 1)) * kb * 0.16;
           dmgNum(m.x, m.y - m.r - 6, String(dmg), crit ? "#FFAB00" : "#f2ecff");
@@ -234,6 +235,23 @@ export function Brawl({ stats, enemy, onEnd }) {
       if (p.dashCd > 0 || S.done) return;
       p.dashCd = dashCdMax; p.dashT = 0.18; p.ifr = 0.32;
       spark(p.x, p.y, "#00AEEF", 8);
+    };
+    const strikeMob = (mob, multiplier, color) => {
+      const damage = Math.max(1, Math.round((stats.str + stats.dex * .45 + stats.wPow) * multiplier));
+      mob.hp -= damage; mob.hit = .18;
+      dmgNum(mob.x, mob.y - mob.r - 7, String(damage), color);
+      spark(mob.x, mob.y, color, 10);
+    };
+    const doSkill = (skillId) => {
+      const skill = techniques.find((entry) => entry.id === skillId);
+      if (!skill || S.done || Number(S.skillCd[skillId] || 0) > 0) return;
+      S.skillCd[skillId] = skill.cooldown; S.banner = skill.name.toUpperCase(); S.bannerT = .65;
+      if (skillId === "arc-slash") S.mobs.filter((mob) => Math.hypot(mob.x-S.p.x,mob.y-S.p.y) < 145).forEach((mob) => strikeMob(mob, 1.65, skill.color));
+      if (skillId === "pulse-guard") { S.p.ifr=Math.max(S.p.ifr,2.2); S.p.hp=Math.min(stats.maxHp,S.p.hp+stats.maxHp*.1); S.rings.push({x:S.p.x,y:S.p.y,r:18,c:skill.color,t:1}); }
+      if (skillId === "vector-rush") { const mob=[...S.mobs].sort((a,b)=>Math.hypot(a.x-S.p.x,a.y-S.p.y)-Math.hypot(b.x-S.p.x,b.y-S.p.y))[0]; if(mob){S.p.x=clamp(mob.x-34,S.p.r,W-S.p.r);S.p.y=clamp(mob.y,S.p.r,H-S.p.r);S.p.ifr=.45;strikeMob(mob,2.35,skill.color);} }
+      if (skillId === "repair-cloud") { S.p.hp=Math.min(stats.maxHp,S.p.hp+stats.maxHp*.3); S.rings.push({x:S.p.x,y:S.p.y,r:18,c:skill.color,t:1}); }
+      if (skillId === "gravity-well") S.mobs.forEach((mob)=>{mob.x+=(S.p.x-mob.x)*.42;mob.y+=(S.p.y-mob.y)*.42;strikeMob(mob,1.25,skill.color);});
+      if (skillId === "overdrive") { S.overdrive=6; spark(S.p.x,S.p.y,skill.color,18); }
     };
 
     /* input */
@@ -281,6 +299,7 @@ export function Brawl({ stats, enemy, onEnd }) {
       /* --- update --- */
       if (flags.current.atk) doAttack();
       if (flags.current.dash) { doDash(); flags.current.dash = false; }
+      if (flags.current.skill) { doSkill(flags.current.skill); flags.current.skill = null; }
       let mx = 0, my = 0;
       if (S.keys.w || S.keys.arrowup) my -= 1;
       if (S.keys.s || S.keys.arrowdown) my += 1;
@@ -297,6 +316,9 @@ export function Brawl({ stats, enemy, onEnd }) {
       p.x = clamp(p.x, p.r, W - p.r); p.y = clamp(p.y, p.r, H - p.r);
       p.atkCd = Math.max(0, p.atkCd - dt); p.dashCd = Math.max(0, p.dashCd - dt);
       p.dashT = Math.max(0, p.dashT - dt); p.ifr = Math.max(0, p.ifr - dt); p.swing = Math.max(0, p.swing - dt);
+      S.overdrive = Math.max(0, S.overdrive - dt);
+      Object.keys(S.skillCd).forEach((id) => { S.skillCd[id] = Math.max(0, S.skillCd[id] - dt); });
+      if (t - S.hudAt > 120) { S.hudAt = t; setSkillHud(techniques.map((skill) => ({ ...skill, remaining: Number(S.skillCd[skill.id] || 0) }))); }
       S.shake = Math.max(0, S.shake - dt); S.bannerT = Math.max(0, S.bannerT - dt);
 
       S.mobs.forEach((m) => {
@@ -517,6 +539,7 @@ export function Brawl({ stats, enemy, onEnd }) {
   return (
     <div className="brawl-wrap" ref={wrap} onContextMenu={(e) => e.preventDefault()}>
       <canvas ref={cvs} className="brawl-canvas" />
+      {!!skillHud.length && <div className="brawl-skill-dock">{skillHud.map((skill) => <button key={skill.id} style={{ "--skill": skill.color }} disabled={skill.remaining > 0} onPointerDown={() => { flags.current.skill = skill.id; }}><b>{skill.glyph}</b><span>{skill.remaining > 0 ? skill.remaining.toFixed(1) : skill.name}</span></button>)}</div>}
       <button className="brawl-btn atk"
         onPointerDown={() => { flags.current.atk = true; }}
         onPointerUp={() => { flags.current.atk = false; }}
@@ -1686,7 +1709,7 @@ const Panel = ({ title, kanji, children }) => (
   </section>
 );
 
-export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses = null, armoryProgress = 0, walletBalance = null, onPlayerChange = null, onOpenArmory = null, onOpenMastery = null, onOpenSocial = null, onOpenTrading = null }) {
+export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses = null, armoryProgress = 0, walletBalance = null, onPlayerChange = null, onOpenBattle = null, onOpenArmory = null, onOpenMastery = null, onOpenSocial = null, onOpenTrading = null }) {
   const initialPlayerRef = useRef(initialPlayer);
   const [p, setP] = useState(newPlayer);
   const [screen, setScreen] = useState("home");
@@ -3043,7 +3066,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
 
 
   const NAV = [
-    ["home", "City", "都"], ["fights", "Combat", "斬"], ["loadout", "Loadout", "装"],
+    ["home", "City", "都"], ["fights", "Battle", "斬"], ["loadout", "Loadout", "装"],
     ["mastery", "Mastery", "技"], ["activities", "Activities", "路"], ["social", "Social", "網"],
   ];
 
@@ -4146,6 +4169,9 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
           border:3px solid var(--ink);background:#fff;box-shadow:3px 3px 0 rgba(44,34,64,.4)}
         .brawl-btn.atk{right:12px;color:var(--gold-deep);background:var(--gold)}
         .brawl-btn.dash{right:82px;bottom:44px;width:48px;height:48px;font-size:17px;color:#fff;background:var(--sky)}
+        .brawl-skill-dock{position:absolute;z-index:3;top:44px;right:10px;display:flex;gap:6px}
+        .brawl-skill-dock button{width:62px;min-height:48px;border:2px solid var(--skill);border-radius:10px;background:rgba(8,14,30,.9);color:#fff;box-shadow:0 0 14px color-mix(in srgb,var(--skill) 45%,transparent);padding:4px;touch-action:none}
+        .brawl-skill-dock b,.brawl-skill-dock span{display:block}.brawl-skill-dock b{color:var(--skill);font:900 18px 'DotGothic16',monospace}.brawl-skill-dock span{overflow:hidden;font-size:7px;text-overflow:ellipsis;white-space:nowrap}.brawl-skill-dock button:disabled{filter:grayscale(.65);opacity:.65}
         .brawl-btn:active{transform:scale(.9) translate(1px,1px);box-shadow:1px 1px 0 rgba(44,34,64,.4)}
         @media(hover:hover) and (pointer:fine){.brawl-btn{display:none}}
         /* ---- Simi the guide robot: friendly light chat ---- */
@@ -4315,7 +4341,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
 
       <nav>
         {NAV.map(([id, label, kanji]) => (
-          <button key={id} className={screen === id ? "on" : ""} onClick={() => { if (id === "loadout") { onOpenArmory?.(); return; } if (id === "mastery") { onOpenMastery?.(); return; } if (id === "social") { onOpenSocial?.(); return; } setScreen(id); setFightLog(null); setScene(null); setJealousy(null); setPendingChoice(null); setSelItem(null); if (brawl) { setBrawl(null); pushLog("You slipped out of the arena.", "info"); } }}>
+          <button key={id} className={screen === id ? "on" : ""} onClick={() => { if (id === "fights" && onOpenBattle) { onOpenBattle(); return; } if (id === "loadout") { onOpenArmory?.(); return; } if (id === "mastery") { onOpenMastery?.(); return; } if (id === "social") { onOpenSocial?.(); return; } setScreen(id); setFightLog(null); setScene(null); setJealousy(null); setPendingChoice(null); setSelItem(null); if (brawl) { setBrawl(null); pushLog("You slipped out of the arena.", "info"); } }}>
             <span className="nk">{kanji}</span>{label}
           </button>
         ))}

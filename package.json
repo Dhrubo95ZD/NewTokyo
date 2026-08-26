@@ -13,7 +13,8 @@
     "test:trading": "node scripts/trading-rules-smoke.mjs && node scripts/exchange-simulator-contract-smoke.mjs && node scripts/trading-ui-contract-smoke.mjs",
     "test:coop": "node scripts/coop-rooms-contract-smoke.mjs",
     "test:mastery": "node scripts/mastery-smoke.mjs && node scripts/mastery-ui-contract-smoke.mjs",
-    "test": "npm run test:ichi && npm run test:progression && npm run test:campaign && npm run test:combat && npm run test:trading && npm run test:coop && npm run test:mastery",
+    "test:skills": "node scripts/combat-skills-smoke.mjs && node scripts/battle-navigation-contract-smoke.mjs",
+    "test": "npm run test:ichi && npm run test:progression && npm run test:campaign && npm run test:combat && npm run test:trading && npm run test:coop && npm run test:mastery && npm run test:skills",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"

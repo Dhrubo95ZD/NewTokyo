@@ -10,6 +10,7 @@ import {
   DUNGEONS, afkBattleSnapshot, calculateCombatPower, chooseBestLoadout, dungeonAccess,
   itemCombatPower, progressionObjectives, salvageValue, saleValue,
 } from "./progressionHubRules.js";
+import { COMBAT_SKILLS, combatSkillById, equipCombatSkill, normalizeCombatSkills } from "../game/combatSkills.js";
 import "./inventory.css";
 
 export { getArmoryBonuses, normalizeInventory };
@@ -19,7 +20,9 @@ const STAT_LABELS = { str: "Strength", def: "Defense", spd: "Speed", dex: "Techn
 const formatTime = (date) => date ? new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—";
 
 export default function ProgressionHub({
+  initialTab = "journey",
   profile, player = {}, value, masteryStats = {}, onChange, onPlayerChange, onClose,
+  combatSkills, onCombatSkillsChange,
   onStartRun, onCompleteRun, onEnhanceItem, progressionState, onManageArmory,
   onStartAfk, onClaimAfk, onQueueCoop, onLeaveCoop, onClaimCoop, onRefreshProgression,
   onCreateCoopRoom, onJoinCoopRoom, onListCoopRooms,
@@ -27,7 +30,8 @@ export default function ProgressionHub({
   onClaimCampaign, onCalibrateCampaign, onCampaignComplete,
 }) {
   const inventory = normalizeInventory(value);
-  const [tab, setTab] = useState("journey");
+  const validTab = (next) => ["journey", "character", "vault", "enhance", "skills"].includes(next) ? next : "journey";
+  const [tab, setTab] = useState(validTab(initialTab));
   const [selectedId, setSelectedId] = useState(null);
   const [slotFilter, setSlotFilter] = useState("all");
   const [rarityFilter, setRarityFilter] = useState("all");
@@ -47,6 +51,8 @@ export default function ProgressionHub({
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => setTab(validTab(initialTab)), [initialTab]);
+
   useEffect(() => {
     const dismiss = (event) => {
       if (event.key !== "Escape") return;
@@ -65,6 +71,8 @@ export default function ProgressionHub({
   const masteryCp = Math.round(["str","def","spd","dex"].reduce((sum, key) => sum + Number(masteryStats[key] || 0), 0) * 14 + Number(masteryStats.hp || 0) * 2 + Number(masteryStats.crit || 0) * 5);
   const localCp = calculateCombatPower({ level: player.level, stats: player.stats }) + gearCp + masteryCp;
   const combatPower = Number(progressionState?.combatPower) || localCp;
+  const skillLoadout = normalizeCombatSkills(combatSkills, player.level);
+  const equippedTechniques = skillLoadout.equipped.map(combatSkillById).filter(Boolean);
   const campaignDone = Boolean(campaignValue?.complete || campaignValue?.serverState === "reward_claimed");
   const questInventory = { ...inventory, dungeon: { bestLevel: progressionState?.bestLevel || inventory.dungeon?.bestLevel || 0 } };
   const objectives = progressionObjectives({ campaignDone, inventory: questInventory, cp: combatPower, player });
@@ -168,6 +176,10 @@ export default function ProgressionHub({
 
   const routeObjective = () => setTab(nextObjective.route === "enhance" ? "enhance" : nextObjective.route);
   const selectDungeon = (dungeon) => { setSelectedDungeonId(dungeon.id); document.querySelector(".dungeon-command")?.scrollIntoView({ behavior: "smooth", block: "center" }); };
+  const equipTechnique = (skillId, slot) => act(async () => {
+    if (!onCombatSkillsChange) throw new Error("Technique save is not ready");
+    return onCombatSkillsChange(equipCombatSkill(skillLoadout, skillId, slot, player.level));
+  }, `${combatSkillById(skillId)?.name || "Technique"} equipped`);
 
   return <main className="inventory-v2 progression-hub">
     <header className="v2-header progression-header">
@@ -176,8 +188,14 @@ export default function ProgressionHub({
       <div className="v2-resources"><span>YEN <b>¥{Number(player.money || 0).toLocaleString()}</b></span><span>SHARDS <b>{inventory.shards}</b></span></div>
       <button onClick={onClose} aria-label="Close progression hub">×</button>
     </header>
-    <nav className="v2-tabs progression-tabs">{[["journey","Journey"],["character","Character"],["vault","Inventory"],["enhance","Forge"]].map(([id,label]) => <button key={id} className={tab === id ? "active" : ""} onClick={() => { setTab(id); if (id !== "enhance") setSelectedId(null); }}>{label}{id === "character" && Number(player.statPoints || 0) > 0 && <i>{player.statPoints}</i>}{id === "vault" && <i>{inventory.owned.length}</i>}</button>)}</nav>
+    <nav className="v2-tabs progression-tabs">{[["journey","Battle"],["character","Character"],["vault","Inventory"],["enhance","Forge"],["skills","Skills"]].map(([id,label]) => <button key={id} className={tab === id ? "active" : ""} onClick={() => { setTab(id); if (id !== "enhance") setSelectedId(null); }}>{label}{id === "character" && Number(player.statPoints || 0) > 0 && <i>{player.statPoints}</i>}{id === "vault" && <i>{inventory.owned.length}</i>}</button>)}</nav>
     {notice && <button className="hub-notice" onClick={() => setNotice("")}>{notice}<b>×</b></button>}
+
+    {tab === "skills" && <section className="combat-skills-v3">
+      <header><div><small>ACTIVE COMBAT SYSTEM</small><h2>Technique Loadout</h2><p>Equip three techniques. They appear in the arena with live cooldowns and immediate effects.</p></div><button onClick={()=>setTab("journey")}>Enter Battle</button></header>
+      <div className="skill-slots">{[0,1,2].map((slot)=>{const skill=combatSkillById(skillLoadout.equipped[slot]);return <div key={slot} className={skill?"filled":""} style={{"--skill":skill?.color||"#91a0b6"}}><small>SLOT {slot+1}</small><b>{skill?.glyph||"＋"}</b><span>{skill?.name||"Empty"}</span></div>})}</div>
+      <div className="skill-catalog">{COMBAT_SKILLS.map((skill)=>{const unlocked=Number(player.level||1)>=skill.level;const equippedSlot=skillLoadout.equipped.indexOf(skill.id);return <article key={skill.id} className={`${unlocked?"unlocked":"locked"} ${equippedSlot>=0?"equipped":""}`} style={{"--skill":skill.color}}><i>{skill.glyph}</i><div><small>{unlocked?`READY · ${skill.cooldown}s COOLDOWN`:`UNLOCKS LV ${skill.level}`}</small><h3>{skill.name}</h3><p>{skill.effect}</p>{unlocked&&<footer>{[0,1,2].map((slot)=><button key={slot} disabled={busy||equippedSlot===slot} onClick={()=>equipTechnique(skill.id,slot)}>{equippedSlot===slot?`In slot ${slot+1}`:`Slot ${slot+1}`}</button>)}</footer>}</div></article>})}</div>
+    </section>}
 
     {tab === "journey" && !campaignDone && <DistrictCampaign profile={profile} value={campaignValue} onChange={onCampaignChange} onBegin={onStartCampaign} onCheckpoint={onCampaignCheckpoint} onClaim={onClaimCampaign} onCalibrate={onCalibrateCampaign} onComplete={onCampaignComplete} onExit={() => setTab("character")}/>} 
     {tab === "journey" && campaignDone && <section className="journey-v3">
@@ -191,7 +209,7 @@ export default function ProgressionHub({
         <div className="operation-modes">
           <article className="afk-mode-card"><small>AFK AUTO-BATTLE</small><h3>{afk ? "Horde battle active" : "Choose a grind zone"}</h3>{afk ? <><p>Your runner is visibly fighting waves in {DUNGEONS.find((d) => d.id === afk.dungeonId)?.name || afk.dungeonId}. Rewards stack for up to 8 hours.</p><button className="watch-battle" onClick={openAfkBattle}>Watch auto-battle</button></> : <><p>Select any unlocked dungeon, preview its horde and rewards, then watch your runner auto-fight.</p><button disabled={busy || !onStartAfk} onClick={openAfkBattle}>Choose location</button></>}</article>
           <article className="coop-card"><small>2–3 RUNNER CO-OP</small><h3>Power-Link Expedition</h3>{party ? <><p>{party.state === "waiting" ? "Room is open. Share its code or wait for Quick Match runners." : party.state === "active" ? `Expedition completes at ${formatTime(party.completes_at)}.` : "Expedition complete."}</p>{party.room_code&&<div className="coop-room-code"><small>ROOM CODE</small><b>{party.room_code}</b></div>}<div className="party-roster">{(party.roster || []).map((member) => <span key={member.userId}><b>{member.name}</b>{Number(member.cp).toLocaleString()} CP</span>)}</div>{party.state === "waiting" ? <><button onClick={()=>setCoopBrowserOpen(true)}>Open room lobby</button><button onClick={() => act(onLeaveCoop,"Left co-op room")}>Leave room</button></> : <button disabled={!coopReady || busy} onClick={() => act(onClaimCoop,"Co-op rewards claimed")}>{coopReady ? "Claim team loot" : "Expedition active"}</button>}</> : <><p>Quick Match fills a public room. Or create a room and share its code with friends.</p><div className="coop-actions"><button disabled={!dungeonAccess(selectedDungeon,{level:player.level,cp:combatPower},"coop").unlocked || busy || !onQueueCoop} onClick={() => act(() => onQueueCoop(selectedDungeon.id),"Quick Match started")}>Quick Match</button><button disabled={busy||!onCreateCoopRoom} onClick={()=>act(()=>onCreateCoopRoom(selectedDungeon.id,"public"),"Co-op room created")}>Create Room</button><button disabled={!onListCoopRooms} onClick={()=>setCoopBrowserOpen(true)}>Browse Rooms</button></div></>}</article>
-          <article className="manual-mode-card"><small>ACTIVE PLAY</small><h3>Manual District Sweep</h3>{running ? <Brawl stats={{hp:110+(combatTotals.def||0)*2+(combatTotals.hp||0),maxHp:110+(combatTotals.def||0)*2+(combatTotals.hp||0),str:12+(combatTotals.str||0),def:6+(combatTotals.def||0),spd:8+(combatTotals.spd||0),dex:8+(combatTotals.dex||0),crit:2+(combatTotals.crit||0),wPow:0,aPow:0}} enemy={{id:"sentinel",name:selectedDungeon.boss,kanji:"守",lvl:selectedDungeon.level,hp:Math.max(70,selectedDungeon.cp/8),atk:12+selectedDungeon.level*.8}} onEnd={finishRun}/> : <><p>Skill-based combat gives an immediate equipment roll. Start with an accessible operation.</p><button disabled={!dungeonAccess(selectedDungeon,{level:player.level,cp:combatPower},"solo").unlocked || busy || !onStartRun} onClick={startRun}>Enter manually</button></>}</article>
+          <article className="manual-mode-card"><small>ACTIVE PLAY</small><h3>Manual District Sweep</h3>{running ? <Brawl techniques={equippedTechniques} stats={{hp:110+(combatTotals.def||0)*2+(combatTotals.hp||0),maxHp:110+(combatTotals.def||0)*2+(combatTotals.hp||0),str:12+(combatTotals.str||0),def:6+(combatTotals.def||0),spd:8+(combatTotals.spd||0),dex:8+(combatTotals.dex||0),crit:2+(combatTotals.crit||0),wPow:0,aPow:0}} enemy={{id:"sentinel",name:selectedDungeon.boss,kanji:"守",lvl:selectedDungeon.level,hp:Math.max(70,selectedDungeon.cp/8),atk:12+selectedDungeon.level*.8}} onEnd={finishRun}/> : <><p>Skill-based combat gives an immediate equipment roll. Start with an accessible operation.</p><button disabled={!dungeonAccess(selectedDungeon,{level:player.level,cp:combatPower},"solo").unlocked || busy || !onStartRun} onClick={startRun}>Enter manually</button></>}</article>
         </div>
       </div>
     </section>}
