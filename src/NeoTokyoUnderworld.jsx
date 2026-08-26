@@ -1709,7 +1709,7 @@ const Panel = ({ title, kanji, children }) => (
   </section>
 );
 
-export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses = null, armoryProgress = 0, walletBalance = null, onPlayerChange = null, onOpenBattle = null, onOpenArmory = null, onOpenSocial = null, onOpenTrading = null, onOpenEconomy = null }) {
+export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses = null, armoryProgress = 0, walletBalance = null, onPlayerChange = null, onOpenBattle = null, onOpenArmory = null, onOpenSocial = null, onOpenTrading = null, onOpenEconomy = null, onNavigate = null }) {
   const initialPlayerRef = useRef(initialPlayer);
   const [p, setP] = useState(newPlayer);
   const [screen, setScreen] = useState("home");
@@ -4342,7 +4342,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
 
       <nav>
         {NAV.map(([id, label, kanji]) => (
-          <button key={id} className={screen === id ? "on" : ""} onClick={() => { if (id === "fights" && onOpenBattle) { onOpenBattle(); return; } if (id === "loadout") { onOpenArmory?.(); return; } if (id === "economy") { onOpenEconomy?.("auction"); return; } if (id === "social") { onOpenSocial?.(); return; } setScreen(id); setFightLog(null); setScene(null); setJealousy(null); setPendingChoice(null); setSelItem(null); if (brawl) { setBrawl(null); pushLog("You slipped out of the arena.", "info"); } }}>
+          <button key={id} className={screen === id ? "on" : ""} onClick={() => { onNavigate?.(id); if (id === "fights" && onOpenBattle) { onOpenBattle(); return; } if (id === "loadout") { onOpenArmory?.(); return; } if (id === "economy") { onOpenEconomy?.("auction"); return; } if (id === "social") { onOpenSocial?.(); return; } setScreen(id); setFightLog(null); setScene(null); setJealousy(null); setPendingChoice(null); setSelItem(null); if (brawl) { setBrawl(null); pushLog("You slipped out of the arena.", "info"); } }}>
             <span className="nk">{kanji}</span>{label}
           </button>
         ))}
