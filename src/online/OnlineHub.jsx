@@ -11,6 +11,7 @@ import { masteryBonuses, normalizeMastery, upgradeMastery } from "./masteryRules
 import TradingTerminal from "../trading/TradingTerminal.jsx";
 import { migrateAccountSave, SAVE_KEY, serializeAccountSave } from "./accountSave.js";
 import { validateRunnerIdentity } from "./progressionRules.js";
+import { normalizeCombatSkills } from "../game/combatSkills.js";
 import "./online-hub.css";
 import "./account-gate.css";
 import "./visual-v3-overlays.css";
@@ -30,6 +31,7 @@ export default function OnlineHub({ children }) {
   const [characterProfile, setCharacterProfile] = useState(null);
   const [editingCharacter, setEditingCharacter] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [progressionTab, setProgressionTab] = useState("character");
   const [masteryOpen, setMasteryOpen] = useState(false);
   const [exchangeOpen, setExchangeOpen] = useState(false);
   const [walletBalance, setWalletBalance] = useState(null);
@@ -80,6 +82,12 @@ export default function OnlineHub({ children }) {
     if (!accountRef.current) return;
     await persistAccount({ ...accountRef.current, ...patch, meta: { ...(accountRef.current.meta || {}), ...(patch.meta || {}), updatedAt: Date.now() } });
   }, [persistAccount]);
+
+  const saveCombatSkills = useCallback(async (next) => {
+    const normalized = normalizeCombatSkills(next, accountRef.current?.core?.level || 1);
+    await commitSections({ meta: { combatSkills: normalized } });
+    return normalized;
+  }, [commitSections]);
 
   useEffect(() => {
     if (!supabase) return undefined;
@@ -497,7 +505,8 @@ export default function OnlineHub({ children }) {
         armoryBonuses,
         armoryProgress: inventoryState?.tutorialStep || 0,
         onPlayerChange: saveCore,
-        onOpenArmory: () => { setOpen(false); setInventoryOpen(true); },
+        onOpenBattle: () => { setOpen(false); setMasteryOpen(false); setExchangeOpen(false); setProgressionTab("journey"); setInventoryOpen(true); },
+        onOpenArmory: () => { setOpen(false); setMasteryOpen(false); setExchangeOpen(false); setProgressionTab("character"); setInventoryOpen(true); },
         onOpenMastery: () => { setOpen(false); setInventoryOpen(false); setExchangeOpen(false); setMasteryOpen(true); },
         onOpenSocial: () => { setInventoryOpen(false); setOpen(true); },
         onOpenTrading: () => { setOpen(false); setInventoryOpen(false); setExchangeOpen(true); },
@@ -505,7 +514,7 @@ export default function OnlineHub({ children }) {
       }) : children}
       <TradingTerminal open={exchangeOpen} balance={walletBalance ?? accountSave?.core?.money ?? 0} onClose={() => setExchangeOpen(false)} onWalletChange={acceptExchangeBalance} />
       {masteryOpen && <div className="mastery-overlay"><MasteryBoard value={accountSave?.meta?.mastery} level={accountSave?.core?.level || 1} busy={busy} onUpgrade={investMastery} onClose={() => setMasteryOpen(false)} /></div>}
-      {inventoryOpen && <Inventory profile={characterProfile} player={accountSave?.core || {}} value={inventoryState} masteryStats={masteryBonuses(accountSave?.meta?.mastery)} onChange={saveInventory} onPlayerChange={saveCore} onClose={() => setInventoryOpen(false)} onStartRun={armoryAuthority ? startDistrictRun : null} onCompleteRun={armoryAuthority ? completeDistrictRun : null} onSaveLoadout={armoryAuthority ? saveArmoryLoadout : null} onEnhanceItem={armoryAuthority ? enhanceArmoryItem : null} progressionState={progressionState} onManageArmory={progressionAuthority ? manageArmory : null} onStartAfk={progressionAuthority ? startAfkDungeon : null} onClaimAfk={progressionAuthority ? claimAfkDungeon : null} onQueueCoop={progressionAuthority ? queueCoopDungeon : null} onCreateCoopRoom={progressionAuthority ? createCoopRoom : null} onJoinCoopRoom={progressionAuthority ? joinCoopRoom : null} onListCoopRooms={progressionAuthority ? listCoopRooms : null} onLeaveCoop={progressionAuthority ? leaveCoopDungeon : null} onClaimCoop={progressionAuthority ? claimCoopDungeon : null} onRefreshProgression={progressionAuthority ? refreshProgression : null} campaignValue={campaignProgress} onCampaignChange={saveCampaign} onStartCampaign={startDistrictOne} onCampaignCheckpoint={advanceDistrictOne} onClaimCampaign={claimDistrictOne} onCalibrateCampaign={armoryAuthority ? enhanceArmoryItem : null} onCampaignComplete={completeCampaign} />}
+      {inventoryOpen && <Inventory initialTab={progressionTab} profile={characterProfile} player={accountSave?.core || {}} value={inventoryState} masteryStats={masteryBonuses(accountSave?.meta?.mastery)} combatSkills={accountSave?.meta?.combatSkills} onCombatSkillsChange={saveCombatSkills} onChange={saveInventory} onPlayerChange={saveCore} onClose={() => setInventoryOpen(false)} onStartRun={armoryAuthority ? startDistrictRun : null} onCompleteRun={armoryAuthority ? completeDistrictRun : null} onSaveLoadout={armoryAuthority ? saveArmoryLoadout : null} onEnhanceItem={armoryAuthority ? enhanceArmoryItem : null} progressionState={progressionState} onManageArmory={progressionAuthority ? manageArmory : null} onStartAfk={progressionAuthority ? startAfkDungeon : null} onClaimAfk={progressionAuthority ? claimAfkDungeon : null} onQueueCoop={progressionAuthority ? queueCoopDungeon : null} onCreateCoopRoom={progressionAuthority ? createCoopRoom : null} onJoinCoopRoom={progressionAuthority ? joinCoopRoom : null} onListCoopRooms={progressionAuthority ? listCoopRooms : null} onLeaveCoop={progressionAuthority ? leaveCoopDungeon : null} onClaimCoop={progressionAuthority ? claimCoopDungeon : null} onRefreshProgression={progressionAuthority ? refreshProgression : null} campaignValue={campaignProgress} onCampaignChange={saveCampaign} onStartCampaign={startDistrictOne} onCampaignCheckpoint={advanceDistrictOne} onClaimCampaign={claimDistrictOne} onCalibrateCampaign={armoryAuthority ? enhanceArmoryItem : null} onCampaignComplete={completeCampaign} />}
       <button className="online-orb" onClick={() => setOpen((v) => !v)} aria-label="Open online hub">
         <RunnerPortrait profile={characterProfile} compact />
         <i className={user ? "online" : ""} />
@@ -513,7 +522,7 @@ export default function OnlineHub({ children }) {
       {open && <aside className="online-hub" aria-label="Neo-Tokyo online hub">
         <header><div><b>NEO GRID</b><small>{status}</small></div><button onClick={() => setOpen(false)}>×</button></header>
         <>
-            <div className="hub-profile"><RunnerPortrait profile={characterProfile} compact /><div><b>{characterProfile.codename}</b><small>{user.email}</small></div><button onClick={() => { setOpen(false); setInventoryOpen(true); }}>Loadout</button><button onClick={() => setEditingCharacter(true)}>Edit</button><button onClick={() => supabase.auth.signOut()}>Exit</button></div>
+            <div className="hub-profile"><RunnerPortrait profile={characterProfile} compact /><div><b>{characterProfile.codename}</b><small>{user.email}</small></div><button onClick={() => { setOpen(false); setProgressionTab("character"); setInventoryOpen(true); }}>Loadout</button><button onClick={() => setEditingCharacter(true)}>Edit</button><button onClick={() => supabase.auth.signOut()}>Exit</button></div>
             <div className="hub-channel"><b>SHIBUYA FREQUENCY</b><span>PUBLIC · LIVE</span></div>
             <div className="hub-messages">{messages.length === 0 && <p className="hub-static">No voices on the frequency yet.</p>}{messages.map((m) => <article key={m.id} className={m.user_id === user.id ? "mine" : ""}><img src={m.profiles?.avatar_url || ""} alt="" /><div><b>{m.profiles?.display_name || "Runner"}</b><p>{m.body}</p></div></article>)}<div ref={listEnd} /></div>
             <div className="hub-compose"><input value={message} maxLength={240} placeholder="Broadcast…" onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} /><button onClick={send} disabled={!message.trim() || busy}>送</button></div>
