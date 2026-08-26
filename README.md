@@ -27,10 +27,15 @@ npm run dev
 4. Run `supabase/20260826_neo_exchange_simulator.sql`.
 5. Run `supabase/20260827_progression_hub.sql` to enable Combat Power, equipment recycling, AFK dungeons and co-op expeditions.
 6. Run `supabase/20260828_gridhold_pvp.sql` to enable co-op room creation, room codes, browsing and Quick Match. The historical filename is retained so existing installations do not need a replacement migration.
-7. Copy `.env.example` to `.env` and add the project URL and public publishable/anon key.
-8. Enable Google in Supabase Auth and configure the Google OAuth client and redirect URL.
+7. Run `supabase/20260829_raid_specializations.sql` to add specializations, four-slot raid rooms, phased raid actions and optional bot filling. Bot-assisted rooms receive exactly 50% equipment-drop chance and 50% material yield.
+8. Copy `.env.example` to `.env` and add the project URL and public publishable/anon key.
+9. Enable Google in Supabase Auth and configure the Google OAuth client and redirect URL.
 
 Co-op supports Quick Match, public room browsing and shareable room codes. A room starts when its combined runner power satisfies the dungeon requirement.
+
+## Linked Raid Operations
+
+Battle contains a dedicated four-runner raid command with Vanguard, Striker and Technician specializations, three multi-phase operations, human matchmaking rooms, shareable codes and server-owned contribution/reward settlement. Players may fill empty squad slots with support bots and begin immediately. Any number of bots changes the equipment roll from 100% to 50% and halves material yield; both penalties are displayed throughout the raid and enforced inside `claim_raid_rewards` rather than trusted to the client.
 
 ## Combat Mastery
 
