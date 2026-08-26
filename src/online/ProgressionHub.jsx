@@ -255,7 +255,7 @@ export default function ProgressionHub({
         <section className="equipment-stage">
           <div className="stage-grid" aria-hidden="true"/><div className="stage-aura" aria-hidden="true"/>
           <figure className="runner-model-v4">
-            <img src="/assets/characters/runner-equipment-v2.webp" alt={`${profile.codename || "Runner"} full equipment preview`}/>
+            <img src="/assets/characters/runner-equipment-v3.webp" alt={`${profile.codename || "Runner"} fully helmeted android equipment preview`}/>
             <figcaption><span><small>ACTIVE RUNNER</small><b>{profile.codename || "RUNNER"}</b></span><em>{profile.archetype || profile.role || "operative"}</em></figcaption>
           </figure>
           <div className="slot-orbit">
