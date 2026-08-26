@@ -8,6 +8,10 @@ Manual battles include a cloud-saved three-slot Technique Loadout. Six level-gat
 
 Android-first React/Capacitor game with Google-only accounts, account-owned cloud progress, live chat/rankings, reactive combat, character equipment and the Neo Exchange server-run market simulator.
 
+## Character equipment cockpit
+
+The **Loadout** entry opens a single responsive character-equipment cockpit: a full-body runner preview, four dedicated gear slots, one-tap best upgrades per slot, whole-loadout Best Equip, base-versus-gear stat breakdowns, secondary combat effects, matching-set progress and equipment bonus totals. Item art is never pasted over the character model; each piece remains readable in its own rarity-lit slot.
+
 ## Local web test
 
 ```bash

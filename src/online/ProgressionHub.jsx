@@ -85,6 +85,8 @@ export default function ProgressionHub({
   const equippedCount = Object.values(inventory.equipped).filter(Boolean).length;
   const best = chooseBestLoadout(ownedItems, inventory.enhancement);
   const canImprove = SLOT_ORDER.some((slot) => best[slot]?.id && best[slot].id !== inventory.equipped[slot]);
+  const setCounts = useMemo(() => Object.values(equipment).filter(Boolean).reduce((counts, item) => ({ ...counts, [item.setId]: (counts[item.setId] || 0) + 1 }), {}), [equipment]);
+  const activeSets = Object.entries(setCounts).map(([setId, count]) => ({ set: SETS.find((entry) => entry.id === setId), count })).filter((entry) => entry.set).sort((a,b) => b.count-a.count);
   const afk = progressionState?.afk;
   const party = progressionState?.party;
   const afkReady = afk && Date.now() - new Date(afk.startedAt).getTime() >= 600000;
@@ -120,6 +122,13 @@ export default function ProgressionHub({
     SLOT_ORDER.forEach((slot) => { if (best[slot]?.id) equipped[slot] = best[slot].id; });
     return saveLoadout(equipped);
   }, "Highest-CP gear equipped in every slot");
+
+  const equipBestSlot = (slot) => act(async () => {
+    const item = best[slot];
+    if (!item) throw new Error(`No ${slot} owned yet`);
+    if (inventory.equipped[slot] === item.id) throw new Error(`${item.name} is already your best ${slot}`);
+    return saveLoadout({ ...inventory.equipped, [slot]: item.id });
+  }, `Best ${slot} equipped`);
 
   const bulkAction = (mode) => {
     if (!unequippedIds.length) { setNotice("No unequipped gear to process"); return; }
@@ -214,10 +223,61 @@ export default function ProgressionHub({
       </div>
     </section>}
 
-    {tab === "character" && <section className="character-v3">
-      <div className="character-panel"><div className="runner-stage"><RunnerPortrait profile={profile}/><span><b>{profile.codename}</b>LV {Number(player.level || 1)} · {combatPower.toLocaleString()} CP</span>{SLOT_ORDER.map((slot) => equipment[slot] && <div key={slot} className={`wearable-layer wearable-${slot}`}><ItemArt item={equipment[slot]} level={inventory.enhancement[equipment[slot].id] || 0}/></div>)}</div><div className="character-actions"><button disabled={!canImprove || busy} onClick={equipBest}>⚡ Quick Best Equip</button><button onClick={() => setTab("vault")}>Manage inventory</button></div></div>
-      <div className="equipment-board"><header><h2>Equipment</h2><span>{equippedCount}/4 slots</span></header>{SLOT_ORDER.map((slot) => { const item=equipment[slot]; return <button key={slot} className={`equipment-tile ${item ? `tier-${item.rarity}` : "empty"}`} style={{"--tier":item?RARITIES[item.rarity].color:"#8aa0b4"}} onClick={() => { if(item)setSelectedId(item.id); setTab(item?"enhance":"vault"); }}><ItemArt item={item} level={inventory.enhancement[item?.id]||0} small/><span><small>{slot}</small><b>{item?.name||"Empty slot"}</b>{item&&<em>{itemCombatPower(item,inventory.enhancement[item.id]||0)} CP</em>}</span></button>;})}</div>
-      <div className="stats-board"><header><div><small>STAT ALLOCATION</small><h2>Build Stats</h2></div><b>{Number(player.statPoints||0)} points</b></header><p>Every point permanently raises Combat Power. Gear and Mastery bonuses are applied below.</p>{Object.entries(STAT_LABELS).map(([key,label]) => <div className="stat-row" key={key}><span><b>{label}</b><small>{key === "str" ? "Damage" : key === "def" ? "Survival" : key === "spd" ? "Movement" : "Skill effects"}</small></span><strong>{Number(player.stats?.[key]||0)}</strong><button disabled={!player.statPoints||busy} onClick={() => allocateStat(key)}>＋</button></div>)}<div className="derived-stats"><span>Loadout attack <b>{combatTotals.str||0}</b></span><span>Loadout defense <b>{combatTotals.def||0}</b></span><span>Loadout speed <b>{combatTotals.spd||0}</b></span><span>Loadout tech <b>{combatTotals.dex||0}</b></span></div></div>
+    {tab === "character" && <section className="character-v4">
+      <header className="loadout-command">
+        <div><small>NEO GRID // LOADOUT DECK</small><h2>Character Equipment</h2><p>See your build, upgrades and set powers without leaving one screen.</p></div>
+        <div className="loadout-power"><small>COMBAT POWER</small><b>{combatPower.toLocaleString()}</b><span>LV {Number(player.level || 1)} · {equippedCount}/4 SLOTS</span></div>
+        <button className="quick-equip-all" disabled={!canImprove || busy} onClick={equipBest}>⚡ {canImprove ? "Equip Best" : "Best Equipped"}</button>
+        <button className="open-vault" onClick={() => setTab("vault")}>Inventory</button>
+      </header>
+
+      <div className="loadout-cockpit">
+        <aside className="combat-stat-panel">
+          <header><div><small>CHARACTER STATS</small><h3>Build Readout</h3></div><b>{Number(player.statPoints || 0)} pts</b></header>
+          <div className="stat-power-row"><span>Combat Power<small>Level, attributes and equipment</small></span><b>{combatPower.toLocaleString()}</b></div>
+          {Object.entries(STAT_LABELS).map(([key, label]) => {
+            const gear = Number(combatTotals[key] || 0);
+            const base = Number(player.stats?.[key] || 0);
+            return <div className="cockpit-stat" key={key}>
+              <span><b>{label}</b><small>{key === "str" ? "Weapon damage" : key === "def" ? "Armor and health" : key === "spd" ? "Movement and recovery" : "Technique power"}</small></span>
+              <div><strong>{base + gear}</strong><em>{base} base <i>+{gear} gear</i></em></div>
+              <button disabled={!player.statPoints || busy} onClick={() => allocateStat(key)} aria-label={`Add one ${label}`}>＋</button>
+            </div>;
+          })}
+          <div className="secondary-stats"><span>Max HP <b>{110 + Number(combatTotals.def || 0) * 2 + Number(combatTotals.hp || 0)}</b></span><span>Critical <b>{Number(combatTotals.crit || 0)}%</b></span><span>Loot bonus <b>+{Number(combatTotals.loot || 0)}%</b></span><span>XP bonus <b>+{Number(combatTotals.xp || 0)}%</b></span></div>
+        </aside>
+
+        <section className="equipment-stage">
+          <div className="stage-grid" aria-hidden="true"/><div className="stage-aura" aria-hidden="true"/>
+          <figure className="runner-model-v4">
+            <img src="/assets/characters/runner-equipment-v2.webp" alt={`${profile.codename || "Runner"} full equipment preview`}/>
+            <figcaption><span><small>ACTIVE RUNNER</small><b>{profile.codename || "RUNNER"}</b></span><em>{profile.archetype || profile.role || "operative"}</em></figcaption>
+          </figure>
+          <div className="slot-orbit">
+            {SLOT_ORDER.map((slot, index) => {
+              const item = equipment[slot]; const upgrade = best[slot];
+              const currentCp = item ? itemCombatPower(item, inventory.enhancement[item.id] || 0) : 0;
+              const upgradeCp = upgrade ? itemCombatPower(upgrade, inventory.enhancement[upgrade.id] || 0) : 0;
+              const isBest = Boolean(item && upgrade?.id === item.id);
+              return <article key={slot} className={`orbit-slot orbit-${slot} ${item ? `tier-${item.rarity}` : "empty"}`} style={{"--tier": item ? RARITIES[item.rarity].color : "#8da3bb"}}>
+                <button className="slot-main" onClick={() => { if (item) setSelectedId(item.id); setTab(item ? "enhance" : "vault"); }}>
+                  <small>0{index + 1} · {slot}</small><ItemArt item={item} level={inventory.enhancement[item?.id] || 0} small/>
+                  <span><b>{item?.name || `Empty ${slot}`}</b><em>{item ? `${currentCp} CP · ${RARITIES[item.rarity].label}` : "Find gear in Battle"}</em></span>
+                </button>
+                <button className="slot-quick" disabled={busy || !upgrade || isBest} onClick={() => equipBestSlot(slot)}>{isBest ? "✓ BEST" : upgrade ? `⚡ QUICK +${Math.max(0, upgradeCp - currentCp)} CP` : "NO GEAR"}</button>
+              </article>;
+            })}
+          </div>
+        </section>
+
+        <aside className="bonus-panel">
+          <header><small>EQUIPMENT BONUSES</small><h3>Loadout Effects</h3></header>
+          <div className="gear-bonus-grid"><span>Attack <b>+{Number(totals.str || 0)}</b></span><span>Defense <b>+{Number(totals.def || 0)}</b></span><span>Speed <b>+{Number(totals.spd || 0)}</b></span><span>Tech <b>+{Number(totals.dex || 0)}</b></span></div>
+          <div className="set-bonus-v4"><h4>Set Protocols</h4>{!activeSets.length && <p>Match two pieces from one equipment set to activate its first protocol.</p>}{activeSets.map(({set, count}) => <article key={set.id}><div><b>{set.name}</b><span>{count}/4 pieces</span></div><i style={{width:`${count * 25}%`}}/><small className={count >= 2 ? "active" : ""}>2 PIECES · {set.two}</small><small className={count >= 4 ? "active" : ""}>4 PIECES · {set.four}</small></article>)}</div>
+          <div className="slot-legend-v4"><h4>Slot Roles</h4><span><b>Weapon</b>Primary damage</span><span><b>Helmet</b>Defense + tech</span><span><b>Armor</b>Core protection</span><span><b>Boots</b>Speed + mobility</span></div>
+          <button onClick={() => setTab("vault")}>Manage all equipment</button>
+        </aside>
+      </div>
     </section>}
 
     {tab === "vault" && <section className="vault-v3">
