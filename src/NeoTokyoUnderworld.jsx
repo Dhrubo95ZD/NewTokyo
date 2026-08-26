@@ -1709,7 +1709,7 @@ const Panel = ({ title, kanji, children }) => (
   </section>
 );
 
-export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses = null, armoryProgress = 0, walletBalance = null, onPlayerChange = null, onOpenBattle = null, onOpenArmory = null, onOpenMastery = null, onOpenSocial = null, onOpenTrading = null }) {
+export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses = null, armoryProgress = 0, walletBalance = null, onPlayerChange = null, onOpenBattle = null, onOpenArmory = null, onOpenSocial = null, onOpenTrading = null, onOpenEconomy = null }) {
   const initialPlayerRef = useRef(initialPlayer);
   const [p, setP] = useState(newPlayer);
   const [screen, setScreen] = useState("home");
@@ -3067,7 +3067,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
 
   const NAV = [
     ["home", "City", "都"], ["fights", "Battle", "斬"], ["loadout", "Loadout", "装"],
-    ["mastery", "Mastery", "技"], ["activities", "Activities", "路"], ["social", "Social", "網"],
+    ["economy", "Economy", "環"], ["social", "Social", "網"],
   ];
 
   const screenBody = () => {
@@ -3102,13 +3102,14 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
               ["forge", "Workshop", "鍛", "Craft field supplies; gear is enhanced in Loadout."],
               ["exchange", "Neo Exchange", "金", "Trade a realistic server-run gold simulation with the same yen earned across the city."],
               ["casino", "Arcade", "遊", "Optional side games and high-risk rewards."],
-            ].map(([id, label, kanji, desc]) => <button key={id} className="activity-card" onClick={() => id === "exchange" ? onOpenTrading?.() : setScreen(id)}><span>{kanji}</span><b>{label}</b><small>{desc}</small></button>)}
+            ].map(([id, label, kanji, desc]) => <button key={id} className="activity-card" onClick={() => id === "exchange" ? onOpenTrading?.() : id === "forge" ? onOpenEconomy?.("crafting") : setScreen(id)}><span>{kanji}</span><b>{label}</b><small>{desc}</small></button>)}
           </div>
         </Panel>
       );
       case "home": return (
         <Panel title={`${p.name}${(p.evo || 0) > 0 ? " " + "★".repeat(Math.min(p.evo, 5)) : ""} — Level ${p.level}`} kanji="家">
           <div className="city-brief"><small>NEO-TOKYO // WARD 09</small><b>The city remembers</b><span>Rain over Shinjuku. Syndicate traffic is rising beneath the mag-rail.</span></div>
+          <button className="btn" onClick={() => setScreen("activities")}>Open City Activities</button>
           {armoryProgress < 3 && <div className="progression-callout"><small>RUNNER INITIATION · {armoryProgress + 1}/3</small><b>{armoryProgress === 0 ? "Secure District One" : armoryProgress === 1 ? "Choose and equip your first weapon" : "Calibrate that weapon to +1"}</b><span>{armoryProgress === 0 ? "Read danger lanes, use your role skill, and protect the ward supply convoy." : armoryProgress === 1 ? "Your first clear grants one of three Green weapons and at least 12 Nano Shards." : "Calibration permanently strengthens the weapon; later gear can reach +20."}</span><button className="chip" onClick={onOpenArmory}>Continue initiation</button></div>}
           {p.title && <p className="flavor" style={{ marginTop: -6 }}><span style={{ color: "#D98600" }}>「{p.title}」</span> · 🔥 {p.streak || 1}-day streak</p>}
           {(p.statPoints || 0) > 0 && (
@@ -4341,7 +4342,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
 
       <nav>
         {NAV.map(([id, label, kanji]) => (
-          <button key={id} className={screen === id ? "on" : ""} onClick={() => { if (id === "fights" && onOpenBattle) { onOpenBattle(); return; } if (id === "loadout") { onOpenArmory?.(); return; } if (id === "mastery") { onOpenMastery?.(); return; } if (id === "social") { onOpenSocial?.(); return; } setScreen(id); setFightLog(null); setScene(null); setJealousy(null); setPendingChoice(null); setSelItem(null); if (brawl) { setBrawl(null); pushLog("You slipped out of the arena.", "info"); } }}>
+          <button key={id} className={screen === id ? "on" : ""} onClick={() => { if (id === "fights" && onOpenBattle) { onOpenBattle(); return; } if (id === "loadout") { onOpenArmory?.(); return; } if (id === "economy") { onOpenEconomy?.("auction"); return; } if (id === "social") { onOpenSocial?.(); return; } setScreen(id); setFightLog(null); setScene(null); setJealousy(null); setPendingChoice(null); setSelItem(null); if (brawl) { setBrawl(null); pushLog("You slipped out of the arena.", "info"); } }}>
             <span className="nk">{kanji}</span>{label}
           </button>
         ))}
