@@ -12,6 +12,7 @@ import TradingTerminal from "../trading/TradingTerminal.jsx";
 import { migrateAccountSave, SAVE_KEY, serializeAccountSave } from "./accountSave.js";
 import { validateRunnerIdentity } from "./progressionRules.js";
 import { normalizeCombatSkills } from "../game/combatSkills.js";
+import { normalizeRaidState } from "../game/raidRules.js";
 import "./online-hub.css";
 import "./account-gate.css";
 import "./visual-v3-overlays.css";
@@ -41,6 +42,8 @@ export default function OnlineHub({ children }) {
   const [armoryAuthority, setArmoryAuthority] = useState(false);
   const [progressionAuthority, setProgressionAuthority] = useState(false);
   const [progressionState, setProgressionState] = useState(null);
+  const [raidAuthority, setRaidAuthority] = useState(false);
+  const [raidState, setRaidState] = useState(() => normalizeRaidState(null));
   const [campaignAuthority, setCampaignAuthority] = useState(false);
   const [campaignProgress, setCampaignProgress] = useState({ serverState: "not_started", serverStage: 0 });
   const [busy, setBusy] = useState(false);
@@ -94,7 +97,7 @@ export default function OnlineHub({ children }) {
     let appUrlListener;
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setBooting(false); });
     const { data: auth } = supabase.auth.onAuthStateChange((_event, next) => {
-      if (!next?.user) { window.storage.setUser(null); accountRef.current = null; setAccountSave(null); setArmoryAuthority(false); setProgressionAuthority(false); setProgressionState(null); setCampaignAuthority(false); setWalletAuthority(false); setWalletBalance(null); setCampaignProgress({ serverState: "not_started", serverStage: 0 }); setAccountReady(false); setCharacterProfile(null); setEditingCharacter(false); setInventoryOpen(false); setMasteryOpen(false); setExchangeOpen(false); setInventoryState(null); }
+      if (!next?.user) { window.storage.setUser(null); accountRef.current = null; setAccountSave(null); setArmoryAuthority(false); setProgressionAuthority(false); setProgressionState(null); setRaidAuthority(false); setRaidState(normalizeRaidState(null)); setCampaignAuthority(false); setWalletAuthority(false); setWalletBalance(null); setCampaignProgress({ serverState: "not_started", serverStage: 0 }); setAccountReady(false); setCharacterProfile(null); setEditingCharacter(false); setInventoryOpen(false); setMasteryOpen(false); setExchangeOpen(false); setInventoryState(null); }
       setSession(next); setBooting(false);
     });
     if (Capacitor.isNativePlatform()) {
@@ -140,6 +143,9 @@ export default function OnlineHub({ children }) {
       const { data: serverProgression, error: progressionError } = await supabase.rpc("get_my_progression_state");
       if (!progressionError && serverProgression) { setProgressionState(serverProgression); setProgressionAuthority(true); }
       else { setProgressionState(null); setProgressionAuthority(false); }
+      const { data: serverRaid, error: raidError } = await supabase.rpc("get_my_raid_state");
+      if (!raidError && serverRaid) { setRaidState(normalizeRaidState(serverRaid)); setRaidAuthority(true); }
+      else { setRaidState(normalizeRaidState(null)); setRaidAuthority(false); }
       const localCampaign = nextSave.meta?.districtOne || {};
       let nextCampaign = { ...localCampaign, serverState: localCampaign.serverState || "not_started", serverStage: localCampaign.serverStage || 0 };
       const { data: serverCampaign, error: campaignError } = await supabase.rpc("get_my_campaign_progress");
@@ -449,6 +455,37 @@ export default function OnlineHub({ children }) {
   const leaveCoopDungeon = useCallback(() => runProgressionAction("leave_coop_dungeon"), [runProgressionAction]);
   const claimCoopDungeon = useCallback(() => runProgressionAction("claim_coop_dungeon"), [runProgressionAction]);
 
+  const refreshRaid = useCallback(async () => {
+    if (!raidAuthority) return null;
+    const { data, error } = await supabase.rpc("get_my_raid_state");
+    if (error) throw error;
+    const next = normalizeRaidState(data);
+    setRaidState(next);
+    return next;
+  }, [raidAuthority]);
+
+  const runRaidAction = useCallback(async (rpc, args = {}) => {
+    if (!raidAuthority) throw new Error("Run the Raid Specializations migration in Supabase first");
+    const { data, error } = await supabase.rpc(rpc, args);
+    if (error) throw error;
+    if (data?.armory) {
+      const nextArmory = normalizeInventory(data.armory);
+      setInventoryState(nextArmory);
+      await commitSections({ armory: nextArmory });
+    }
+    await refreshRaid();
+    await refreshProgression();
+    return data;
+  }, [commitSections, raidAuthority, refreshProgression, refreshRaid]);
+
+  const setRaidSpecialization = useCallback((specialization) => runRaidAction("set_my_raid_specialization", { p_specialization: specialization }), [runRaidAction]);
+  const queueRaid = useCallback((raidId, allowBots = false) => runRaidAction("queue_raid", { p_raid_id: raidId, p_allow_bots: allowBots }), [runRaidAction]);
+  const joinRaid = useCallback((roomCode) => runRaidAction("join_raid_room", { p_room_code: roomCode }), [runRaidAction]);
+  const fillRaidBots = useCallback(() => runRaidAction("fill_raid_with_bots"), [runRaidAction]);
+  const advanceRaid = useCallback((action) => runRaidAction("advance_raid_phase", { p_action: action }), [runRaidAction]);
+  const claimRaid = useCallback(() => runRaidAction("claim_raid_rewards"), [runRaidAction]);
+  const leaveRaid = useCallback(() => runRaidAction("leave_raid_room"), [runRaidAction]);
+
   const investMastery = useCallback(async (nodeId) => {
     if (!accountRef.current) return;
     const current = normalizeMastery(accountRef.current.meta?.mastery);
@@ -466,6 +503,15 @@ export default function OnlineHub({ children }) {
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [userId, progressionAuthority, refreshProgression]);
+
+  useEffect(() => {
+    if (!supabase || !user || !raidAuthority) return undefined;
+    const channel = supabase.channel(`raids-${user.id}`)
+      .on("postgres_changes", { event:"*", schema:"public", table:"raid_parties" }, refreshRaid)
+      .on("postgres_changes", { event:"*", schema:"public", table:"raid_party_members" }, refreshRaid)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [userId, raidAuthority, refreshRaid]);
 
   const armoryBonuses = useMemo(() => {
     const gear = getArmoryBonuses(inventoryState, characterProfile);
@@ -514,7 +560,7 @@ export default function OnlineHub({ children }) {
       }) : children}
       <TradingTerminal open={exchangeOpen} balance={walletBalance ?? accountSave?.core?.money ?? 0} onClose={() => setExchangeOpen(false)} onWalletChange={acceptExchangeBalance} />
       {masteryOpen && <div className="mastery-overlay"><MasteryBoard value={accountSave?.meta?.mastery} level={accountSave?.core?.level || 1} busy={busy} onUpgrade={investMastery} onClose={() => setMasteryOpen(false)} /></div>}
-      {inventoryOpen && <Inventory initialTab={progressionTab} profile={characterProfile} player={accountSave?.core || {}} value={inventoryState} masteryStats={masteryBonuses(accountSave?.meta?.mastery)} combatSkills={accountSave?.meta?.combatSkills} onCombatSkillsChange={saveCombatSkills} onChange={saveInventory} onPlayerChange={saveCore} onClose={() => setInventoryOpen(false)} onStartRun={armoryAuthority ? startDistrictRun : null} onCompleteRun={armoryAuthority ? completeDistrictRun : null} onSaveLoadout={armoryAuthority ? saveArmoryLoadout : null} onEnhanceItem={armoryAuthority ? enhanceArmoryItem : null} progressionState={progressionState} onManageArmory={progressionAuthority ? manageArmory : null} onStartAfk={progressionAuthority ? startAfkDungeon : null} onClaimAfk={progressionAuthority ? claimAfkDungeon : null} onQueueCoop={progressionAuthority ? queueCoopDungeon : null} onCreateCoopRoom={progressionAuthority ? createCoopRoom : null} onJoinCoopRoom={progressionAuthority ? joinCoopRoom : null} onListCoopRooms={progressionAuthority ? listCoopRooms : null} onLeaveCoop={progressionAuthority ? leaveCoopDungeon : null} onClaimCoop={progressionAuthority ? claimCoopDungeon : null} onRefreshProgression={progressionAuthority ? refreshProgression : null} campaignValue={campaignProgress} onCampaignChange={saveCampaign} onStartCampaign={startDistrictOne} onCampaignCheckpoint={advanceDistrictOne} onClaimCampaign={claimDistrictOne} onCalibrateCampaign={armoryAuthority ? enhanceArmoryItem : null} onCampaignComplete={completeCampaign} />}
+      {inventoryOpen && <Inventory initialTab={progressionTab} profile={characterProfile} player={accountSave?.core || {}} value={inventoryState} masteryStats={masteryBonuses(accountSave?.meta?.mastery)} combatSkills={accountSave?.meta?.combatSkills} onCombatSkillsChange={saveCombatSkills} onChange={saveInventory} onPlayerChange={saveCore} onClose={() => setInventoryOpen(false)} onStartRun={armoryAuthority ? startDistrictRun : null} onCompleteRun={armoryAuthority ? completeDistrictRun : null} onSaveLoadout={armoryAuthority ? saveArmoryLoadout : null} onEnhanceItem={armoryAuthority ? enhanceArmoryItem : null} progressionState={progressionState} onManageArmory={progressionAuthority ? manageArmory : null} onStartAfk={progressionAuthority ? startAfkDungeon : null} onClaimAfk={progressionAuthority ? claimAfkDungeon : null} onQueueCoop={progressionAuthority ? queueCoopDungeon : null} onCreateCoopRoom={progressionAuthority ? createCoopRoom : null} onJoinCoopRoom={progressionAuthority ? joinCoopRoom : null} onListCoopRooms={progressionAuthority ? listCoopRooms : null} onLeaveCoop={progressionAuthority ? leaveCoopDungeon : null} onClaimCoop={progressionAuthority ? claimCoopDungeon : null} onRefreshProgression={progressionAuthority ? refreshProgression : null} raidState={raidState} onSetRaidSpecialization={raidAuthority ? setRaidSpecialization : null} onQueueRaid={raidAuthority ? queueRaid : null} onJoinRaid={raidAuthority ? joinRaid : null} onFillRaidBots={raidAuthority ? fillRaidBots : null} onAdvanceRaid={raidAuthority ? advanceRaid : null} onClaimRaid={raidAuthority ? claimRaid : null} onLeaveRaid={raidAuthority ? leaveRaid : null} onRefreshRaid={raidAuthority ? refreshRaid : null} campaignValue={campaignProgress} onCampaignChange={saveCampaign} onStartCampaign={startDistrictOne} onCampaignCheckpoint={advanceDistrictOne} onClaimCampaign={claimDistrictOne} onCalibrateCampaign={armoryAuthority ? enhanceArmoryItem : null} onCampaignComplete={completeCampaign} />}
       <button className="online-orb" onClick={() => setOpen((v) => !v)} aria-label="Open online hub">
         <RunnerPortrait profile={characterProfile} compact />
         <i className={user ? "online" : ""} />

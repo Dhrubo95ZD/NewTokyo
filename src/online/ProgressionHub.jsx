@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Brawl } from "../NeoTokyoUnderworld.jsx";
 import DistrictCampaign from "../game/DistrictCampaign.jsx";
+import RaidCommand from "../game/RaidCommand.jsx";
 import { RunnerPortrait } from "./CharacterCreator.jsx";
 import {
   LOOT, RARITIES, RARITY_ORDER, SETS, SLOT_ORDER, ItemArt,
@@ -26,6 +27,8 @@ export default function ProgressionHub({
   onStartRun, onCompleteRun, onEnhanceItem, progressionState, onManageArmory,
   onStartAfk, onClaimAfk, onQueueCoop, onLeaveCoop, onClaimCoop, onRefreshProgression,
   onCreateCoopRoom, onJoinCoopRoom, onListCoopRooms,
+  raidState, onSetRaidSpecialization, onQueueRaid, onJoinRaid, onFillRaidBots,
+  onAdvanceRaid, onClaimRaid, onLeaveRaid, onRefreshRaid,
   campaignValue, onCampaignChange, onStartCampaign, onCampaignCheckpoint,
   onClaimCampaign, onCalibrateCampaign, onCampaignComplete,
 }) {
@@ -209,6 +212,7 @@ export default function ProgressionHub({
     {tab === "journey" && !campaignDone && <DistrictCampaign profile={profile} value={campaignValue} onChange={onCampaignChange} onBegin={onStartCampaign} onCheckpoint={onCampaignCheckpoint} onClaim={onClaimCampaign} onCalibrate={onCalibrateCampaign} onComplete={onCampaignComplete} onExit={() => setTab("character")}/>} 
     {tab === "journey" && campaignDone && <section className="journey-v3">
       <div className="next-step-card"><div><small>NEXT MEANINGFUL STEP</small><h2>{nextObjective.title}</h2><p>{nextObjective.detail}</p></div><button onClick={routeObjective}>{nextObjective.done ? "View progress" : "Go"}</button></div>
+      <RaidCommand player={player} combatPower={combatPower} state={raidState} busy={busy} onSpecialize={onSetRaidSpecialization} onQueue={onQueueRaid} onJoin={onJoinRaid} onFillBots={onFillRaidBots} onAdvance={onAdvanceRaid} onClaim={onClaimRaid} onLeave={onLeaveRaid} onRefresh={onRefreshRaid}/>
       <div className="journey-columns">
         <aside className="quest-rail"><header><small>PROGRESSION PATH</small><b>{objectives.filter((q) => q.done).length}/{objectives.length}</b></header>{objectives.map((quest) => <button key={quest.id} className={quest.done ? "done" : ""} onClick={() => setTab(quest.route === "enhance" ? "enhance" : quest.route)}><i>{quest.done ? "✓" : "○"}</i><span><b>{quest.title}</b><small>{quest.detail}</small></span></button>)}</aside>
         <div className="dungeon-directory"><header><div><small>ALL QUESTS + DUNGEONS</small><h2>City Operations</h2></div><span>Solo needs 100% CP · Co-op needs 75%</span></header><div className="dungeon-grid">{DUNGEONS.map((dungeon) => { const solo = dungeonAccess(dungeon,{level:player.level,cp:combatPower},"solo"); const coop = dungeonAccess(dungeon,{level:player.level,cp:combatPower},"coop"); const clears = Number(progressionState?.clears?.[dungeon.id] || 0); return <button key={dungeon.id} className={`${selectedDungeon.id === dungeon.id ? "selected" : ""} ${solo.unlocked ? "ready" : coop.unlocked ? "coop-only" : "locked"}`} onClick={() => selectDungeon(dungeon)}><div><small>LV {dungeon.level} · {dungeon.district}</small><b>{dungeon.name}</b><span>{dungeon.boss}</span></div><em>{dungeon.rarity}</em><footer><span>{dungeon.cp.toLocaleString()} CP</span><span>{clears} clears</span></footer></button>;})}</div></div>
