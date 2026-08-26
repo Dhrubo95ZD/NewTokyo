@@ -200,7 +200,7 @@ export default function ProgressionHub({
       <div className="v2-resources"><span>YEN <b>¥{Number(player.money || 0).toLocaleString()}</b></span><span>SHARDS <b>{inventory.shards}</b></span></div>
       <button onClick={onClose} aria-label="Close progression hub">×</button>
     </header>
-    <nav className="v2-tabs progression-tabs">{[["journey","Battle"],["character","Character"],["vault","Inventory"],["enhance","Forge"],["skills","Skills"]].map(([id,label]) => <button key={id} className={tab === id ? "active" : ""} onClick={() => { setTab(id); if (id !== "enhance") setSelectedId(null); }}>{label}{id === "character" && Number(player.statPoints || 0) > 0 && <i>{player.statPoints}</i>}{id === "vault" && <i>{inventory.owned.length}</i>}</button>)}</nav>
+    <nav className="v2-tabs progression-tabs" aria-label="Progression sections">{[["journey","Battle","⚔"],["character","Character","◈"],["vault","Inventory","▦"],["enhance","Forge","✦"],["skills","Skills","⌁"]].map(([id,label,glyph]) => <button key={id} className={tab === id ? "active" : ""} onClick={() => { setTab(id); if (id !== "enhance") setSelectedId(null); }}><span className="progression-tab-glyph" aria-hidden="true">{glyph}</span><span>{label}</span>{id === "character" && Number(player.statPoints || 0) > 0 && <i>{player.statPoints}</i>}{id === "vault" && <i>{inventory.owned.length}</i>}</button>)}</nav>
     {notice && <button className="hub-notice" onClick={() => setNotice("")}>{notice}<b>×</b></button>}
 
 
