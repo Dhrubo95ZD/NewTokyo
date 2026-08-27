@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 75185)
-Total output lines: 4414
-
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./visual-v3.css";
 import { AndroidRunnerSprite, androidSpriteFrame } from "./game/AndroidRunner.jsx";
@@ -1558,7 +1555,1088 @@ const LEGACY_STORY_ARCHIVE = [
       }},
       { t: "Above the Law", req: { aff: 110, partner: true }, cost: { energy: 12 }, xp: 200, reward: 3000, branches: {
         ayame_weapon: [
-          "It becomes a rhythm: she slides you a name no warrant can reach, and a …15185 tokens truncated…{
+          "It becomes a rhythm: she slides you a name no warrant can reach, and a week later that name's whole operation folds under 'anonymous tips' and 'procedural miracles.' Her clearance rate becomes precinct legend. Nobody asks how. She never tells.",
+          "'I'm not corrupt,' she says firmly, doing the crossword in your kitchen in her precinct hoodie. 'I'm force-multiplied. There's a difference and I'll arrest anyone who says otherwise.' She fills in a word. 'Also I told my sister about you. She thinks you're a consultant. Keep it that way, and wear something that doesn't say organized crime to the kids' birthday.' Somehow, this is the most useful you've ever been to anyone.",
+        ],
+        default: [
+          "Dating a lieutenant comes with house rules delivered like charges: no details she'd have to act on, no blood on your hands she'd have to test, and Sunday dinners are non-negotiable and civilian. In exchange, you notice patrols reroute a block early. Busts that should stick... develop procedural errors.",
+          "'I'm not corrupt,' she says firmly, doing the crossword in your kitchen in her precinct hoodie. 'I am selectively efficient. There's a difference and I'll arrest anyone who says otherwise.' She fills in a word, then, without looking up: 'Also I told my sister about you. She wants you at the kids' birthday. Wear something that doesn't say organized crime.' Somehow, this is the most protected you've ever been.",
+        ],
+      }},
+    ],
+  },
+];
+
+/* Player-visible story cast. IDs stay stable so existing cloud saves retain
+   their chapter and trust progress after the story-standard migration. */
+const ALLY_NETWORK = [
+  {
+    id: "sakura", name: "Kaori Sato", kanji: "結", tag: "Ward Coordinator",
+    bio: "A calm community organizer who keeps Ward 09 supplied during blackouts and transit failures.",
+    perks: { 4: "discount", 7: "syndicate" },
+    perkDesc: { 4: "Local suppliers trust your team — 10% off everything", 7: "Ward Network missions unlock in Contracts" },
+    stages: [
+      { t: "Rain Supply", req: { aff: 0 }, cost: { energy: 5 }, xp: 10, scene: ["A storm cuts power to the market. You help Kaori carry food crates to families before the refrigeration fails. She adds your name to the ward volunteer list."] },
+      { t: "The Missing Manifest", req: { aff: 12 }, cost: { energy: 6, money: 500 }, xp: 20, scene: ["A medicine shipment is misrouted. You and Kaori trace the paper trail, pay the emergency courier fee, and get every box to the clinic before sunrise."] },
+      { t: "Quiet Leadership", req: { aff: 25, lvl: 5 }, cost: { energy: 6 }, xp: 30, scene: ["Kaori asks you to coordinate three volunteer teams during a mag-rail shutdown. Clear instructions and patience turn panic into an orderly evacuation."] },
+      { t: "Open Market", req: { aff: 40, fightsWon: 10 }, cost: { energy: 10 }, xp: 60, reward: 2000, scene: ["You protect a relief market from a gang trying to seize its supplies. The vendors agree that your team will always receive the local rate."] },
+      { t: "Clean Accounts", req: { aff: 60, money: 20000 }, cost: { energy: 8, money: 10000 }, xp: 90, scene: ["Kaori opens the ward fund books to public review. Your contribution clears urgent debts and proves the network can operate without hidden obligations."] },
+      { t: "Ward Assembly", req: { aff: 85 }, cost: { energy: 10 }, xp: 120, scene: ["At the ward assembly, Kaori presents a safety plan built from everything your team learned. Residents approve it and ask you both to oversee the first month."] },
+      { t: "A Stronger Ward", req: { aff: 110 }, cost: { energy: 12 }, xp: 200, reward: 5000, scene: ["The network becomes permanent: clinics, couriers, shops, and volunteers sharing verified requests. Kaori gives your runner secure access to the hardest community contracts."] },
+    ],
+  },
+  {
+    id: "rin", name: "Rin Amasawa", kanji: "迅", tag: "Emergency Courier",
+    bio: "Ward 09's fastest licensed courier, known for getting vital packages through when the rail grid stops.",
+    perks: { 4: "turbo", 7: "nitro" },
+    perkDesc: { 4: "Courier training — energy regenerates 25% faster", 7: "Endurance route — faster regeneration and +10 max energy" },
+    stages: [
+      { t: "Right of Way", req: { aff: 0 }, cost: { energy: 5 }, xp: 10, scene: ["You help Rin clear a crowded delivery lane without endangering pedestrians. She respects that you chose safety over speed."] },
+      { t: "Night Route", req: { aff: 12 }, cost: { energy: 5, money: 400 }, xp: 20, scene: ["Over ramen, Rin teaches you how to read road closures and plan fallback routes before a delivery begins."] },
+      { t: "Steady Passenger", req: { aff: 25, spd: 15 }, cost: { energy: 8 }, xp: 35, scene: ["You complete a supervised courier route, keeping every package secure through tight turns and sudden rain."] },
+      { t: "Harbor Relay", req: { aff: 40, spd: 30 }, cost: { energy: 10 }, xp: 60, reward: 1500, scene: ["Your team wins a legal harbor relay by planning clean hand-offs instead of taking reckless shortcuts. Rin shares her advanced training map."] },
+      { t: "Engine Rebuild", req: { aff: 60, money: 8000 }, cost: { energy: 8, money: 8000 }, xp: 90, scene: ["You help Rin restore an old delivery bike using documented parts and careful testing. It returns to service for the clinic route."] },
+      { t: "Typhoon Run", req: { aff: 85 }, cost: { energy: 10 }, xp: 120, scene: ["With roads closing by the minute, you coordinate from the map while Rin delivers emergency batteries to a shelter before the typhoon lands."] },
+      { t: "Courier Standard", req: { aff: 110 }, cost: { energy: 10 }, xp: 200, reward: 3000, scene: ["Rin publishes the team's safe-route standard for every ward courier. Your runner earns permanent access to her endurance program."] },
+    ],
+  },
+  {
+    id: "hana", name: "Hana Mochizuki", kanji: "医", tag: "Clinic Medic",
+    bio: "A practical trainee medic who runs evening first-aid sessions and never wastes a needed supply.",
+    perks: { 4: "medic", 7: "triage" },
+    perkDesc: { 4: "First-aid coaching — HP regenerates faster", 7: "Triage network — shorter hospital recovery" },
+    stages: [
+      { t: "First Response", req: { aff: 0 }, cost: { energy: 5 }, xp: 10, scene: ["You help Hana stabilize an injured courier and keep the crowd calm until the ambulance arrives."] },
+      { t: "Supply Check", req: { aff: 12 }, cost: { energy: 6, money: 400 }, xp: 20, scene: ["You replace expired first-aid stock and label every cabinet so volunteers can find supplies quickly."] },
+      { t: "Clear Head", req: { aff: 25, happy: 70 }, cost: { energy: 6 }, xp: 35, scene: ["Hana runs a demanding response drill. Your calm attention helps the whole class finish without mistakes."] },
+      { t: "Night Clinic", req: { aff: 40, def: 25 }, cost: { energy: 10 }, xp: 60, reward: 1500, scene: ["A city outage fills the clinic. You carry equipment, manage the queue, and protect the entrance while Hana treats patients."] },
+      { t: "Mobile Unit", req: { aff: 60, money: 12000 }, cost: { energy: 8, money: 8000 }, xp: 90, scene: ["Your funding repairs a mobile clinic van. Hana tests every system before approving it for ward service."] },
+      { t: "Training Day", req: { aff: 85 }, cost: { energy: 10 }, xp: 120, scene: ["Together you train shopkeepers and couriers in basic first response, expanding the ward's safety net block by block."] },
+      { t: "Care Network", req: { aff: 110 }, cost: { energy: 10 }, xp: 200, reward: 3000, scene: ["Hana links the clinic, mobile unit, and volunteer teams into one reliable response network. Your runner receives advanced triage support."] },
+    ],
+  },
+  {
+    id: "yumi", name: "Yumi Hoshino", kanji: "音", tag: "Independent Performer",
+    bio: "A disciplined singer who writes her own material and organizes clean, welcoming community shows.",
+    perks: { 4: "sunshine", 7: "lucky" },
+    perkDesc: { 4: "Morale playlist — happiness decays slowly", 7: "Crowd momentum — slightly better arcade luck" },
+    stages: [
+      { t: "One Flyer Left", req: { aff: 0 }, cost: { energy: 5 }, xp: 10, scene: ["You help Yumi distribute the last flyers for a small all-ages community show. She remembers that you stayed to clean the hall afterward."] },
+      { t: "Audience of Nine", req: { aff: 12 }, cost: { energy: 5, money: 300 }, xp: 20, scene: ["Only nine people arrive, but Yumi performs with care and thanks every attendee. You help balance the modest door income."] },
+      { t: "Arcade Logistics", req: { aff: 25, gambleWins: 3 }, cost: { energy: 6, money: 500 }, xp: 35, scene: ["Yumi studies the arcade's card tables as a lesson in probability and budgeting. Together you set a strict entertainment limit and stick to it."] },
+      { t: "B-Side", req: { aff: 40 }, cost: { energy: 8 }, xp: 60, scene: ["A ward rescue inspires a new song about courage and service. You help Yumi check that every lyric honours the people involved."] },
+      { t: "Fair Contract", req: { aff: 60, money: 12000 }, cost: { energy: 8, money: 12000 }, xp: 90, scene: ["An unfair agency contract threatens Yumi's work. A legal adviser helps negotiate a clean exit, funded by your team."] },
+      { t: "Two Hundred Voices", req: { aff: 85 }, cost: { energy: 10 }, xp: 120, scene: ["Two hundred neighbours sing Yumi's hopeful chorus together. She turns the event into a fundraiser for the night clinic."] },
+      { t: "Open Stage", req: { aff: 110 }, cost: { energy: 10 }, xp: 200, reward: 3000, scene: ["Yumi establishes a transparent community stage where new performers keep their rights and younger players have a safe venue."] },
+    ],
+  },
+  {
+    id: "ayame", name: "Aya Tachibana", kanji: "察", tag: "Civic Investigator",
+    bio: "A methodical public-safety investigator who follows evidence, documents every decision, and refuses bribes.",
+    perks: { 4: "headsup", 7: "immunity" },
+    perkDesc: { 4: "Safety alerts — jail sentences are shorter", 7: "Verified evidence — chance to avoid a false bust" },
+    stages: [
+      { t: "Witness Statement", req: { aff: 0 }, cost: { energy: 5 }, xp: 10, scene: ["Aya asks what you saw near a damaged supply depot. You give a complete statement and help identify the real escape route."] },
+      { t: "Open Records", req: { aff: 12 }, cost: { energy: 6, money: 400 }, xp: 20, scene: ["You review public incident records with Aya and find a pattern of missing evidence tags."] },
+      { t: "Known Routes", req: { aff: 25, crimesDone: 15 }, cost: { energy: 6 }, xp: 35, scene: ["Your knowledge of the ward helps Aya recover stolen relief supplies without accusing innocent residents."] },
+      { t: "The Safety Alert", req: { aff: 40, lvl: 8 }, cost: { energy: 8 }, xp: 60, scene: ["Aya issues a verified safety alert before a dangerous building inspection, preventing workers from entering the site."] },
+      { t: "Audit Trail", req: { aff: 60 }, cost: { energy: 10, nerve: 10 }, xp: 90, reward: 4000, scene: ["You secure an unbroken audit trail proving that an official diverted community funds. Aya submits the evidence through proper review channels."] },
+      { t: "Public Hearing", req: { aff: 85 }, cost: { energy: 10 }, xp: 120, scene: ["At a public hearing, Aya presents the facts without exaggeration. Your testimony helps the ward adopt stronger oversight."] },
+      { t: "Clear Record", req: { aff: 110 }, cost: { energy: 12 }, xp: 200, reward: 3000, scene: ["Aya establishes a trusted reporting line between residents and investigators. Your runner earns access to verified safety intelligence."] },
+    ],
+  },
+];
+const GIRLS = LEGACY_STORY_ARCHIVE;
+
+const CONTRACTS = [
+  { id: "c1", name: "Escort the Kurosawa Convoy", kanji: "護", nerve: 10, energy: 15, chance: 0.75, pay: [12000, 20000], xp: 120 },
+  { id: "c2", name: "Silence the Mizuno Ledger", kanji: "帳", nerve: 14, energy: 18, chance: 0.6, pay: [20000, 38000], xp: 200 },
+  { id: "c3", name: "Retrieve the Oyabun's Heirloom", kanji: "宝", nerve: 18, energy: 22, chance: 0.45, pay: [40000, 75000], xp: 350 },
+];
+
+const girlState = (p, id) => (p.romance && p.romance[id]) || { aff: 0, stage: 0 };
+const hasPerk = (p, perkId) => GIRLS.some((g) =>
+  Object.entries(g.perks).some(([s, pid]) => pid === perkId && girlState(p, g.id).stage >= Number(s)));
+const GIFTS = { pocky: 4, plush: 15, sake: 6, ramen: 5, charm: 25 };
+
+/* pairs whose personalities can accept an open/shared relationship */
+const POLY_PAIRS = [["rin", "yumi"], ["rin", "hana"], ["hana", "yumi"], ["yumi", "sakura"], ["hana", "ayame"]];
+const polyOK = (a, b) => POLY_PAIRS.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
+const pairKey = (a, b) => [a, b].sort().join("+");
+const CONFESS = 6; // stage value once chapter 6 (the confession) is completed
+const shortName = (id) => (GIRLS.find((g) => g.id === id)?.name.split(" ")[0]) || id;
+const hasFlag = (p, f) => (p.flags || []).includes(f);
+const resolveScene = (stage, flags) => {
+  if (stage.branches) {
+    for (const key of Object.keys(stage.branches)) {
+      if (key !== "default" && flags.includes(key)) return stage.branches[key];
+    }
+    return stage.branches.default;
+  }
+  return stage.scene;
+};
+
+const REGEN = { energy: 4000, nerve: 9000, hp: 2500, happyDecay: 30000 };
+
+const newPlayer = () => ({
+  name: "Runaway", handle: null, cloudKey: null,
+  level: 1, xp: 0, money: 500,
+  energy: 30, nerve: 10, hp: 100, happy: 100,
+  stats: { str: 5, def: 5, spd: 5, dex: 5 },
+  inventory: {}, weapon: null, armor: null,
+  job: "none",
+  jailUntil: 0, hospitalUntil: 0,
+  counters: { fightsWon: 0, crimesDone: 0, trains: 0, shifts: 0, gambleWins: 0, crafts: 0 },
+  claimed: [],
+  romance: {}, partner: null, flags: [],
+  bank: 0, bankAt: now(), lastDay: null, streak: 0, daily: null, achv: [], title: null, gear: [], pity: 0, autoSalvage: false, statPoints: 0, fame: 0, evo: 0,
+  created: now(),
+});
+
+const maxEnergy = (p) => 30 + p.level * 2 + (hasPerk(p, "nitro") ? 10 : 0) + (p.evo || 0) * 5;
+const maxNerve = (p) => 10 + Math.floor(p.level * 1.2);
+const maxHp = (p) => 100 + p.level * 12 + (p.stats.def + gearBonuses(p).def) * 2 + gearBonuses(p).hp;
+const xpNeed = (p) => p.level * 100;
+
+/* Stable UI primitives — must live at module scope so React never remounts their subtrees */
+const Bar = ({ label, val, max, color }) => (
+  <div className="bar">
+    <div className="bar-head"><span>{label}</span><span>{Math.floor(val)}/{max}</span></div>
+    <div className="bar-track"><div className="bar-fill" style={{ width: `${clamp((val / max) * 100, 0, 100)}%`, background: color }} /></div>
+  </div>
+);
+
+const Panel = ({ title, kanji, children }) => (
+  <section className="panel">
+    <div className="panel-kanji">{kanji}</div>
+    <h2 className="panel-title">{title}</h2>
+    {children}
+  </section>
+);
+
+export default function NeoTokyoUnderworld({ initialPlayer = null, runnerProfile = null, armoryBonuses = null, armoryProgress = 0, walletBalance = null, onPlayerChange = null, onOpenBattle = null, onOpenArmory = null, onOpenSocial = null, onOpenTrading = null, onOpenEconomy = null, onNavigate = null }) {
+  const initialPlayerRef = useRef(initialPlayer);
+  const [p, setP] = useState(newPlayer);
+  const [screen, setScreen] = useState("home");
+  const [log, setLog] = useState([{ t: "system", msg: "Welcome to Neo-Tokyo. The night is yours." }]);
+  const [loaded, setLoaded] = useState(false);
+  const [fightLog, setFightLog] = useState(null);
+  const [bet, setBet] = useState(100);
+  const [chatMsgs, setChatMsgs] = useState([]);
+  const [chatInput, setChatInput] = useState("");
+  const [handleInput, setHandleInput] = useState("");
+  const [handleErr, setHandleErr] = useState("");
+  const [chatBusy, setChatBusy] = useState(false);
+  const [board, setBoard] = useState(null);
+  const [pinInput, setPinInput] = useState("");
+  const [gateMode, setGateMode] = useState("new");
+  const [selGirl, setSelGirl] = useState(null);
+  const [scene, setScene] = useState(null);
+  const [jealousy, setJealousy] = useState(null);
+  const [pendingChoice, setPendingChoice] = useState(null);
+  const [floaters, setFloaters] = useState([]);
+  const [revealIdx, setRevealIdx] = useState(0);
+  const [selItem, setSelItem] = useState(null);
+  const [forging, setForging] = useState(null);
+  const [brawl, setBrawl] = useState(null);
+  const [lootQueue, setLootQueue] = useState([]);
+  const [bjMode, setBjMode] = useState("classic");
+  const [bj, setBj] = useState(null);
+  const [bjFeed, setBjFeed] = useState([]);
+  const bjFeedCache = useRef({});
+  const [cricket, setCricket] = useState(null);
+  const [evoConfirm, setEvoConfirm] = useState(false);
+  const [ichi, setIchi] = useState(null);
+  const [combatMode, setCombatMode] = useState("brawl");
+  const [simiOpen, setSimiOpen] = useState(false);
+  const [simiMsgs, setSimiMsgs] = useState([
+    { role: "assistant", content: "*boot chime* ♪ Simi online! I'm your guide unit, senpai. Ask what to do next, how the Forge works, which ally route to build, or how to play ICHI with proper UNO rules." },
+  ]);
+  const [simiInput, setSimiInput] = useState("");
+  const [simiBusy, setSimiBusy] = useState(false);
+  const simiEndRef = useRef(null);
+  const floatId = useRef(0);
+
+  const float = useCallback((text, color = "#D98600") => {
+    const id = ++floatId.current;
+    setFloaters((f) => [...f, { id, text, color, x: 12 + Math.random() * 56 }]);
+    setTimeout(() => setFloaters((f) => f.filter((x) => x.id !== id)), 1600);
+  }, []);
+  const chatCache = useRef({});
+  const lbPushAt = useRef(0);
+  const cloudPushAt = useRef(0);
+
+  const sha256 = async (s) => {
+    try {
+      if (typeof crypto !== "undefined" && crypto.subtle && crypto.subtle.digest && typeof TextEncoder !== "undefined") {
+        const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+        return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+      }
+    } catch (e) { /* fall through to pure-JS */ }
+    return sha256Sync(s);
+  };
+  const passKey = (h, pin) => sha256(`ntu-grid-pass|${h.toLowerCase()}|${pin}`);
+
+  /* ---------- storage capability layer ---------- */
+  const sharedOK = useRef(null); // null = untested, true/false = known
+
+  const probeShared = useCallback(async () => {
+    if (sharedOK.current !== null) return sharedOK.current;
+    if (!window.storage || !window.storage.set) { sharedOK.current = false; return false; }
+    try {
+      const probeKey = "probe:" + Math.random().toString(36).slice(2, 8);
+      const res = await window.storage.set(probeKey, "1", true);
+      if (!res) throw new Error("null response");
+      try { await window.storage.delete(probeKey, true); } catch (e) { /* fine */ }
+      sharedOK.current = true;
+    } catch (e) {
+      sharedOK.current = false;
+    }
+    return sharedOK.current;
+  }, []);
+
+  const sGet = async (k, shared) => {
+    if (shared && sharedOK.current === false) throw new Error("shared storage unavailable");
+    return window.storage.get(k, shared);
+  };
+  const sSet = async (k, v, shared) => {
+    if (shared && sharedOK.current === false) throw new Error("shared storage unavailable");
+    const r = await window.storage.set(k, v, shared);
+    if (!r) throw new Error("storage returned no result");
+    return r;
+  };
+  const sList = async (prefix, shared) => {
+    if (shared && sharedOK.current === false) throw new Error("shared storage unavailable");
+    return window.storage.list(prefix, shared);
+  };
+
+  /* offline (local) fallback for the Grid Pass when shared storage is blocked */
+  const localPassSave = async (key, data) => window.storage.set(`localacct:${key}`, JSON.stringify(data), false);
+  const localPassLoad = async (key) => window.storage.get(`localacct:${key}`, false);
+  const [, forceTick] = useState(0);
+  const lastRegen = useRef({ energy: now(), nerve: now(), hp: now(), happy: now() });
+  const saveTimer = useRef(null);
+
+  const pushLog = useCallback((msg, t = "info") => {
+    setLog((l) => [{ t, msg, at: now() }, ...l].slice(0, 60));
+  }, []);
+
+  /* ---------- load save ---------- */
+  useEffect(() => {
+    (async () => {
+      try {
+        const seededPlayer = initialPlayerRef.current;
+        const r = seededPlayer ? { value: JSON.stringify(seededPlayer) } : await window.storage.get("ntu-save-v1");
+        if (r && r.value) {
+          const s = JSON.parse(r.value);
+          const merged = processDay({ ...newPlayer(), ...s, stats: { ...newPlayer().stats, ...s.stats }, counters: { ...newPlayer().counters, ...s.counters } }, pushLog);
+          if (s.statPoints === undefined) {
+            const spent = (merged.stats.str + merged.stats.def + merged.stats.spd + merged.stats.dex) - 20;
+            merged.statPoints = Math.max(0, (merged.level - 1) * 5 - spent);
+            if (merged.statPoints > 0) pushLog(`New system — stats now come from level-ups. You have ${merged.statPoints} unspent stat points waiting.`, "system");
+          }
+          if (merged.bank > 0) {
+            const earned = Math.floor(merged.bank * 0.02 * ((now() - (merged.bankAt || now())) / 3600000));
+            if (earned >= 1) {
+              merged.bank += earned; merged.bankAt = now();
+              pushLog(`While you were away, the bank earned ${fmt(earned)} in interest.`, "system");
+            }
+          }
+          setP(merged);
+          pushLog("Save file loaded. Welcome back.", "system");
+        } else {
+          setP((pl) => processDay({ ...pl }, pushLog));
+        }
+      } catch (e) { setP((pl) => processDay({ ...pl }, pushLog)); }
+      await probeShared();
+      setLoaded(true);
+    })();
+  }, [pushLog]);
+
+  useEffect(() => {
+    if (!armoryBonuses) return;
+    setP((player) => ({ ...player, armoryBonuses }));
+  }, [armoryBonuses]);
+
+  useEffect(() => {
+    if (!loaded || !Number.isFinite(Number(walletBalance))) return;
+    setP((player) => Number(player.money) === Number(walletBalance) ? player : { ...player, money: Math.max(0, Number(walletBalance)) });
+  }, [loaded, walletBalance]);
+
+  /* ---------- autosave ---------- */
+  useEffect(() => {
+    if (!loaded) return;
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      try {
+        if (onPlayerChange) await onPlayerChange(p);
+        else await window.storage.set("ntu-save-v1", JSON.stringify(p));
+      } catch (e) { /* retry on next mutation */ }
+      if (p.handle && sharedOK.current && now() - lbPushAt.current > 30000) {
+        lbPushAt.current = now();
+        try {
+          await sSet(`lb:${p.handle.toLowerCase()}`, JSON.stringify({
+            h: p.handle, lvl: p.level, money: p.money, wins: p.counters.fightsWon, title: p.title || null, evo: p.evo || 0, seen: now(),
+          }), true);
+        } catch (e) { /* shared store unavailable */ }
+      }
+      if (p.cloudKey && now() - cloudPushAt.current > 15000) {
+        cloudPushAt.current = now();
+        try {
+          if (sharedOK.current) await sSet(`acct:${p.cloudKey}`, JSON.stringify(p), true);
+          else await localPassSave(p.cloudKey, p);
+        } catch (e) { /* retry next save */ }
+      }
+    }, 800);
+  }, [p, loaded, onPlayerChange]);
+
+  /* ---------- regen tick ---------- */
+  useEffect(() => {
+    const iv = setInterval(() => {
+      const t = now();
+      setP((pl) => {
+        let ch = false; const q = { ...pl };
+        const r = lastRegen.current;
+        const eInt = hasPerk(q, "nitro") ? 2500 : hasPerk(q, "turbo") ? 3000 : REGEN.energy;
+        if (t - r.energy >= eInt && q.energy < maxEnergy(q)) {
+          q.energy = clamp(q.energy + Math.floor((t - r.energy) / eInt), 0, maxEnergy(q)); r.energy = t; ch = true;
+        }
+        if (t - r.nerve >= REGEN.nerve && q.nerve < maxNerve(q)) {
+          q.nerve = clamp(q.nerve + Math.floor((t - r.nerve) / REGEN.nerve), 0, maxNerve(q)); r.nerve = t; ch = true;
+        }
+        if (t - r.hp >= REGEN.hp && q.hp < maxHp(q) && q.hospitalUntil < t) {
+          const heal = hasPerk(q, "firstaid") ? 4 : 2;
+          q.hp = clamp(q.hp + Math.floor((t - r.hp) / REGEN.hp) * heal, 0, maxHp(q)); r.hp = t; ch = true;
+        }
+        if (q.bank > 0) {
+          const interest = Math.floor(q.bank * 0.02 * ((t - (q.bankAt || t)) / 3600000));
+          if (interest >= 1) { q.bank += interest; q.bankAt = t; ch = true; }
+        }
+        if (q.lastDay !== todayStr()) { processDay(q, null); ch = true; }
+        const hFloor = hasPerk(q, "sunshine") ? 55 : 20;
+        const hInt = hasPerk(q, "sunshine") ? REGEN.happyDecay * 3 : REGEN.happyDecay;
+        if (t - r.happy >= hInt && q.happy > hFloor) { q.happy -= 1; r.happy = t; ch = true; }
+        return ch ? q : pl;
+      });
+      forceTick((x) => x + 1); // refresh jail/hospital countdowns
+    }, 1000);
+    return () => clearInterval(iv);
+  }, []);
+
+  /* ---------- helpers ---------- */
+  const gainXp = (q, amt) => {
+    const morale = q.happy >= 70 ? 1.1 : 1;
+    q.xp += Math.round(amt * (1 + gearBonuses(q).xp / 100) * morale * evoMult(q));
+    while (q.xp >= xpNeed(q)) {
+      q.xp -= xpNeed(q); q.level += 1;
+      q.statPoints = (q.statPoints || 0) + 5;
+      q.energy = maxEnergy(q); q.nerve = maxNerve(q); q.hp = maxHp(q);
+      pushLog(`LEVEL UP — level ${q.level}! +5 stat points to spend. Bars refilled.`, "good");
+      float("LEVEL UP! +5 stat points", "#D98600");
+    }
+  };
+
+  const jailed = p.jailUntil > now();
+  const hospitalized = p.hospitalUntil > now();
+  const locked = jailed || hospitalized;
+  const secsLeft = (until) => Math.max(0, Math.ceil((until - now()) / 1000));
+
+  const weapon = itemById(p.weapon);
+  const armor = itemById(p.armor);
+
+  /* ---------- actions ---------- */
+  /* fight playback: reveal one combat line at a time */
+  useEffect(() => {
+    if (!fightLog || revealIdx >= fightLog.lines.length) return;
+    const iv = setInterval(() => setRevealIdx((i) => Math.min(i + 1, fightLog.lines.length)), 380);
+    return () => clearInterval(iv);
+  }, [fightLog, revealIdx]);
+
+  const doCrime = (c) => {
+    if (locked) return;
+    if (p.nerve < c.nerve) { pushLog("Not enough nerve. Wait for it to build.", "bad"); return; }
+    setP((pl) => {
+      const q = { ...pl, counters: { ...pl.counters }, stats: { ...pl.stats } };
+      q.nerve -= c.nerve;
+      const bonus = Math.min(0.15, q.stats.dex * 0.002 + q.level * 0.003);
+      if (Math.random() < c.chance + bonus) {
+        const pay = Math.round(rnd(c.pay[0], c.pay[1]) * (1 + 0.05 * fameTierIdx(q)) * evoMult(q));
+        q.money += pay; q.counters.crimesDone += 1; bumpDaily(q, "crimes");
+        gainXp(q, c.xp);
+        let drops = "";
+        if (Math.random() < 0.3) { addItem(q, "cell", 1); drops += " 電"; }
+        if (Math.random() < 0.25) { addItem(q, "silk", 1); drops += " 糸"; }
+        if (Math.random() < 0.03) { addItem(q, "star", 1); drops += " 星"; }
+        pushLog(`Crime success — ${c.name}. You pocket ${fmt(pay)}${drops ? ` (+${drops.trim()})` : ""}.`, "good");
+        float(`+${fmt(pay)}`, "#00A377");
+        if (drops) float(`+${drops}`, "#D98600");
+      } else if (Math.random() < 0.5) {
+        if (hasPerk(q, "immunity") && Math.random() < 0.3) {
+          pushLog("A patrol was inbound — but it rerouted a block early. Ayame's doing. You walk.", "good");
+        } else {
+          const jt = Math.round(c.jail * (hasPerk(q, "headsup") ? 0.65 : 1));
+          q.jailUntil = now() + jt * 1000;
+          pushLog(`Busted! The keisatsu drag you in for ${jt}s.`, "bad");
+        }
+      } else {
+        pushLog(`Failed — ${c.name}. You slip away empty-handed.`, "bad");
+      }
+      return q;
+    });
+  };
+
+  const allocateStat = (key, n) => {
+    const spend = Math.min(n, p.statPoints || 0);
+    if (spend <= 0) { pushLog("No stat points to spend — level up to earn more.", "bad"); return; }
+    setP((pl) => {
+      const q = { ...pl, stats: { ...pl.stats }, counters: { ...pl.counters } };
+      q.statPoints -= spend;
+      q.stats[key] += spend;
+      q.counters.trains += spend;
+      for (let i = 0; i < spend; i++) bumpDaily(q, "trains");
+      pushLog(`Allocated +${spend} ${key.toUpperCase()}.`, "good");
+      return q;
+    });
+    float(`${key.toUpperCase()} +${spend}`, "#0C93CC");
+  };
+
+  const respecStats = () => {
+    const cost = p.level * 1000;
+    const pool = (p.stats.str + p.stats.def + p.stats.spd + p.stats.dex) - 20;
+    if (pool <= 0) { pushLog("Nothing to reset — your stats are at base.", "info"); return; }
+    if (p.money < cost) { pushLog(`A full respec costs ${fmt(cost)}.`, "bad"); return; }
+    setP((pl) => {
+      const q = { ...pl, stats: { str: 5, def: 5, spd: 5, dex: 5 } };
+      q.money -= cost;
+      q.statPoints = (q.statPoints || 0) + pool;
+      q.hp = Math.min(q.hp, maxHp(q));
+      pushLog(`Respec complete — ${pool} points refunded for ${fmt(cost)}.`, "system");
+      return q;
+    });
+    float("STATS RESET", "#D98600");
+  };
+
+  const addItem = (q, id, n = 1) => { q.inventory = { ...q.inventory }; q.inventory[id] = (q.inventory[id] || 0) + n; };
+  const bumpDaily = (q, key) => {
+    if (!q.daily) return;
+    q.daily = { ...q.daily, prog: { ...q.daily.prog, [key]: (q.daily.prog[key] || 0) + 1 } };
+  };
+
+  const fight = (e) => {
+    if (locked) return;
+    if (p.energy < 8) { pushLog("Fighting takes 8 energy. You're running on fumes.", "bad"); return; }
+    setP((pl) => {
+      const q = { ...pl, counters: { ...pl.counters } };
+      q.energy -= 8;
+      const gb = gearBonuses(q);
+      const eff = { str: q.stats.str + gb.str, def: q.stats.def + gb.def, spd: q.stats.spd + gb.spd, dex: q.stats.dex + gb.dex };
+      const wPow = equipPower(q, "weapon");
+      const aPow = equipPower(q, "armor");
+      let myHp = q.hp, foeHp = e.hp;
+      const pMax = maxHp(q), eMax = e.hp;
+      const lines = [{ t: `You square off against ${e.name} (Lv ${e.lvl}) under the neon rain.`, kind: "info", myHp, foeHp }];
+      let round = 1;
+      while (myHp > 0 && foeHp > 0 && round <= 30) {
+        const meFirst = eff.spd + rnd(0, 20) >= e.lvl * 3 + rnd(0, 20);
+        const myHit = Math.max(1, Math.round((eff.str + wPow) * (0.8 + Math.random() * 0.5) - e.def * 0.5));
+        const foeHit = Math.max(1, Math.round(e.atk * (0.8 + Math.random() * 0.5) - (eff.def + aPow) * 0.4));
+        const dodge = Math.random() < Math.min(0.35, eff.dex * 0.004);
+        const crit = Math.random() < 0.12 + gb.crit / 100;
+        const seq = meFirst ? ["me", "foe"] : ["foe", "me"];
+        for (const turn of seq) {
+          if (myHp <= 0 || foeHp <= 0) break;
+          if (turn === "me") {
+            const dmg = crit ? Math.round(myHit * 1.6) : myHit;
+            foeHp = Math.max(0, foeHp - dmg);
+            lines.push({ t: `You strike for ${dmg}${crit ? " — CRITICAL!" : ""}`, kind: crit ? "crit" : "me", dmg, myHp, foeHp });
+          } else if (dodge) {
+            lines.push({ t: "You weave past the attack!", kind: "dodge", myHp, foeHp });
+          } else {
+            myHp = Math.max(0, myHp - foeHit);
+            lines.push({ t: `${e.name.split(" ")[0]} hits you for ${foeHit}`, kind: "foe", dmg: foeHit, myHp, foeHp });
+          }
+        }
+        round++;
+      }
+      if (foeHp <= 0 && myHp > 0) {
+        const pay = Math.round(rnd(e.pay[0], e.pay[1]) * (1 + gb.loot / 100) * evoMult(q));
+        q.money += pay; q.hp = Math.max(1, myHp); q.counters.fightsWon += 1; bumpDaily(q, "fights");
+        gainXp(q, e.xp);
+        const scraps = 1 + Math.floor(e.lvl / 6);
+        addItem(q, "scrap", scraps);
+        let drops = `鉄×${scraps}`;
+        if (Math.random() < 0.12 + e.lvl * 0.02) { addItem(q, "oni", 1); drops += " · 紅×1"; }
+        if (e.boss) {
+          addItem(q, "star", 1); addItem(q, "oni", 2); drops += " · 星×1 · 紅×2";
+          q.flags = Array.from(new Set([...(q.flags || []), "boss_slain"]));
+        }
+        lines.push({ t: `VICTORY — you take ${fmt(pay)}. Loot: ${drops}`, kind: "win", myHp: q.hp, foeHp: 0 });
+        pushLog(`Defeated ${e.name} and looted ${fmt(pay)} (${drops}).`, "good");
+        float(`+${fmt(pay)}`, "#00A377"); float(`+ ${drops}`, "#D98600");
+      } else {
+        const stay = hasPerk(q, "guardian") ? 22 : 45;
+        q.hp = 0; q.hospitalUntil = now() + stay * 1000;
+        lines.push({ t: `DEFEAT — you wake up in Kannon General Hospital (${stay}s)${hasPerk(q, "guardian") ? ". Hana pulls strings for early release." : "."}`, kind: "lose", myHp: 0, foeHp });
+        pushLog(`${e.name} put you in the hospital.`, "bad");
+      }
+      setFightLog({ enemy: e, lines, pMax, eMax });
+      setRevealIdx(1);
+      return q;
+    });
+  };
+
+  const startBrawl = (e) => {
+    if (locked) return;
+    if (p.energy < 8) { pushLog("Fighting takes 8 energy. You're running on fumes.", "bad"); return; }
+    setP((pl) => ({ ...pl, energy: pl.energy - 8 }));
+    setBrawl({ enemy: e });
+  };
+
+  const applyBrawlResult = (e, win, hpFrac) => {
+    setP((pl) => {
+      const q = { ...pl, counters: { ...pl.counters } };
+      if (win) {
+        const gb = gearBonuses(q);
+        const pay = Math.round(rnd(e.pay[0], e.pay[1]) * 1.25 * (1 + gb.loot / 100) * evoMult(q));
+        q.money += pay; q.hp = Math.max(1, Math.round(maxHp(q) * hpFrac));
+        q.counters.fightsWon += 1; bumpDaily(q, "fights");
+        gainXp(q, Math.round(e.xp * 1.2));
+        const scraps = 1 + Math.floor(e.lvl / 6);
+        addItem(q, "scrap", scraps);
+        let drops = `鉄×${scraps}`;
+        if (Math.random() < 0.15 + e.lvl * 0.02) { addItem(q, "oni", 1); drops += " · 紅×1"; }
+        if (e.boss) {
+          addItem(q, "star", 1); addItem(q, "oni", 2); drops += " · 星×1 · 紅×2";
+          q.flags = Array.from(new Set([...(q.flags || []), "boss_slain"]));
+        }
+        pushLog(`Brawl won vs ${e.name} — ${fmt(pay)} (+25% brawl bonus) and ${drops}.`, "good");
+        float(`+${fmt(pay)}`, "#00A377"); float(`+ ${drops}`, "#D98600");
+      } else {
+        const stay = hasPerk(q, "guardian") ? 22 : 45;
+        q.hp = 0; q.hospitalUntil = now() + stay * 1000;
+        pushLog(`${e.name} beat you down in the brawl. Hospital: ${stay}s.`, "bad");
+      }
+      return q;
+    });
+    setBrawl(null);
+  };
+
+  const priceOf = (item) => Math.round(item.cost * (hasPerk(p, "discount") ? 0.9 : 1));
+
+  const buy = (item) => {
+    const cost = priceOf(item);
+    if (p.money < cost) { pushLog("Not enough yen.", "bad"); return; }
+    setP((pl) => {
+      const q = { ...pl, inventory: { ...pl.inventory } };
+      q.money -= cost;
+      addItem(q, item.id, 1);
+      if (item.type === "weapon") { q.weapon = item.id; pushLog(`Bought & equipped ${item.name}.`, "good"); }
+      else if (item.type === "armor") { q.armor = item.id; pushLog(`Bought & equipped ${item.name}.`, "good"); }
+      else pushLog(`Bought ${item.name}.`, "good");
+      return q;
+    });
+    float(`-${fmt(cost)}`, "#E23A6B");
+  };
+
+  const tryGearDrop = (q, e) => {
+    const chance = e.boss ? 1 : 0.18 + e.lvl * 0.004;
+    if (Math.random() > chance) return null;
+    q.pity = (q.pity || 0) + 1;
+    let g = rollGear(e.lvl, !!e.boss);
+    if (q.pity >= 40 && g.rarity !== "legendary") {
+      let tries = 0;
+      while (g.rarity !== "legendary" && tries++ < 600) g = rollGear(e.lvl, true);
+    }
+    if (g.rarity === "legendary") q.pity = 0;
+    if (q.autoSalvage && g.rarity === "common") {
+      addItem(q, "scrap", 2);
+      pushLog("Common drop auto-salvaged → 鉄×2.", "info");
+      return null;
+    }
+    q.gear = [...(q.gear || []), g].slice(-60);
+    const tag = g.rarity === "legendary" ? "⟡ LEGENDARY DROP" : g.rarity === "golden" ? "✦ GOLDEN DROP" : "✦ Gear drop";
+    const msg = `${tag} — ${g.name} (${g.type === "weapon" ? "ATK" : "DEF"} ${gearPower(g)})`;
+    pushLog(msg, g.rarity === "legendary" ? "system" : "good");
+    setLootQueue((l) => [...l, g]);
+    return msg;
+  };
+
+  const enhanceGear = (uid) => {
+    const g = gearOf(p, uid);
+    if (!g || g.plus >= 10) return;
+    const ri = RAR_IDX[g.rarity];
+    const sc = (g.plus + 1) * (ri + 1), yen = (g.plus + 1) * 400 * (ri + 1);
+    if ((p.inventory.scrap || 0) < sc || p.money < yen) { pushLog(`Enhancing needs 鉄×${sc} + ${fmt(yen)}.`, "bad"); return; }
+    setP((pl) => {
+      const q = { ...pl, inventory: { ...pl.inventory }, gear: pl.gear.map((x) => (x.uid === uid ? { ...x, plus: x.plus + 1 } : x)) };
+      q.inventory.scrap -= sc; if (q.inventory.scrap <= 0) delete q.inventory.scrap;
+      q.money -= yen;
+      pushLog(`Enhanced ${g.name} to +${g.plus + 1}.`, "good");
+      return q;
+    });
+    float(`${g.name} +${g.plus + 1}!`, RARITY_COLOR[g.rarity]);
+  };
+
+  const salvageGear = (uid) => {
+    const g = gearOf(p, uid);
+    if (!g) return;
+    const sc = [2, 4, 8, 16, 40][RAR_IDX[g.rarity]];
+    setP((pl) => {
+      const q = { ...pl, gear: pl.gear.filter((x) => x.uid !== uid) };
+      if (q.weapon === uid) q.weapon = null;
+      if (q.armor === uid) q.armor = null;
+      addItem(q, "scrap", sc);
+      pushLog(`Salvaged ${g.name} → 鉄×${sc}.`, "info");
+      return q;
+    });
+    setSelItem(null);
+    float(`+ 鉄×${sc}`, "#2C2240");
+  };
+
+  const equipItem = (id) => {
+    if (isGearId(id)) {
+      const g = gearOf(p, id);
+      if (!g) return;
+      const was = p[g.type] === id;
+      setP((pl) => ({ ...pl, [g.type]: pl[g.type] === id ? null : id }));
+      float(was ? "Unequipped" : `Equipped ${g.name}`, "#0C93CC");
+      return;
+    }
+    const it = itemById(id);
+    if (!it || !p.inventory[id] || (it.type !== "weapon" && it.type !== "armor")) return;
+    setP((pl) => ({ ...pl, [it.type]: pl[it.type] === id ? null : id }));
+    float(p[it.type] === id ? "Unequipped" : `Equipped ${it.name}`, "#0C93CC");
+  };
+
+  const craft = (recipe) => {
+    if (locked) return;
+    const out = itemById(recipe.out);
+    const short = Object.entries(recipe.mats).filter(([m, n]) => (p.inventory[m] || 0) < n);
+    if (short.length || p.money < recipe.money) {
+      pushLog(`The forge needs more: ${short.map(([m, n]) => `${itemById(m).kanji}×${n}`).join(" ")}${p.money < recipe.money ? ` and ${fmt(recipe.money)}` : ""}.`, "bad");
+      return;
+    }
+    setForging(recipe.out);
+    setTimeout(() => setForging(null), 900);
+    setP((pl) => {
+      const q = { ...pl, inventory: { ...pl.inventory }, counters: { ...pl.counters } };
+      Object.entries(recipe.mats).forEach(([m, n]) => {
+        q.inventory[m] -= n; if (q.inventory[m] <= 0) delete q.inventory[m];
+      });
+      q.money -= recipe.money;
+      addItem(q, recipe.out, 1);
+      q.counters.crafts += 1; bumpDaily(q, "crafts");
+      gainXp(q, 25);
+      pushLog(`Forged ${out.name} — the anvil sings.`, "good");
+      return q;
+    });
+    float(`✦ ${out.name} forged!`, RARITY_COLOR[out.rarity]);
+  };
+
+  /* ---------- Simi the guide robot ---------- */
+  const simiSnapshot = () => {
+    const mats = MATERIALS.map((m) => `${m.icon}${p.inventory[m.id] || 0}`).join(" ");
+    const allies = GIRLS.map((g) => {
+      const gs = girlState(p, g.id);
+      return `${shortName(g.id)}: ch${gs.stage}/7 trust${gs.aff}`;
+    }).join("; ");
+    const claimable = MISSIONS.filter((m) => !p.claimed.includes(m.id) && p.counters[m.stat] >= m.goal).map((m) => m.name).join(", ") || "none";
+    return JSON.stringify({
+      screen, level: p.level, money: Math.floor(p.money),
+      energy: `${p.energy}/${maxEnergy(p)}`, nerve: `${p.nerve}/${maxNerve(p)}`,
+      hp: `${p.hp}/${maxHp(p)}`, happy: p.happy, stats: p.stats, unspentStatPoints: p.statPoints || 0, renown: `${p.fame || 0} (${fameTierName(p)})`, evolutions: p.evo || 0,
+      weapon: (equipInfo(p, "weapon") || {}).name || "bare fists",
+      armor: (equipInfo(p, "armor") || {}).name || "none",
+      bestGear: (p.gear || []).map((g) => `${g.rarity} ${g.name}+${g.plus}`).slice(-5).join("; ") || "none",
+      job: p.job, materials: mats, allies,
+      jailed, hospitalized, claimableMissions: claimable,
+      record: p.counters,
+    });
+  };
+
+  const simiFallback = (q) => {
+    const s = q.toLowerCase();
+    const has = (...w) => w.some((x) => s.includes(x));
+    if (has("what", "now", "next", "do", "start") && !has("forge", "romance", "affection")) {
+      if (jailed) return "*whirr* You're in a cell, senpai — nothing to do but wait out the timer. Nerve keeps regenerating though!";
+      if (hospitalized) return "Rest up! Hana would say the same. Your HP refills on release. ♪";
+      const done = MISSIONS.find((m) => !p.claimed.includes(m.id) && p.counters[m.stat] >= m.goal);
+      if (p.level >= EVOLVE_LEVEL) return `*whirr* Senpai... you can EVOLVE. Home screen. Permanent +${((p.evo || 0) + 1) * 10}% power tier awaits. The chrysalis calls.`;
+      if (done) return `*beep!* You have an unclaimed mission — "${done.name}"! Free ${fmt(done.reward)} waiting on the Missions screen!`;
+      if (p.nerve >= 8) return "Your nerve bar is loaded — hit the Crimes screen! Smuggle Rare Manga pays well at your level, and crimes drop 🔋 and 🧵 for the Forge.";
+      if ((p.statPoints || 0) > 0) return `*beep!* You have ${p.statPoints} unspent stat points on the Stats screen! Spend them — STR for damage, SPD to strike first, DEX to dodge.`;
+      if (p.energy >= maxEnergy(p) * 0.7) return "Lots of energy, senpai! Pick a fight for yen and 鉄 scrap, or work a shift.";
+      return "Bars are low — grab a Melon Soda, work a shift, or spend time on a Hearts romance route. Romance chapters unlock strong permanent perks. ♪";
+    }
+    if (has("forge", "craft", "material", "recipe")) return "The Night Forge turns drops into gear! 🔩 from fights, 🔋🧵 from contracts, 🔻 Crimson Alloy from tough enemies, and 🌟 from jackpots. The Apex Blade (+65) costs 12🔩 6🔻 2🌟 and ¥20,000. *beep*";
+    if (has("rich", "money", "yen", "broke")) return "Fastest yen: contracts when nerve is up, fights when energy is up, and job shifts between them. Kaori's chapter 7 unlocks the Ward Network's highest-paying contracts. ♪";
+    if (has("kaori", "sakura")) return "Kaori coordinates Ward 09 relief. Her chapter 4 opens the local supplier discount, and chapter 7 unlocks Ward Network contracts. *beep*";
+    if (has("rin")) return "Rin needs speed to be impressed — train SPD to 15 for ch3 and 30 for ch4. Her perks make your energy regen way faster. Never ask her to slow down! ♪";
+    if (has("hana")) return "Hana's clinic route asks for 70 happiness at chapter 3 and 25 DEF at chapter 4. Her perks improve HP regeneration and hospital recovery. *beep*";
+    if (has("yumi")) return "Yumi's community stage route needs 3 arcade wins for chapter 3 and ¥12,000 for the fair-contract chapter. Her perks protect morale and slightly improve arcade luck.";
+    if (has("aya", "ayame")) return "Aya's investigation route uses your ward knowledge: 15 completed contracts for chapter 3 and level 8 for chapter 4. Her perks reduce jail time and false busts.";
+    if (has("ally", "allies", "trust", "support", "bond", "romance", "girl", "date", "partner", "affection")) return "Open Hearts to date Sakura, Rin, Hana, Yumi or Ayame. Hangouts and gifts raise affection; chapter six makes the relationship choice, and other active romances can trigger jealousy. ♪";
+    if (has("evolve", "prestige", "rebirth", "reset run")) return `Evolve unlocks at level ${EVOLVE_LEVEL} on the Home screen, senpai! Reset the run, keep your gear/ally trust/bank, and gain +10% XP, +10% yen and +5 max energy forever per evolution. *beep*`;
+    if (has("uno", "ichi", "card game")) return "ICHI now follows classic UNO rules: match color, number or symbol; no stacking; +4 only when you hold no active-color card; call UNO at one card or draw 2. First out takes the in-game yen pot. *beep*";
+    if (has("stat", "point", "train", "gym", "build", "respec")) return "Stats come from level-ups now — +5 points per level, spent freely on the Stats screen. STR = damage, DEF = tanking, SPD = first strike + move speed, DEX = dodge + crit. Respec anytime for level×1000 yen. *beep*";
+    if (has("fight", "combat", "enemy", "lose", "hospital")) return "Fights cost 8 energy. STR = damage, DEF = tanking, SPD = striking first, DEX = dodging. If Kenji beats you up, buy a Bokken and Jacket first! Losing means the hospital, but Hana can halve that. *beep*";
+    if (has("jail", "police", "bust", "arrest")) return "Busted crimes have a 50% jail chance. Ayame's perks shrink sentences and can void busts entirely at ch7. Or just... commit better crimes, senpai. ♪";
+    if (has("grid", "pin", "login", "handle", "save")) return "Your progress is tied to the Google account you used to sign in, senpai. No extra PIN is needed — cloud save follows that account automatically!";
+    if (has("chat", "player", "rank", "leader")) return "World Chat and City Rankings are in the nav — real players, live! Claim a handle first. Be nice out there or I'll *beep* disapprovingly.";
+    if (has("hi", "hello", "hey", "who are you", "simi")) return "*happy beep* I'm Simi! Guide unit, morale officer, and the only resident of this city who won't rob you. Ask me 'what now?' anytime, senpai! ♪";
+    return "*processing whirr* Try asking about contracts, fights, the Forge, money, allies, UNO, or just 'what should I do now?' ♪";
+  };
+
+  const askSimi = async (text) => {
+    const t = (text || simiInput).trim();
+    if (!t || simiBusy) return;
+    setSimiInput("");
+    const msgs = [...simiMsgs, { role: "user", content: t }];
+    setSimiMsgs(msgs);
+    setSimiBusy(true);
+    await new Promise((resolve) => setTimeout(resolve, 280));
+    setSimiMsgs((m) => [...m, { role: "assistant", content: simiFallback(t) }]);
+    setSimiBusy(false);
+  };
+
+  useEffect(() => {
+    if (simiOpen && simiEndRef.current) simiEndRef.current.scrollIntoView({ behavior: "smooth" });
+  }, [simiMsgs, simiBusy, simiOpen]);
+
+  const useItem = (id) => {
+    const item = itemById(id);
+    if (!item || !p.inventory[id]) return;
+    setP((pl) => {
+      const q = { ...pl, inventory: { ...pl.inventory } };
+      q.inventory[id] -= 1; if (q.inventory[id] <= 0) delete q.inventory[id];
+      if (item.effect === "hp") q.hp = clamp(q.hp + item.amount, 0, maxHp(q));
+      if (item.effect === "energy") q.energy = clamp(q.energy + item.amount, 0, maxEnergy(q) + 20);
+      if (item.effect === "happy") q.happy = clamp(q.happy + item.amount, 0, 100);
+      if (item.effect === "nerve") q.nerve = clamp(q.nerve + item.amount, 0, maxNerve(q) + 5);
+      pushLog(`Used ${item.name} (${item.desc}).`, "good");
+      return q;
+    });
+  };
+
+  const workShift = () => {
+    const job = JOBS.find((j) => j.id === p.job);
+    if (!job || job.id === "none" || locked) return;
+    if (p.energy < job.energy) { pushLog(`A shift needs ${job.energy} energy.`, "bad"); return; }
+    setP((pl) => {
+      const q = { ...pl, counters: { ...pl.counters } };
+      q.energy -= job.energy; q.money += Math.round(job.pay * evoMult(q)); q.counters.shifts += 1; bumpDaily(q, "shifts");
+      q.happy = clamp(q.happy - 3, 0, 100);
+      gainXp(q, job.xp);
+      pushLog(`Worked a shift as ${job.name}: ${fmt(job.pay)}.`, "good");
+      float(`+${fmt(job.pay)}`, "#00A377");
+      return q;
+    });
+  };
+
+  const addFame = (q, winAmt) => {
+    const before = fameTierIdx(q);
+    q.fame = (q.fame || 0) + Math.max(1, Math.floor(winAmt / 500));
+    const after = fameTierIdx(q);
+    if (after > before) {
+      pushLog(`Your name travels — the ward now knows you as 「${FAME_TIERS[after].n}」. Syndicates pay +${after * 5}% on crimes; hearts warm faster.`, "system");
+      float(`RENOWN UP — ${FAME_TIERS[after].n}`, "#D98600");
+    }
+  };
+
+  const tryApproach = (q, net) => {
+    if (net < 1500 || Math.random() > 0.3) return;
+    const eligible = GIRLS.filter((g) => !hasFlag(q, `heartbroken_${g.id}`));
+    if (!eligible.length) return;
+    const g = eligible[rnd(0, eligible.length - 1)];
+    const gs = girlState(q, g.id);
+    const gain = rnd(2, 5) + fameTierIdx(q);
+    setGirl(q, g.id, { aff: gs.aff + gain });
+    const lines = {
+      sakura: `Sakura's people report your winnings before you've even cashed out. She pretends not to be impressed. Affection +${gain}.`,
+      rin: `Rin pulls up outside the casino. "Big winner needs a fast exit?" Affection +${gain}.`,
+      hana: `Hana texts: "Gambling is bad for your health. ...how much did you win though?" Affection +${gain}.`,
+      yumi: `Yumi materializes at your elbow. "Rich AND lucky?! Buy me a crepe, high roller!" Affection +${gain}.`,
+      ayame: `Ayame watches from the bar. "Legally acquired for once. I'm almost proud." Affection +${gain}.`,
+    };
+    pushLog(lines[g.id], "good");
+    float(`♥ ${shortName(g.id)} +${gain}`, "#E23A6B");
+  };
+
+  const bjBroadcast = async (net) => {
+    if (net < 1000 || !sharedOK.current || !p.handle) return;
+    try {
+      await sSet(`bjfeed:${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+        JSON.stringify({ h: p.handle, amt: net, t: Date.now() }), true);
+    } catch (e) { /* fine */ }
+  };
+
+  const bjDraw = (st) => st.deck.pop();
+
+  const applyBjSettle = (step) => {
+    setP((pl) => {
+      const q = { ...pl, counters: { ...pl.counters } };
+      if (step.payout > 0) q.money += step.payout;
+      if (step.net > 0) {
+        q.counters.gambleWins += 1; bumpDaily(q, "wins");
+        addFame(q, step.net);
+        tryApproach(q, step.net);
+        pushLog(`Blackjack — ${step.outcome}: +${fmt(step.net)}.`, "good");
+      } else if (step.net === 0) pushLog("Blackjack — push. Stake returned.", "info");
+      else pushLog(`Blackjack — ${step.outcome}: -${fmt(-step.net)}.`, "bad");
+      return q;
+    });
+    if (step.net > 0) { float(`+${fmt(step.net)}`, "#00A377"); bjBroadcast(step.net); }
+    else if (step.net < 0) float(`-${fmt(-step.net)}`, "#E23A6B");
+  };
+
+  const bjResolve = (stIn) => {
+    /* simulate the rest of the round, but emit it as a timed script */
+    const sim = {
+      deck: [...stIn.deck],
+      you: { ...stIn.you, cards: [...stIn.you.cards] },
+      bots: stIn.bots.map((b) => ({ ...b, cards: [...b.cards] })),
+      dealer: { ...stIn.dealer, cards: [...stIn.dealer.cards] },
+    };
+    const draw = () => sim.deck.pop();
+    const script = [];
+    sim.bots.forEach((bt, bi) => {
+      script.push({ t: "turn", who: `bot${bi}`, name: bt.name });
+      while (handValue(bt.cards) < bt.style) {
+        const c = draw();
+        bt.cards.push(c);
+        script.push({ t: "botcard", bi, c });
+      }
+      if (handValue(bt.cards) > 21) script.push({ t: "bust", bi });
+      else script.push({ t: "stand", bi });
+    });
+    script.push({ t: "reveal" });
+    while (handValue(sim.dealer.cards) < 17) {
+      const c = draw();
+      sim.dealer.cards.push(c);
+      script.push({ t: "dealercard", c });
+    }
+    const dv = handValue(sim.dealer.cards);
+    const v = handValue(sim.you.cards);
+    const stake = sim.you.bet * (sim.you.doubled ? 2 : 1);
+    const natural = v === 21 && sim.you.cards.length === 2 && !sim.you.doubled;
+    const dealerNatural = handValue(sim.dealer.cards.slice(0, 2)) === 21;
+    let payout = 0, outcome = "";
+    if (v > 21) { payout = 0; outcome = "BUST"; }
+    else if (natural && dealerNatural) { payout = stake; outcome = "PUSH"; }
+    else if (natural) { payout = Math.round(sim.you.bet * 2.5); outcome = "BLACKJACK!"; }
+    else if (dv > 21) { payout = stake * 2; outcome = "DEALER BUSTS"; }
+    else if (v > dv) { payout = stake * 2; outcome = "YOU WIN"; }
+    else if (v === dv) { payout = stake; outcome = "PUSH"; }
+    else { payout = 0; outcome = "HOUSE WINS"; }
+    script.push({ t: "result", outcome, net: payout - stake, payout });
+    setBj({
+      ...stIn,
+      you: { ...stIn.you, cards: [...stIn.you.cards] },
+      bots: stIn.bots.map((b) => ({ ...b, cards: [...b.cards] })),
+      dealer: { ...stIn.dealer, cards: [...stIn.dealer.cards] },
+      phase: "acting", turn: null, script, cursor: 0,
+      talk: handValue(stIn.you.cards) > 21 ? "You bust. The table winces in sympathy." : "You stand. The table plays on…",
+    });
+  };
+
+  /* timed playback of the round script — one action at a time */
+  useEffect(() => {
+    if (!bj || bj.phase !== "acting") return;
+    const step = bj.script && bj.script[bj.cursor];
+    if (!step) return;
+    const delay = step.t === "turn" ? 600 : step.t === "reveal" ? 750 : step.t === "result" ? 800 : 620;
+    const id = setTimeout(() => {
+      if (step.t === "result") applyBjSettle(step);
+      setBj((cur) => {
+        if (!cur || cur.phase !== "acting") return cur;
+        const st = {
+          ...cur, cursor: cur.cursor + 1,
+          bots: cur.bots.map((b) => ({ ...b, cards: [...b.cards] })),
+          dealer: { ...cur.dealer, cards: [...cur.dealer.cards] },
+        };
+        if (step.t === "turn") { st.turn = step.who; st.talk = `${step.name} plays…`; }
+        if (step.t === "botcard") st.bots[step.bi].cards.push(step.c);
+        if (step.t === "bust") {
+          st.bots[step.bi].bust = true; st.turn = null;
+          st.talk = BJ_TALK.bust[rnd(0, BJ_TALK.bust.length - 1)];
+        }
+        if (step.t === "stand") {
+          st.turn = null;
+          st.talk = `${st.bots[step.bi].name} stands on ${handValue(st.bots[step.bi].cards)}.`;
+        }
+        if (step.t === "reveal") { st.dealer.revealed = true; st.turn = "dealer"; st.talk = "Madam Koi turns her hole card…"; }
+        if (step.t === "dealercard") st.talk = "Madam Koi draws.";
+        if (step.t === "result") {
+          st.phase = "result"; st.turn = null;
+          st.outcome = step.outcome; st.net = step.net;
+          st.talk = step.net > 0 ? BJ_TALK.win[rnd(0, BJ_TALK.win.length - 1)] : BJ_TALK.lose[rnd(0, BJ_TALK.lose.length - 1)];
+        }
+        return st;
+      });
+    }, delay);
+    return () => clearTimeout(id);
+  }, [bj]);
+
+
+  const ichiStart = () => {
+    if (locked) return;
+    const b = clamp(bet, 10, Math.floor(p.money));
+    if (p.money < 10) { pushLog("You need at least ¥10 to sit down for ICHI.", "bad"); return; }
+    setP((pl) => ({ ...pl, money: pl.money - b }));
+    setIchi({ bet: b, id: Date.now() });
+  };
+
+  const ichiEnd = ({ win, winnerName }) => {
+    const b = ichi ? ichi.bet : 0;
+    setIchi(null);
+    setP((pl) => {
+      const q = { ...pl, counters: { ...pl.counters } };
+      if (win) {
+        const payout = b * 3;
+        q.money += payout;
+        q.counters.gambleWins += 1; bumpDaily(q, "wins");
+        addFame(q, payout - b); tryApproach(q, payout - b);
+        pushLog(`ICHI! You shed your last card and take the pot: +${fmt(payout - b)}.`, "good");
+      } else {
+        pushLog(`${winnerName} sheds last and takes the pot. -${fmt(b)}.`, "bad");
+      }
+      return q;
+    });
+    if (win) float(`一 ICHI! +${fmt(b * 2)}`, "#D98600");
+    else float(`-${fmt(b)}`, "#E23A6B");
+  };
+
+  const cricketStart = () => {
+    if (locked) return;
+    const b = clamp(bet, 10, Math.floor(p.money));
+    if (p.money < 10) { pushLog("You need at least ¥10 for the cricket bookies.", "bad"); return; }
+    setP((pl) => ({ ...pl, money: pl.money - b }));
+    setCricket({ bet: b, id: Date.now() });
+  };
+
+  const cricketEnd = ({ runs, mult }) => {
+    const b = cricket ? cricket.bet : 0;
+    setCricket(null);
+    setP((pl) => {
+      const q = { ...pl, counters: { ...pl.counters } };
+      const payout = b * mult;
+      if (payout > 0) q.money += payout;
+      const net = payout - b;
+      if (net > 0) {
+        q.counters.gambleWins += 1; bumpDaily(q, "wins");
+        addFame(q, net); tryApproach(q, net);
+        pushLog(`Street cricket — ${runs} runs: +${fmt(net)}.`, "good");
+      } else if (net === 0) pushLog(`Street cricket — ${runs} runs. Stake returned.`, "info");
+      else pushLog(`Street cricket — out for ${runs}. -${fmt(-net)}.`, "bad");
+      return q;
+    });
+    const netF = b * mult - b;
+    if (netF > 0) float(`+${fmt(netF)}`, "#00A377");
+    else if (netF < 0) float(`-${fmt(-netF)}`, "#E23A6B");
+  };
+
+  const arcadeSkillEnd = ({ score = 0, reward = 0 }) => {
+    const safeReward = clamp(Math.floor(reward), 0, 500);
+    if (safeReward) setP((pl) => ({ ...pl, money: pl.money + safeReward }));
+    pushLog(`Arcade skill run · ${Math.floor(score).toLocaleString()} pts${safeReward ? ` · +${fmt(safeReward)}` : ""}.`, "good");
+    if (safeReward) float(`+${fmt(safeReward)}`, "#55eaff");
+  };
+
+  const bjStart = () => {
+    if (locked) return;
+    const b = clamp(bet, 10, Math.floor(p.money));
+    if (p.money < 10) { pushLog("You need at least ¥10 to sit at the table.", "bad"); return; }
+    setP((pl) => ({ ...pl, money: pl.money - b }));
+    const st = {
+      phase: "player", deck: newDeck(),
+      you: { cards: [], bet: b, doubled: false },
+      bots: BJ_BOTS.map((bt) => ({ ...bt, cards: [] })),
+      dealer: { cards: [], revealed: false },
+      talk: BJ_TALK.deal[rnd(0, BJ_TALK.deal.length - 1)],
+    };
+    st.you.cards = [bjDraw(st), bjDraw(st)];
+    st.bots.forEach((bt) => { bt.cards = [bjDraw(st), bjDraw(st)]; });
+    st.dealer.cards = [bjDraw(st), bjDraw(st)];
+    setBj({ ...st, phase: "deal", talk: "Madam Koi deals…" });
+    setTimeout(() => {
+      if (handValue(st.you.cards) === 21) { bjResolve({ ...st, talk: "Natural 21!" }); return; }
+      setBj((cur) => (cur && cur.phase === "deal" ? { ...cur, phase: "player", talk: "Your move." } : cur));
+    }, 1100);
+  };
+
+  const bjHit = () => {
+    if (!bj || bj.phase !== "player") return;
+    const st = { ...bj, you: { ...bj.you, cards: [...bj.you.cards, bjDraw(bj)] } };
+    if (handValue(st.you.cards) > 21) { bjResolve(st); return; }
+    if (handValue(st.you.cards) === 21) { bjResolve(st); return; }
+    setBj(st);
+  };
+
+  const bjStand = () => { if (bj && bj.phase === "player") bjResolve({ ...bj, you: { ...bj.you } }); };
+
+  const bjDouble = () => {
+    if (!bj || bj.phase !== "player" || bj.you.cards.length !== 2) return;
+    if (p.money < bj.you.bet) { pushLog("Not enough yen to double down.", "bad"); return; }
+    setP((pl) => ({ ...pl, money: pl.money - bj.you.bet }));
+    const st = { ...bj, you: { ...bj.you, doubled: true, cards: [...bj.you.cards, bjDraw(bj)] } };
+    bjResolve(st);
+  };
+
+  /* live table feed of real players' wins */
+  useEffect(() => {
+    if (screen !== "casino" || bjMode !== "blackjack" || sharedOK.current !== true) return;
+    const poll = async () => {
+      try {
+        const res = await sList("bjfeed:", true);
+        const keys = (res && res.keys ? res.keys : []).map(keyName).filter(Boolean).sort().slice(-5);
+        const rows = [];
+        for (const k of keys) {
+          if (!(k in bjFeedCache.current)) {
+            try { const r = await sGet(k, true); bjFeedCache.current[k] = r && r.value ? JSON.parse(r.value) : null; }
+            catch (e) { bjFeedCache.current[k] = null; }
+          }
+          if (bjFeedCache.current[k]) rows.push(bjFeedCache.current[k]);
+        }
+        setBjFeed(rows.sort((a, b) => b.t - a.t));
+      } catch (e) { /* keep last */ }
+    };
+    poll();
+    const iv = setInterval(poll, 15000);
+    return () => clearInterval(iv);
+  }, [screen, bjMode]);
+
+  const gamble = (kind) => {
+    if (locked) return;
+    const b = clamp(bet, 10, p.money);
+    if (p.money < 10) { pushLog("You need at least ¥10 to gamble.", "bad"); return; }
+    setP((pl) => {
+      const q = { ...pl, counters: { ...pl.counters } };
+      const lucky = hasPerk(q, "lucky");
+      if (kind === "coin") {
+        if (Math.random() < (lucky ? 0.53 : 0.48)) { q.money += b; q.counters.gambleWins += 1; bumpDaily(q, "wins"); addFame(q, b); tryApproach(q, b); pushLog(`Coin flip WON — +${fmt(b)}.`, "good"); float(`+${fmt(b)}`, "#00A377"); }
+        else { q.money -= b; pushLog(`Coin flip lost — -${fmt(b)}.`, "bad"); }
+      } else {
+        const roll = Math.random();
+        if (roll < (lucky ? 0.07 : 0.05)) { q.money += b * 10; q.counters.gambleWins += 1; bumpDaily(q, "wins"); addFame(q, b * 10); tryApproach(q, b * 10); addItem(q, "star", 1); pushLog(`JACKPOT 七七七 — +${fmt(b * 10)} and a 星 Star Shard!`, "good"); float(`七七七 +${fmt(b * 10)}`, "#D98600"); float("+ 星", "#D98600"); }
+        else if (roll < (lucky ? 0.36 : 0.3)) { q.money += b * 2; q.counters.gambleWins += 1; bumpDaily(q, "wins"); addFame(q, b * 2); tryApproach(q, b * 2); pushLog(`Slots paid double — +${fmt(b * 2)}.`, "good"); float(`+${fmt(b * 2)}`, "#00A377"); }
+        else { q.money -= b; pushLog(`Slots ate your bet — -${fmt(b)}.`, "bad"); }
+      }
+      return q;
+    });
+  };
+
+  const claimMission = (m) => {
+    if (p.claimed.includes(m.id) || p.counters[m.stat] < m.goal) return;
+    setP((pl) => {
+      const q = { ...pl, claimed: [...pl.claimed, m.id] };
+      q.money += m.reward; gainXp(q, m.xp);
+      pushLog(`Mission complete — ${m.name}: ${fmt(m.reward)}.`, "good");
+      return q;
+    });
+  };
+
+  /* ---------- branching romance ---------- */
+  const setGirl = (q, id, patch) => {
     q.romance = { ...(q.romance || {}) };
     q.romance[id] = { ...girlState(q, id), ...patch };
   };
@@ -1817,13 +2895,7 @@ const LEGACY_STORY_ARCHIVE = [
     });
   };
 
-  const applySyndicateChoice = (amount, result) => {
-    setP((pl) => ({ ...pl, money: Math.max(0, pl.money + Number(amount || 0)) }));
-    pushLog(`${result}${amount >= 0 ? ` +${fmt(amount)}` : ` −${fmt(Math.abs(amount))}`}`, amount >= 0 ? "good" : "bad");
-    if (amount > 0) float(`+${fmt(amount)}`, "#7dffca");
-  };
-
-  const evolve = () => {
+  const applySyndicateChoice = (amount, result) => {\n    setP((pl) => ({ ...pl, money: Math.max(0, pl.money + Number(amount || 0)) }));\n    pushLog(`${result}${amount >= 0 ? ` +${fmt(amount)}` : ` −${fmt(Math.abs(amount))}`}`, amount >= 0 ? "good" : "bad");\n    if (amount > 0) float(`+${fmt(amount)}`, "#7dffca");\n  };\n\n  const evolve = () => {
     if (p.level < EVOLVE_LEVEL) return;
     setEvoConfirm(false);
     setP((pl) => {
