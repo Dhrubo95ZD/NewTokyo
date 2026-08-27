@@ -614,7 +614,12 @@ export default function OnlineHub({ children }) {
         onOpenSocial: () => { setInventoryOpen(false); setOpen(true); },
         onOpenTrading: () => { setOpen(false); setInventoryOpen(false); setExchangeOpen(true); },
         onOpenEconomy: (tab = "auction") => { setOpen(false); setInventoryOpen(false); setMasteryOpen(false); setExchangeOpen(false); setEconomyTab(tab); setEconomyOpen(true); },
-        onNavigate: (destination) => { if (destination !== "social") { setOpen(false); setEmojiOpen(false); } },
+        onNavigate: (destination) => {
+          setOpen(false); setEmojiOpen(false);
+          if (destination !== "fights" && destination !== "loadout") setInventoryOpen(false);
+          if (destination !== "economy") setEconomyOpen(false);
+          setMasteryOpen(false); setExchangeOpen(false);
+        },
         walletBalance,
       }) : children}
       <TradingTerminal open={exchangeOpen} balance={walletBalance ?? accountSave?.core?.money ?? 0} onClose={() => setExchangeOpen(false)} onWalletChange={acceptExchangeBalance} />

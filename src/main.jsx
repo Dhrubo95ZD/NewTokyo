@@ -5,6 +5,7 @@ import { createStorageBridge } from "./storage.js";
 import OnlineHub from "./online/OnlineHub.jsx";
 import { supabase } from "./online/supabase.js";
 import "./mobile.css";
+import "./command-deck-v7.css";
 
 class CrashScreen extends React.Component {
   constructor(props) {
