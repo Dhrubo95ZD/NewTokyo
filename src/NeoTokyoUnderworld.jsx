@@ -248,9 +248,9 @@ export function Brawl({ stats, enemy, onEnd, techniques = [] }) {
       if (!skill || S.done || Number(S.skillCd[skillId] || 0) > 0) return;
       S.skillCd[skillId] = skill.cooldown; S.banner = skill.name.toUpperCase(); S.bannerT = .65;
       if (skillId === "arc-slash") S.mobs.filter((mob) => Math.hypot(mob.x-S.p.x,mob.y-S.p.y) < 145).forEach((mob) => strikeMob(mob, 1.65, skill.color));
-      if (skillId === "pulse-guard") { S.p.ifr=Math.max(S.p.ifr,2.2); S.p.hp=Math.min(stats.maxHp,S.p.hp+stats.maxHp*.1); S.rings.push({x:S.p.x,y:S.p.y,r:18,c:skill.color,t:1}); }
+      if (skillId === "pulse-guard") { S.p.ifr=Math.max(S.p.ifr,2.2); S.p.hp=Math.min(stats.maxHp,S.p.hp+stats.maxHp*.1); S.rings.push({x:S.p.x,y:S.p.y,r:18,c:skill.color,t:.8,duration:.8,growth:95}); }
       if (skillId === "vector-rush") { const mob=[...S.mobs].sort((a,b)=>Math.hypot(a.x-S.p.x,a.y-S.p.y)-Math.hypot(b.x-S.p.x,b.y-S.p.y))[0]; if(mob){S.p.x=clamp(mob.x-34,S.p.r,W-S.p.r);S.p.y=clamp(mob.y,S.p.r,H-S.p.r);S.p.ifr=.45;strikeMob(mob,2.35,skill.color);} }
-      if (skillId === "repair-cloud") { S.p.hp=Math.min(stats.maxHp,S.p.hp+stats.maxHp*.3); S.rings.push({x:S.p.x,y:S.p.y,r:18,c:skill.color,t:1}); }
+      if (skillId === "repair-cloud") { S.p.hp=Math.min(stats.maxHp,S.p.hp+stats.maxHp*.3); S.rings.push({x:S.p.x,y:S.p.y,r:18,c:skill.color,t:.8,duration:.8,growth:95}); }
       if (skillId === "gravity-well") S.mobs.forEach((mob)=>{mob.x+=(S.p.x-mob.x)*.42;mob.y+=(S.p.y-mob.y)*.42;strikeMob(mob,1.25,skill.color);});
       if (skillId === "overdrive") { S.overdrive=6; spark(S.p.x,S.p.y,skill.color,18); }
     };
@@ -473,8 +473,11 @@ export function Brawl({ stats, enemy, onEnd, techniques = [] }) {
       /* kill rings, particles, damage numbers */
       S.rings = S.rings.filter((q) => (q.t -= dt) > 0);
       S.rings.forEach((q) => {
-        ctx.globalAlpha = q.t / 0.4; ctx.strokeStyle = q.c; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.arc(q.x, q.y, q.r + (0.4 - q.t) * 95, 0, 7); ctx.stroke();
+        const duration = Math.max(0.01, Number(q.duration || 0.4));
+        const progress = clamp(1 - q.t / duration, 0, 1);
+        const radius = Math.max(0.1, Number(q.r || 0) + progress * Number(q.growth || 95));
+        ctx.globalAlpha = clamp(q.t / duration, 0, 1); ctx.strokeStyle = q.c; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(q.x, q.y, radius, 0, 7); ctx.stroke();
       });
       ctx.globalAlpha = 1;
       S.parts.forEach((q) => { ctx.globalAlpha = q.t / 0.4; ctx.fillStyle = q.c; ctx.fillRect(q.x - 2, q.y - 2, 4, 4); });
@@ -3133,9 +3136,11 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
       case "home": return (
         <Panel title={`${p.name}${(p.evo || 0) > 0 ? " " + "★".repeat(Math.min(p.evo, 5)) : ""} — Level ${p.level}`} kanji="家">
           <div className="city-brief"><small>NEO-TOKYO // WARD 09</small><b>The city remembers</b><span>Rain over Shinjuku. Syndicate traffic is rising beneath the mag-rail.</span></div>
-          <button className="btn" onClick={() => setScreen("activities")}>Open City Activities</button>
+          <div className="city-home-actions">
+            <button className="btn city-activity-cta" onClick={() => setScreen("activities")}>Open City Activities</button>
+            {p.title && <p className="flavor city-home-status"><span>「{p.title}」</span><i aria-hidden="true">·</i><b>🔥 {p.streak || 1}-day streak</b></p>}
+          </div>
           {armoryProgress < 3 && <div className="progression-callout"><small>RUNNER INITIATION · {armoryProgress + 1}/3</small><b>{armoryProgress === 0 ? "Secure District One" : armoryProgress === 1 ? "Choose and equip your first weapon" : "Calibrate that weapon to +1"}</b><span>{armoryProgress === 0 ? "Read danger lanes, use your role skill, and protect the ward supply convoy." : armoryProgress === 1 ? "Your first clear grants one of three Green weapons and at least 12 Nano Shards." : "Calibration permanently strengthens the weapon; later gear can reach +20."}</span><button className="chip" onClick={onOpenArmory}>Continue initiation</button></div>}
-          {p.title && <p className="flavor" style={{ marginTop: -6 }}><span style={{ color: "#D98600" }}>「{p.title}」</span> · 🔥 {p.streak || 1}-day streak</p>}
           {(p.statPoints || 0) > 0 && (
             <p className="flavor" style={{ color: "#D98600" }}>You have {p.statPoints} unspent stat points — visit the Stats screen to grow stronger.</p>
           )}
