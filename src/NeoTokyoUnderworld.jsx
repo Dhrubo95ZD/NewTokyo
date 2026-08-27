@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import "./visual-v3.css";
 import { AndroidRunnerSprite, androidSpriteFrame } from "./game/AndroidRunner.jsx";
 import { CricketGameV2, NeonReflex, CircuitMemory } from "./arcade/ArcadeGames.jsx";
+import SyndicateCampaign from "./game/SyndicateCampaign.jsx";
 
 /* ============================================================
    NEO-TOKYO UNDERWORLD — a Torn-style anime crime RPG
@@ -2894,7 +2895,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, runnerProfile
     });
   };
 
-  const evolve = () => {
+  const applySyndicateChoice = (amount, result) => {\n    setP((pl) => ({ ...pl, money: Math.max(0, pl.money + Number(amount || 0)) }));\n    pushLog(`${result}${amount >= 0 ? ` +${fmt(amount)}` : ` −${fmt(Math.abs(amount))}`}`, amount >= 0 ? "good" : "bad");\n    if (amount > 0) float(`+${fmt(amount)}`, "#7dffca");\n  };\n\n  const evolve = () => {
     if (p.level < EVOLVE_LEVEL) return;
     setEvoConfirm(false);
     setP((pl) => {
@@ -3106,6 +3107,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, runnerProfile
     );
 
     switch (screen) {
+      case "story": return <SyndicateCampaign value={p.syndicateCampaign} onChange={(next) => setP((pl) => ({ ...pl, syndicateCampaign: next }))} onEarn={applySyndicateChoice} onExit={() => setScreen("home")} />;
       case "arcade": return (
         <Panel title="Neon Arcade" kanji="遊">
           <div className="arcade-hero"><small>WARD 09 // PLAY + TRADE</small><b>Games and market simulation.</b><span>Quick-launch every minigame plus the XAU/USD terminal. Player trading and professions now live in Economy.</span></div>
@@ -3138,7 +3140,8 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, runnerProfile
               ["gym", "Train", "力", "Spend energy to shape your base stats."],
               ["crimes", "Contracts", "罪", "Risk nerve for money and reputation."],
               ["job", "Work", "職", "Earn steady income and unlock careers."],
-              ["missions", "Story", "命", "Long-term objectives and city progression."],
+              ["story", "Family Story", "命", "Rise from nothing through choices, crime and recruitment."],
+              ["missions", "Objectives", "標", "Daily quests, achievements and long-term goals."],
               ["hearts", "Romance", "恋", "Date five women through branching stories, choices and relationship consequences."],
               ["shop", "Supplies", "店", "Buy recovery items and gifts."],
               ["items", "Bag", "袋", "Manage consumables and crafting materials."],
