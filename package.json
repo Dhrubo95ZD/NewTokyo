@@ -9,7 +9,7 @@
     "test:ichi": "node scripts/ichi-smoke.mjs",
     "test:progression": "node scripts/progression-rules-smoke.mjs && node scripts/progression-hub-smoke.mjs && node scripts/progression-hub-contract-smoke.mjs && node scripts/progression-hub-ui-smoke.mjs && node scripts/character-equipment-v4-smoke.mjs",
     "test:campaign": "node scripts/district-campaign-smoke.mjs",
-    "test:combat": "node scripts/reactive-combat-smoke.mjs && node scripts/operation-encounter-smoke.mjs",
+    "test:combat": "node scripts/reactive-combat-smoke.mjs && node scripts/operation-encounter-smoke.mjs && node scripts/pulse-guard-freeze-smoke.mjs",
     "test:trading": "node scripts/trading-rules-smoke.mjs && node scripts/exchange-simulator-contract-smoke.mjs && node scripts/trading-ui-contract-smoke.mjs",
     "test:coop": "node scripts/coop-rooms-contract-smoke.mjs",
     "test:mastery": "node scripts/mastery-smoke.mjs && node scripts/mastery-ui-contract-smoke.mjs",
