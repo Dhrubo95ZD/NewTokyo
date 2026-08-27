@@ -6,6 +6,7 @@ import EndlessCircuit from "../game/EndlessCircuit.jsx";
 import NeonDepths from "../game/NeonDepths.jsx";
 import { operationEncounterProfile } from "../game/operationEncounterRules.js";
 import { RunnerPortrait } from "./CharacterCreator.jsx";
+import { AndroidRunnerModel } from "../game/AndroidRunner.jsx";
 import {
   GEAR_SLOTS, LOOT, RARITIES, RARITY_ORDER, SETS, SLOT_ORDER, ItemArt,
   getArmoryBonuses, normalizeInventory,
@@ -205,7 +206,7 @@ export default function ProgressionHub({
   }, `${combatSkillById(skillId)?.name || "Technique"} equipped`);
 
   const encounterStats = {hp:110+(combatTotals.def||0)*2+(combatTotals.hp||0),maxHp:110+(combatTotals.def||0)*2+(combatTotals.hp||0),str:12+(combatTotals.str||0),def:6+(combatTotals.def||0),spd:8+(combatTotals.spd||0),dex:8+(combatTotals.dex||0),crit:2+(combatTotals.crit||0),wPow:0,aPow:0};
-  if (running) return <OperationEncounter dungeon={selectedDungeon} stats={encounterStats} techniques={equippedTechniques} runKey={runToken || `${selectedDungeon.id}-local`} result={encounterResult} busy={busy} onEnd={finishRun} onRetry={startRun} onExit={exitRun}/>;
+  if (running) return <OperationEncounter dungeon={selectedDungeon} stats={encounterStats} techniques={equippedTechniques} profile={profile} runKey={runToken || `${selectedDungeon.id}-local`} result={encounterResult} busy={busy} onEnd={finishRun} onRetry={startRun} onExit={exitRun}/>;
 
   return <main className="inventory-v2 progression-hub">
     <header className="v2-header progression-header">
@@ -235,9 +236,9 @@ export default function ProgressionHub({
 
       {battleMode === "raids" && <div className="battle-mode-panel"><RaidCommand player={player} combatPower={combatPower} state={raidState} busy={busy} onSpecialize={onSetRaidSpecialization} onQueue={onQueueRaid} onJoin={onJoinRaid} onFillBots={onFillRaidBots} onAdvance={onAdvanceRaid} onClaim={onClaimRaid} onLeave={onLeaveRaid} onRefresh={onRefreshRaid}/></div>}
 
-      {battleMode === "endless" && <div className="battle-mode-panel"><EndlessCircuit combatPower={combatPower} state={endlessState} busy={busy} onStart={onStartEndless} onStop={onStopEndless} onResolve={onResolveEndless} onRefresh={onRefreshEndless}/></div>}
+      {battleMode === "endless" && <div className="battle-mode-panel"><EndlessCircuit combatPower={combatPower} profile={profile} state={endlessState} busy={busy} onStart={onStartEndless} onStop={onStopEndless} onResolve={onResolveEndless} onRefresh={onRefreshEndless}/></div>}
 
-      {battleMode === "depths" && <div className="battle-mode-panel depths-mode-panel"><NeonDepths combatPower={combatPower} state={depthsState} busy={busy} onStart={onStartDepths} onAdvance={onAdvanceDepths} onExtract={onExtractDepths} onAbandon={onAbandonDepths} onRefresh={onRefreshDepths}/></div>}
+      {battleMode === "depths" && <div className="battle-mode-panel depths-mode-panel"><NeonDepths combatPower={combatPower} profile={profile} state={depthsState} busy={busy} onStart={onStartDepths} onAdvance={onAdvanceDepths} onExtract={onExtractDepths} onAbandon={onAbandonDepths} onRefresh={onRefreshDepths}/></div>}
 
       {["operations","afk","coop"].includes(battleMode) && <div className="battle-mode-panel operation-panel">
         <div className="dungeon-directory"><header><div><small>ALL QUESTS + DUNGEONS</small><h2>{battleMode === "operations" ? "Full-Screen Encounters" : battleMode === "afk" ? "AFK Grind Zones" : "Co-op Expeditions"}</h2></div><span>{battleMode === "coop" ? "Co-op needs 75% CP" : "Select one mission"}</span></header><div className="dungeon-grid">{DUNGEONS.map((dungeon) => { const solo = dungeonAccess(dungeon,{level:player.level,cp:combatPower},"solo"); const coop = dungeonAccess(dungeon,{level:player.level,cp:combatPower},"coop"); const access = battleMode === "coop" ? coop : solo; const clears = Number(progressionState?.clears?.[dungeon.id] || 0); const encounter = operationEncounterProfile(dungeon); return <button key={dungeon.id} className={`${selectedDungeon.id === dungeon.id ? "selected" : ""} ${access.unlocked ? "ready" : "locked"}`} onClick={() => setSelectedDungeonId(dungeon.id)}><div><small>LV {dungeon.level} · {dungeon.district}</small><b>{dungeon.name}</b><span>{dungeon.boss}</span></div><em>{encounter.label} · {dungeon.rarity}</em><footer><span>{dungeon.cp.toLocaleString()} CP</span><span>{clears} clears</span></footer></button>;})}</div></div>
@@ -276,7 +277,7 @@ export default function ProgressionHub({
         <section className="equipment-stage">
           <div className="stage-grid" aria-hidden="true"/><div className="stage-aura" aria-hidden="true"/>
           <figure className="runner-model-v4">
-            <img src="/assets/characters/runner-equipment-v3.webp" alt={`${profile.codename || "Runner"} fully helmeted android equipment preview`}/>
+            <AndroidRunnerModel profile={profile} label={`${profile.codename || "Runner"} customized fully helmeted android equipment preview`}/>
             <figcaption><span><small>ACTIVE RUNNER</small><b>{profile.codename || "RUNNER"}</b></span><em>{profile.archetype || profile.role || "operative"}</em></figcaption>
           </figure>
           <div className="slot-orbit">

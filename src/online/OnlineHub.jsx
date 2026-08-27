@@ -690,6 +690,7 @@ export default function OnlineHub({ children }) {
     <>
       {isValidElement(children) ? cloneElement(children, {
         initialPlayer: accountSave?.core || null,
+        runnerProfile: characterProfile,
         armoryBonuses,
         armoryProgress: inventoryState?.tutorialStep || 0,
         onPlayerChange: saveCore,

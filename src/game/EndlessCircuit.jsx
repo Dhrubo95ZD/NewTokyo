@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { DROP_BEAMS, endlessStageRequirement, normalizeEndlessState, normalizeGroundDrops } from "./endlessRules.js";
+import { AndroidRunnerSprite } from "./AndroidRunner.jsx";
 import "./endless-circuit.css";
 
-export default function EndlessCircuit({ combatPower = 0, state, busy, onStart, onStop, onResolve, onRefresh }) {
+export default function EndlessCircuit({ combatPower = 0, profile, state, busy, onStart, onStop, onResolve, onRefresh }) {
   const grind = normalizeEndlessState(state);
   const [target, setTarget] = useState(grind.stage);
   const [drops, setDrops] = useState([]);
@@ -52,7 +53,7 @@ export default function EndlessCircuit({ combatPower = 0, state, busy, onStart, 
     <div className="endless-arena">
       <div className="endless-sky"/><div className="endless-grid"/>
       <div className="endless-hud"><span>CURRENT STAGE <b>{grind.stage}</b></span><span>REQUIRED CP <b>{grind.requiredCp.toLocaleString()}</b></span><span>YOUR CP <b>{Number(combatPower).toLocaleString()}</b></span></div>
-      <div className="endless-runner"><i/><b>ANDROID RUNNER</b></div>
+      <div className="endless-runner"><AndroidRunnerSprite profile={profile} action={grind.active?"slash":"idle"}/><b>{profile?.codename||"ANDROID RUNNER"}</b></div>
       <div className="endless-horde">{[0,1,2,3,4].map((unit)=><i key={unit} style={{"--unit":unit}}><span>{unit===4?"ELITE":"HOSTILE"}</span></i>)}</div>
       <div className="endless-slash"/><div className="endless-impact"/>
       <div className="ground-loot" aria-live="polite">{drops.map((drop,index)=><article key={drop.id} style={{"--beam":DROP_BEAMS[drop.rarity]||DROP_BEAMS.common,"--drop":index}}><i/><b>{drop.name}</b><span>{drop.duplicate?`DUPLICATE · +${drop.shards} SHARDS`:drop.rarity.toUpperCase()}</span></article>)}</div>

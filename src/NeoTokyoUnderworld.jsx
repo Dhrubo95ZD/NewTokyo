@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./visual-v3.css";
+import { AndroidRunnerSprite, androidSpriteFrame } from "./game/AndroidRunner.jsx";
 
 /* ============================================================
    NEO-TOKYO UNDERWORLD — a Torn-style anime crime RPG
@@ -152,7 +153,7 @@ const RECIPES = [
 
 
 /* ============ HACK & SLASH ARENA ============ */
-export function Brawl({ stats, enemy, onEnd, techniques = [] }) {
+export function Brawl({ stats, enemy, onEnd, techniques = [], profile = {} }) {
   const cvs = useRef(null);
   const wrap = useRef(null);
   const flags = useRef({ atk: false, dash: false, skill: null });
@@ -167,6 +168,7 @@ export function Brawl({ stats, enemy, onEnd, techniques = [] }) {
     ctx.scale(dpr, dpr);
     const arenaBg = new Image();
     arenaBg.src = "/assets/world-v3/undercity-arena.webp";
+    const runnerAtlas = new Image(); runnerAtlas.src = "/assets/characters/android-v1/android-combat-atlas-v1.webp";
 
     const MOB_COLORS = { punk: "#00AEEF", delinq: "#FF4D82", ronin_e: "#8f7bff", maid: "#ffb3d1", oni_e: "#F1385C", kitsune: "#f2ecff", phantom: "#63f0ff" };
     const reduce = 60 / (60 + stats.def + stats.aPow);
@@ -443,20 +445,14 @@ export function Brawl({ stats, enemy, onEnd, techniques = [] }) {
       });
       ctx.globalAlpha = 1;
 
-      /* player — neon rōnin */
+      /* player — saved fully helmeted android identity */
       shadowBlob(p.x, p.y, p.r);
       ctx.save(); ctx.translate(p.x, p.y);
       if (p.ifr > 0) ctx.globalAlpha = 0.55;
-      ctx.shadowColor = "#FF4D82"; ctx.shadowBlur = 14;
-      ctx.fillStyle = "#241f3d"; ctx.strokeStyle = "#FF4D82"; ctx.lineWidth = 2.6;
-      ctx.beginPath(); ctx.arc(0, 0, p.r, 0, 7); ctx.fill(); ctx.stroke();
-      ctx.shadowBlur = 0;
-      ctx.rotate(p.face);
-      ctx.fillStyle = "#00AEEF";
-      ctx.beginPath(); ctx.moveTo(p.r * 0.15, -5.5); ctx.lineTo(p.r * 0.95, -2.5); ctx.lineTo(p.r * 0.95, 2.5); ctx.lineTo(p.r * 0.15, 5.5); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = "#FF4D82"; ctx.lineWidth = 2.4; ctx.lineCap = "round";
-      ctx.beginPath(); ctx.moveTo(-p.r * 0.6, -3); ctx.quadraticCurveTo(-p.r * 1.6, -6 + Math.sin(S.t * 9) * 3, -p.r * 2.1, -2); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-p.r * 0.6, 3); ctx.quadraticCurveTo(-p.r * 1.7, 7 + Math.cos(S.t * 8) * 3, -p.r * 2.2, 4); ctx.stroke();
+      if (runnerAtlas.complete && runnerAtlas.naturalWidth) {
+        const action=p.swing>0?"slash":(Math.hypot(p.mvx,p.mvy)>.01||p.dashT>0)?"run":"idle";const frame=androidSpriteFrame(profile,action);const sw=runnerAtlas.naturalWidth/4,sh=runnerAtlas.naturalHeight/4;
+        ctx.save();ctx.scale(Math.cos(p.face)<0?-1:1,1);ctx.drawImage(runnerAtlas,(frame%4)*sw,Math.floor(frame/4)*sh,sw,sh,-44,-60,88,88);ctx.restore();
+      }
       if (p.swing > 0) {
         const sw = p.swing / 0.18;
         ctx.globalAlpha = sw;
@@ -1716,7 +1712,7 @@ const Panel = ({ title, kanji, children }) => (
   </section>
 );
 
-export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses = null, armoryProgress = 0, walletBalance = null, onPlayerChange = null, onOpenBattle = null, onOpenArmory = null, onOpenSocial = null, onOpenTrading = null, onOpenEconomy = null, onNavigate = null }) {
+export default function NeoTokyoUnderworld({ initialPlayer = null, runnerProfile = null, armoryBonuses = null, armoryProgress = 0, walletBalance = null, onPlayerChange = null, onOpenBattle = null, onOpenArmory = null, onOpenSocial = null, onOpenTrading = null, onOpenEconomy = null, onNavigate = null }) {
   const initialPlayerRef = useRef(initialPlayer);
   const [p, setP] = useState(newPlayer);
   const [screen, setScreen] = useState("home");
@@ -3309,7 +3305,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
               <div className={`battle ${cur.kind === "foe" ? "fx-shake" : ""}`}>
                 <div className="battle-head">
                   <div className="fighter">
-                    <span className="avatar"><PixIcon id="player" size={40} /></span>
+                    <span className="avatar android-fight-avatar"><AndroidRunnerSprite profile={runnerProfile||{}} action={cur.kind === "me" || cur.kind === "crit" ? "slash" : "idle"}/></span>
                     <div className="fighter-bar">
                       <small>YOU</small>
                       <div className="hp-track"><div className="hp-fill me" style={{ width: `${(cur.myHp / fightLog.pMax) * 100}%` }} /></div>
@@ -4007,6 +4003,8 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
         .fighter{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
         .fighter.right{flex-direction:row}
         .avatar{font-size:34px;filter:drop-shadow(0 0 8px rgba(255,77,130,.5))}
+        .android-fight-avatar{display:inline-block;width:46px;height:52px;overflow:hidden}
+        .android-fight-avatar .android-runner-sprite{width:100%;height:100%}
         .fighter-bar{flex:1;min-width:0}
         .fighter-bar small{font-family:'Baloo 2',sans-serif;font-size:9px;color:#B8AFD2;letter-spacing:1px}
         .hp-track{height:8px;background:#2B2444;border-radius:99px;overflow:hidden}

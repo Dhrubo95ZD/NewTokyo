@@ -60,7 +60,7 @@
 /* Equipment cockpit v5: strict MMORPG slot matrix. Slots never overlap the model. */
 .equipment-stage{display:grid;grid-template-columns:minmax(160px,1fr) minmax(210px,.92fr) minmax(160px,1fr);grid-template-rows:1fr 1fr auto;grid-template-areas:"weapon model helmet" "armor model boots" ". megachip .";gap:12px;padding:16px;min-height:700px;overflow:hidden}
 .runner-model-v4{position:relative;z-index:2;inset:auto;grid-area:model;width:100%;height:100%;min-height:590px;align-self:stretch}
-.runner-model-v4>img{inset:8px 0 58px;height:calc(100% - 66px);object-fit:contain;object-position:center bottom}
+.runner-model-v4>.android-runner-model{position:absolute;inset:8px 0 58px;width:100%;height:calc(100% - 66px);min-height:0}
 .runner-model-v4 figcaption{left:4px;right:4px;bottom:4px}
 .slot-orbit{display:contents}.orbit-slot{position:relative;inset:auto!important;width:100%;max-width:none;transform:none!important;align-self:center;z-index:4;border-radius:18px}
 .orbit-weapon{grid-area:weapon}.orbit-helmet{grid-area:helmet}.orbit-armor{grid-area:armor}.orbit-boots{grid-area:boots}.orbit-megachip{grid-area:megachip}
@@ -70,13 +70,13 @@
 
 @media(max-width:700px){
  .equipment-stage{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:430px auto auto auto;grid-template-areas:"model model" "weapon helmet" "armor boots" "megachip megachip";gap:10px;padding:10px;min-height:0}
- .runner-model-v4{inset:auto;min-height:430px}.runner-model-v4>img{inset:4px 8% 56px;width:84%;height:calc(100% - 60px)}.runner-model-v4 figcaption{left:7%;right:7%;bottom:4px}
+ .runner-model-v4{inset:auto;min-height:430px}.runner-model-v4>.android-runner-model{inset:4px 8% 56px;width:84%;height:calc(100% - 60px)}.runner-model-v4 figcaption{left:7%;right:7%;bottom:4px}
  .slot-orbit{display:contents}.orbit-slot{inset:auto!important;width:100%;transform:none!important;align-self:stretch}
  .slot-main,.orbit-megachip .slot-main{min-height:112px;grid-template-columns:58px minmax(0,1fr);padding:8px}.slot-main>.v2-item-art{width:58px;height:66px}.slot-main b{font-size:10px}.slot-main em{font-size:7px}.slot-quick{min-height:48px}
  .stage-aura{left:24%;right:24%;bottom:auto;top:95px}
 }
 @media(max-width:430px){
- .equipment-stage{grid-template-rows:390px auto auto auto;gap:8px;padding:8px}.runner-model-v4{inset:auto;min-height:390px}.runner-model-v4>img{inset:2px 10% 54px;width:80%;height:calc(100% - 56px)}
+ .equipment-stage{grid-template-rows:390px auto auto auto;gap:8px;padding:8px}.runner-model-v4{inset:auto;min-height:390px}.runner-model-v4>.android-runner-model{inset:2px 10% 54px;width:80%;height:calc(100% - 56px)}
  .slot-main,.orbit-megachip .slot-main{min-height:104px;grid-template-columns:50px minmax(0,1fr);gap:3px 6px;padding:7px}.slot-main>.v2-item-art{width:50px;height:58px}.slot-main b{font-size:9px}.slot-main>small{font-size:7px}.slot-quick{font-size:8px}
 }
 

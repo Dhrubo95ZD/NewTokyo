@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DEPTHS_OBJECTIVES, depthsRecommendedCp, normalizeDepthsState, roomRewardPreview } from "./neonDepthsRules.js";
+import { androidSpriteFrame } from "./AndroidRunner.jsx";
 import "./neon-depths.css";
 
 const ACTORS = "/assets/neon-depths/depths-actors-v1.webp";
 const ENVIRONMENT = "/assets/neon-depths/depths-environment-v1.webp";
 const ABILITIES = "/assets/neon-depths/depths-abilities-v1.webp";
+const RUNNER = "/assets/characters/android-v1/android-combat-atlas-v1.webp";
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 const loadImage = (src) => new Promise((resolve) => { const image = new Image(); image.onload = () => resolve(image); image.src = src; });
@@ -22,7 +24,7 @@ function createRoomSimulation(room, tier, combatPower) {
   return { player: { x: 50, y: 66, hp: 100, maxHp: 100 }, enemies, nodes, objective, tier, combatPower, shieldUntil: 0, dashUntil: 0, lastAttack: 0, lastDamage: 0, startedAt: performance.now() };
 }
 
-function ExpeditionCanvas({ room, tier, combatPower, phase, onPhase, onLoot }) {
+function ExpeditionCanvas({ room, tier, combatPower, profile, phase, onPhase, onLoot }) {
   const canvasRef = useRef(null);
   const simRef = useRef(null);
   const imagesRef = useRef(null);
@@ -30,7 +32,7 @@ function ExpeditionCanvas({ room, tier, combatPower, phase, onPhase, onLoot }) {
   const [cooldowns, setCooldowns] = useState({ slash: 0, pulse: 0, dash: 0, shield: 0 });
 
   useEffect(() => { simRef.current = createRoomSimulation(room, tier, combatPower); onPhase("playing"); }, [room.index, tier, combatPower, onPhase]);
-  useEffect(() => { Promise.all([loadImage(ENVIRONMENT), loadImage(ACTORS), loadImage(ABILITIES)]).then(([environment, actors, abilities]) => { imagesRef.current = { environment, actors, abilities }; }); }, []);
+  useEffect(() => { Promise.all([loadImage(ENVIRONMENT), loadImage(ACTORS), loadImage(ABILITIES),loadImage(RUNNER)]).then(([environment, actors, abilities,runner]) => { imagesRef.current = { environment, actors, abilities,runner }; }); }, []);
 
   const complete = useCallback(() => {
     if (phase !== "playing" || simRef.current?.completed) return;
@@ -43,6 +45,7 @@ function ExpeditionCanvas({ room, tier, combatPower, phase, onPhase, onLoot }) {
     const sim = simRef.current; if (!sim || phase !== "playing" || cooldowns[ability] > Date.now()) return;
     const durations = { slash: 1900, pulse: 2600, dash: 4200, shield: 7000 };
     setCooldowns((current) => ({ ...current, [ability]: Date.now() + durations[ability] }));
+    sim.action=ability==="pulse"?"shoot":ability==="slash"?"slash":ability==="dash"?"run":"idle";sim.actionUntil=performance.now()+520;
     if (ability === "shield") { sim.shieldUntil = performance.now() + 2400; return; }
     if (ability === "dash") { sim.player.x = clamp(sim.player.x + 18, 10, 90); sim.dashUntil = performance.now() + 420; return; }
     const living = sim.enemies.filter((enemy) => enemy.hp > 0).sort((a,b) => Math.hypot(a.x-sim.player.x,a.y-sim.player.y)-Math.hypot(b.x-sim.player.x,b.y-sim.player.y));
@@ -89,7 +92,7 @@ function ExpeditionCanvas({ room, tier, combatPower, phase, onPhase, onLoot }) {
         if (sim.player.hp<=0) onPhase("defeat");
         if(images) {
           if(now<sim.dashUntil) drawAtlas(images.abilities,2,4,2,px-24,py,140,100,.75);
-          drawAtlas(images.actors,now<sim.dashUntil?1:0,4,2,px,py,96,132);
+          const playerAction=now<Number(sim.actionUntil||0)?sim.action:(now<sim.dashUntil?"run":"idle");drawAtlas(images.runner,androidSpriteFrame(profile,playerAction),4,4,px,py,108,108);
           if(now<sim.shieldUntil) drawAtlas(images.abilities,3,4,2,px,py+8,150,150,.72);
         }
         context.fillStyle="rgba(2,8,16,.9)";context.fillRect(20,height-25,width-40,9);context.fillStyle="#35e7d2";context.fillRect(20,height-25,(width-40)*(sim.player.hp/sim.player.maxHp),9);
@@ -110,7 +113,7 @@ function ExpeditionCanvas({ room, tier, combatPower, phase, onPhase, onLoot }) {
   return <div className="depths-playfield"><canvas ref={canvasRef} onPointerDown={interact}/><div className="depths-abilities" aria-label="Expedition abilities">{[["slash","斬","Blade",0],["pulse","撃","Pulse",1],["dash","避","Dash",2],["shield","盾","Guard",3]].map(([id,glyph,label,frame])=><button key={id} disabled={cd(id)>0||phase!=="playing"} onClick={()=>useAbility(id)} style={{"--ability-frame":frame}}><i>{glyph}</i><span>{label}</span>{cd(id)>0&&<em>{cd(id).toFixed(1)}</em>}</button>)}</div></div>;
 }
 
-export default function NeonDepths({ combatPower=0, state, busy, onStart, onAdvance, onExtract, onAbandon, onRefresh }) {
+export default function NeonDepths({ combatPower=0, profile, state, busy, onStart, onAdvance, onExtract, onAbandon, onRefresh }) {
   const normalized=useMemo(()=>normalizeDepthsState(state),[state]);
   const [tier,setTier]=useState(Math.max(1,normalized.highestTier)); const [partyMode,setPartyMode]=useState("solo");
   const [phase,setPhase]=useState("playing"); const [localLoot,setLocalLoot]=useState(null); const [notice,setNotice]=useState("");
@@ -127,7 +130,7 @@ export default function NeonDepths({ combatPower=0, state, busy, onStart, onAdva
   const fail=()=>act(()=>onAdvance(normalized.id,normalized.roomIndex,"defeat","none"));
   return <section className={`neon-depths-run accent-${room.accent}`}>
     <header className="depths-hud"><div><small>NEON DEPTHS · TIER {normalized.tier}</small><b>ROOM {normalized.roomIndex+1}/{normalized.route.length} · {objective.label}</b></div><div className="depths-backpack"><small>UNSECURED BACKPACK</small><b>{normalized.backpack.length+(localLoot?1:0)} DROPS</b></div><button onClick={()=>act(()=>onAbandon(normalized.id))}>Exit</button></header>
-    <ExpeditionCanvas room={room} tier={normalized.tier} combatPower={combatPower} phase={phase} onPhase={setPhase} onLoot={setLocalLoot}/>
+    <ExpeditionCanvas room={room} tier={normalized.tier} combatPower={combatPower} profile={profile} phase={phase} onPhase={setPhase} onLoot={setLocalLoot}/>
     <aside className="depths-objective"><small>{room.elite?"ELITE CHAMBER":room.type.toUpperCase()}</small><b>{objective.label}</b><span>{objective.detail}</span></aside>
     {phase==="cleared"&&<div className="depths-result"><small>ROOM SECURED</small><h2>{localLoot?.name}</h2><div className={`depths-loot rarity-${localLoot?.rarity}`}><span/><b>{localLoot?.rarity?.toUpperCase()} DROP</b><em>Unsecured until extraction</em></div><div className="depths-route-actions">{room.canExtract&&<button className="extract" disabled={busy} onClick={extract}>Extract safely</button>}<button disabled={busy} onClick={()=>advance("freight")}>Freight Spine <small>Combat route</small></button><button disabled={busy} onClick={()=>advance("relay")}>Flooded Relay <small>Tech route</small></button></div></div>}
     {phase==="defeat"&&<div className="depths-result defeat"><small>SIGNAL LOST</small><h2>Unsecured loot lost</h2><p>Your extracted equipment is safe. Return to deployment and choose the same tier or regroup.</p><button disabled={busy} onClick={fail}>Return to command</button></div>}

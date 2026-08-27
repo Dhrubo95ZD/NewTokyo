@@ -20,7 +20,8 @@
     "test:endless": "node scripts/endless-circuit-smoke.mjs && node scripts/battle-command-layout-smoke.mjs",
     "test:romance": "node scripts/relationship-restoration-smoke.mjs",
     "test:depths": "node scripts/neon-depths-smoke.mjs",
-    "test": "npm run test:ichi && npm run test:progression && npm run test:campaign && npm run test:combat && npm run test:trading && npm run test:coop && npm run test:mastery && npm run test:skills && npm run test:raid && npm run test:economy && npm run test:crews && npm run test:endless && npm run test:romance && npm run test:depths",
+    "test:android-identity": "node scripts/android-identity-smoke.mjs",
+    "test": "npm run test:ichi && npm run test:progression && npm run test:campaign && npm run test:combat && npm run test:trading && npm run test:coop && npm run test:mastery && npm run test:skills && npm run test:raid && npm run test:economy && npm run test:crews && npm run test:endless && npm run test:romance && npm run test:depths && npm run test:android-identity",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"
