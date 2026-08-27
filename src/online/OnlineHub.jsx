@@ -15,9 +15,13 @@ import { migrateAccountSave, SAVE_KEY, serializeAccountSave } from "./accountSav
 import { validateRunnerIdentity } from "./progressionRules.js";
 import { normalizeCombatSkills } from "../game/combatSkills.js";
 import { normalizeRaidState } from "../game/raidRules.js";
+import { normalizeEndlessState } from "../game/endlessRules.js";
+import CrewCommand from "../social/CrewCommand.jsx";
+import { normalizeCrewState } from "../social/crewRules.js";
 import "./online-hub.css";
 import "./account-gate.css";
 import "./visual-v3-overlays.css";
+import "../social/social-tabs.css";
 
 const LEGACY_OWNER_KEY = "ntu:legacy-save-owner";
 const nativeRedirect = "com.neotokyo.underworld://auth/callback";
@@ -51,6 +55,11 @@ export default function OnlineHub({ children }) {
   const [progressionState, setProgressionState] = useState(null);
   const [raidAuthority, setRaidAuthority] = useState(false);
   const [raidState, setRaidState] = useState(() => normalizeRaidState(null));
+  const [endlessAuthority, setEndlessAuthority] = useState(false);
+  const [endlessState, setEndlessState] = useState(() => normalizeEndlessState(null));
+  const [crewAuthority, setCrewAuthority] = useState(false);
+  const [crewState, setCrewState] = useState(() => normalizeCrewState(null));
+  const [socialTab, setSocialTab] = useState("crew");
   const [campaignAuthority, setCampaignAuthority] = useState(false);
   const [campaignProgress, setCampaignProgress] = useState({ serverState: "not_started", serverStage: 0 });
   const [busy, setBusy] = useState(false);
@@ -105,7 +114,7 @@ export default function OnlineHub({ children }) {
     let appUrlListener;
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setBooting(false); });
     const { data: auth } = supabase.auth.onAuthStateChange((_event, next) => {
-      if (!next?.user) { window.storage.setUser(null); accountRef.current = null; setAccountSave(null); setArmoryAuthority(false); setProgressionAuthority(false); setProgressionState(null); setRaidAuthority(false); setRaidState(normalizeRaidState(null)); setCampaignAuthority(false); setWalletAuthority(false); setWalletBalance(null); setCampaignProgress({ serverState: "not_started", serverStage: 0 }); setAccountReady(false); setCharacterProfile(null); setEditingCharacter(false); setInventoryOpen(false); setMasteryOpen(false); setExchangeOpen(false); setEconomyOpen(false); setEconomyAuthority(false); setEconomyState(normalizeEconomyState(null)); setInventoryState(null); }
+      if (!next?.user) { window.storage.setUser(null); accountRef.current = null; setAccountSave(null); setArmoryAuthority(false); setProgressionAuthority(false); setProgressionState(null); setRaidAuthority(false); setRaidState(normalizeRaidState(null)); setEndlessAuthority(false); setEndlessState(normalizeEndlessState(null)); setCrewAuthority(false); setCrewState(normalizeCrewState(null)); setCampaignAuthority(false); setWalletAuthority(false); setWalletBalance(null); setCampaignProgress({ serverState: "not_started", serverStage: 0 }); setAccountReady(false); setCharacterProfile(null); setEditingCharacter(false); setInventoryOpen(false); setMasteryOpen(false); setExchangeOpen(false); setEconomyOpen(false); setEconomyAuthority(false); setEconomyState(normalizeEconomyState(null)); setInventoryState(null); }
       setSession(next); setBooting(false);
     });
     if (Capacitor.isNativePlatform()) {
@@ -154,6 +163,12 @@ export default function OnlineHub({ children }) {
       const { data: serverRaid, error: raidError } = await supabase.rpc("get_my_raid_state");
       if (!raidError && serverRaid) { setRaidState(normalizeRaidState(serverRaid)); setRaidAuthority(true); }
       else { setRaidState(normalizeRaidState(null)); setRaidAuthority(false); }
+      const { data: serverEndless, error: endlessError } = await supabase.rpc("get_my_endless_state");
+      if (!endlessError && serverEndless) { setEndlessState(normalizeEndlessState(serverEndless)); setEndlessAuthority(true); }
+      else { setEndlessState(normalizeEndlessState(null)); setEndlessAuthority(false); }
+      const { data: serverCrew, error: crewError } = await supabase.rpc("get_my_crew_state");
+      if (!crewError && serverCrew) { setCrewState(normalizeCrewState(serverCrew)); setCrewAuthority(true); }
+      else { setCrewState(normalizeCrewState(null)); setCrewAuthority(false); }
       const { data: serverEconomy, error: economyError } = await supabase.rpc("get_my_economy_state");
       if (!economyError && serverEconomy) { setEconomyState(normalizeEconomyState(serverEconomy)); setEconomyAuthority(true); }
       else { setEconomyState(normalizeEconomyState(null)); setEconomyAuthority(false); }
@@ -502,6 +517,43 @@ export default function OnlineHub({ children }) {
   const claimRaid = useCallback(() => runRaidAction("claim_raid_rewards"), [runRaidAction]);
   const leaveRaid = useCallback(() => runRaidAction("leave_raid_room"), [runRaidAction]);
 
+  const refreshEndless = useCallback(async () => {
+    if (!endlessAuthority) return null;
+    const { data, error } = await supabase.rpc("get_my_endless_state");
+    if (error) throw error;
+    const next = normalizeEndlessState(data); setEndlessState(next); return next;
+  }, [endlessAuthority]);
+  const runEndlessAction = useCallback(async (rpc, args = {}) => {
+    if (!endlessAuthority) throw new Error("Run the Runner Crews + Endless SQL migration first");
+    const { data, error } = await supabase.rpc(rpc, args); if (error) throw error;
+    if (data?.armory) { const armory = normalizeInventory(data.armory); setInventoryState(armory); await commitSections({ armory }); }
+    const rawState = data?.state || data; if (rawState) setEndlessState(normalizeEndlessState(rawState));
+    return data;
+  }, [commitSections, endlessAuthority]);
+  const startEndless = useCallback((stage) => runEndlessAction("start_endless_grind", { p_stage: stage }), [runEndlessAction]);
+  const stopEndless = useCallback(() => runEndlessAction("stop_endless_grind"), [runEndlessAction]);
+  const resolveEndless = useCallback(() => runEndlessAction("resolve_endless_grind"), [runEndlessAction]);
+
+  const refreshCrew = useCallback(async () => {
+    if (!crewAuthority) return null;
+    const { data, error } = await supabase.rpc("get_my_crew_state"); if (error) throw error;
+    const next = normalizeCrewState(data); setCrewState(next); return next;
+  }, [crewAuthority]);
+  const runCrewAction = useCallback(async (rpc, args = {}) => {
+    if (!crewAuthority) throw new Error("Run the Runner Crews + Endless SQL migration first");
+    const { data, error } = await supabase.rpc(rpc, args); if (error) throw error;
+    if (data?.armory) { const armory = normalizeInventory(data.armory); setInventoryState(armory); await commitSections({ armory }); }
+    if (data?.balance != null && accountRef.current) { const balance = Number(data.balance) || 0; setWalletBalance(balance); await commitSections({ core: { ...accountRef.current.core, money: balance } }); }
+    const rawState = data?.crewState || data; if (rawState) setCrewState(normalizeCrewState(rawState));
+    return data;
+  }, [commitSections, crewAuthority]);
+  const createCrew = useCallback((name, tag, color) => runCrewAction("create_runner_crew", { p_name: name, p_tag: tag, p_color: color }), [runCrewAction]);
+  const joinCrew = useCallback((crewId) => runCrewAction("join_runner_crew", { p_crew_id: crewId }), [runCrewAction]);
+  const leaveCrew = useCallback(() => runCrewAction("leave_runner_crew"), [runCrewAction]);
+  const contributeCrisis = useCallback((track) => runCrewAction("contribute_city_crisis", { p_track: track }), [runCrewAction]);
+  const strikeCrisis = useCallback(() => runCrewAction("strike_city_crisis"), [runCrewAction]);
+  const claimCrisis = useCallback(() => runCrewAction("claim_city_crisis_reward"), [runCrewAction]);
+
   const refreshEconomy = useCallback(async () => {
     if (!economyAuthority) return null;
     const { data, error } = await supabase.rpc("get_my_economy_state");
@@ -570,6 +622,15 @@ export default function OnlineHub({ children }) {
     return () => { supabase.removeChannel(channel); };
   }, [userId, economyAuthority, refreshEconomy]);
 
+  useEffect(() => {
+    if (!supabase || !user || !crewAuthority) return undefined;
+    const channel = supabase.channel(`crew-${user.id}`)
+      .on("postgres_changes", { event:"*", schema:"public", table:"runner_crew_members" }, refreshCrew)
+      .on("postgres_changes", { event:"*", schema:"public", table:"crew_crisis_progress" }, refreshCrew)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [userId, crewAuthority, refreshCrew]);
+
   const armoryBonuses = useMemo(() => {
     const gear = getArmoryBonuses(inventoryState, characterProfile);
     const mastery = masteryBonuses(accountSave?.meta?.mastery);
@@ -611,7 +672,7 @@ export default function OnlineHub({ children }) {
         onOpenBattle: () => { setOpen(false); setMasteryOpen(false); setExchangeOpen(false); setProgressionTab("journey"); setInventoryOpen(true); },
         onOpenArmory: () => { setOpen(false); setMasteryOpen(false); setExchangeOpen(false); setProgressionTab("character"); setInventoryOpen(true); },
         onOpenMastery: () => { setOpen(false); setInventoryOpen(false); setExchangeOpen(false); setMasteryOpen(true); },
-        onOpenSocial: () => { setInventoryOpen(false); setOpen(true); },
+        onOpenSocial: () => { setInventoryOpen(false); setSocialTab("crew"); setOpen(true); },
         onOpenTrading: () => { setOpen(false); setInventoryOpen(false); setExchangeOpen(true); },
         onOpenEconomy: (tab = "auction") => { setOpen(false); setInventoryOpen(false); setMasteryOpen(false); setExchangeOpen(false); setEconomyTab(tab); setEconomyOpen(true); },
         onNavigate: (destination) => {
@@ -625,18 +686,21 @@ export default function OnlineHub({ children }) {
       <TradingTerminal open={exchangeOpen} balance={walletBalance ?? accountSave?.core?.money ?? 0} onClose={() => setExchangeOpen(false)} onWalletChange={acceptExchangeBalance} />
       <EconomyHub key={economyTab} open={economyOpen} initialTab={economyTab} state={economyAuthority ? economyState : null} inventory={inventoryState} balance={walletBalance ?? accountSave?.core?.money ?? 0} busy={busy} onClose={() => setEconomyOpen(false)} onRefresh={refreshEconomy} onStartSkill={startLifeSkill} onClaimSkill={claimLifeSkill} onCraft={craftRecipe} onList={listAuction} onBuy={buyAuction} onCancel={cancelAuction} />
       {masteryOpen && <div className="mastery-overlay"><MasteryBoard value={accountSave?.meta?.mastery} level={accountSave?.core?.level || 1} busy={busy} onUpgrade={investMastery} onClose={() => setMasteryOpen(false)} /></div>}
-      {inventoryOpen && <Inventory initialTab={progressionTab} profile={characterProfile} player={accountSave?.core || {}} value={inventoryState} masteryStats={masteryBonuses(accountSave?.meta?.mastery)} combatSkills={accountSave?.meta?.combatSkills} onCombatSkillsChange={saveCombatSkills} onChange={saveInventory} onPlayerChange={saveCore} onClose={() => setInventoryOpen(false)} onStartRun={armoryAuthority ? startDistrictRun : null} onCompleteRun={armoryAuthority ? completeDistrictRun : null} onSaveLoadout={armoryAuthority ? saveArmoryLoadout : null} onEnhanceItem={armoryAuthority ? enhanceArmoryItem : null} progressionState={progressionState} onManageArmory={progressionAuthority ? manageArmory : null} onStartAfk={progressionAuthority ? startAfkDungeon : null} onClaimAfk={progressionAuthority ? claimAfkDungeon : null} onQueueCoop={progressionAuthority ? queueCoopDungeon : null} onCreateCoopRoom={progressionAuthority ? createCoopRoom : null} onJoinCoopRoom={progressionAuthority ? joinCoopRoom : null} onListCoopRooms={progressionAuthority ? listCoopRooms : null} onLeaveCoop={progressionAuthority ? leaveCoopDungeon : null} onClaimCoop={progressionAuthority ? claimCoopDungeon : null} onRefreshProgression={progressionAuthority ? refreshProgression : null} raidState={raidState} onSetRaidSpecialization={raidAuthority ? setRaidSpecialization : null} onQueueRaid={raidAuthority ? queueRaid : null} onJoinRaid={raidAuthority ? joinRaid : null} onFillRaidBots={raidAuthority ? fillRaidBots : null} onAdvanceRaid={raidAuthority ? advanceRaid : null} onClaimRaid={raidAuthority ? claimRaid : null} onLeaveRaid={raidAuthority ? leaveRaid : null} onRefreshRaid={raidAuthority ? refreshRaid : null} campaignValue={campaignProgress} onCampaignChange={saveCampaign} onStartCampaign={startDistrictOne} onCampaignCheckpoint={advanceDistrictOne} onClaimCampaign={claimDistrictOne} onCalibrateCampaign={armoryAuthority ? enhanceArmoryItem : null} onCampaignComplete={completeCampaign} />}
+      {inventoryOpen && <Inventory initialTab={progressionTab} profile={characterProfile} player={accountSave?.core || {}} value={inventoryState} masteryStats={masteryBonuses(accountSave?.meta?.mastery)} combatSkills={accountSave?.meta?.combatSkills} onCombatSkillsChange={saveCombatSkills} onChange={saveInventory} onPlayerChange={saveCore} onClose={() => setInventoryOpen(false)} onStartRun={armoryAuthority ? startDistrictRun : null} onCompleteRun={armoryAuthority ? completeDistrictRun : null} onSaveLoadout={armoryAuthority ? saveArmoryLoadout : null} onEnhanceItem={armoryAuthority ? enhanceArmoryItem : null} progressionState={progressionState} onManageArmory={progressionAuthority ? manageArmory : null} onStartAfk={progressionAuthority ? startAfkDungeon : null} onClaimAfk={progressionAuthority ? claimAfkDungeon : null} onQueueCoop={progressionAuthority ? queueCoopDungeon : null} onCreateCoopRoom={progressionAuthority ? createCoopRoom : null} onJoinCoopRoom={progressionAuthority ? joinCoopRoom : null} onListCoopRooms={progressionAuthority ? listCoopRooms : null} onLeaveCoop={progressionAuthority ? leaveCoopDungeon : null} onClaimCoop={progressionAuthority ? claimCoopDungeon : null} onRefreshProgression={progressionAuthority ? refreshProgression : null} raidState={raidState} onSetRaidSpecialization={raidAuthority ? setRaidSpecialization : null} onQueueRaid={raidAuthority ? queueRaid : null} onJoinRaid={raidAuthority ? joinRaid : null} onFillRaidBots={raidAuthority ? fillRaidBots : null} onAdvanceRaid={raidAuthority ? advanceRaid : null} onClaimRaid={raidAuthority ? claimRaid : null} onLeaveRaid={raidAuthority ? leaveRaid : null} onRefreshRaid={raidAuthority ? refreshRaid : null} endlessState={endlessAuthority ? endlessState : null} onStartEndless={endlessAuthority ? startEndless : null} onStopEndless={endlessAuthority ? stopEndless : null} onResolveEndless={endlessAuthority ? resolveEndless : null} onRefreshEndless={endlessAuthority ? refreshEndless : null} campaignValue={campaignProgress} onCampaignChange={saveCampaign} onStartCampaign={startDistrictOne} onCampaignCheckpoint={advanceDistrictOne} onClaimCampaign={claimDistrictOne} onCalibrateCampaign={armoryAuthority ? enhanceArmoryItem : null} onCampaignComplete={completeCampaign} />}
       <button className="online-orb" onClick={() => { setEmojiOpen(false); setOpen((v) => !v); }} aria-label="Open online hub">
         <RunnerPortrait profile={characterProfile} compact />
         <i className={user ? "online" : ""} />
       </button>
-      {open && <aside className="online-hub" aria-label="Neo-Tokyo online hub">
+      {open && <aside className={`online-hub ${socialTab === "crew" ? "crew-view" : "chat-view"}`} aria-label="Neo-Tokyo online hub">
         <header><div><b>NEO GRID</b><small>{status}</small></div><button onClick={() => { setEmojiOpen(false); setOpen(false); }}>×</button></header>
         <>
             <div className="hub-profile"><RunnerPortrait profile={characterProfile} compact /><div><b>{characterProfile.codename}</b><small>{user.email}</small></div><button onClick={() => { setOpen(false); setProgressionTab("character"); setInventoryOpen(true); }}>Loadout</button><button onClick={() => { setOpen(false); setMasteryOpen(true); }}>Mastery</button><button onClick={() => setEditingCharacter(true)}>Edit</button><button onClick={() => supabase.auth.signOut()}>Exit</button></div>
-            <div className="hub-channel"><b>SHIBUYA FREQUENCY</b><span>PUBLIC · LIVE</span></div>
-            <div className="hub-messages">{messages.length === 0 && <p className="hub-static">No voices on the frequency yet.</p>}{messages.map((m) => <article key={m.id} className={m.user_id === user.id ? "mine" : ""}><img src={m.profiles?.avatar_url || ""} alt="" /><div><b>{m.profiles?.display_name || "Runner"}</b><p>{m.body}</p></div></article>)}<div ref={listEnd} /></div>
-            <div className="hub-compose-wrap">{emojiOpen && <div className="emoji-tray" role="listbox" aria-label="Chat emoticons">{CHAT_EMOJI.map((emoji) => <button key={emoji} type="button" onClick={() => addEmoji(emoji)} aria-label={`Add ${emoji}`}>{emoji}</button>)}</div>}<div className="hub-compose"><button className="emoji-toggle" type="button" onClick={() => setEmojiOpen((value) => !value)} aria-expanded={emojiOpen} aria-label="Choose emoticon">☺</button><input value={message} maxLength={240} placeholder="Broadcast…" onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} /><button className="chat-send" onClick={send} disabled={!message.trim() || busy}>送</button></div></div>
+            <nav className="social-mode-tabs" aria-label="Social sections"><button className={socialTab==="crew"?"active":""} onClick={()=>{setEmojiOpen(false);setSocialTab("crew")}}>隊 <span>Crew</span></button><button className={socialTab==="chat"?"active":""} onClick={()=>setSocialTab("chat")}>網 <span>Chat</span></button></nav>
+            {socialTab === "crew" ? <CrewCommand state={crewAuthority ? crewState : null} busy={busy} onCreate={createCrew} onJoin={joinCrew} onLeave={leaveCrew} onContribute={contributeCrisis} onStrike={strikeCrisis} onClaim={claimCrisis} onRefresh={refreshCrew}/> : <>
+              <div className="hub-channel"><b>SHIBUYA FREQUENCY</b><span>PUBLIC · LIVE</span></div>
+              <div className="hub-messages">{messages.length === 0 && <p className="hub-static">No voices on the frequency yet.</p>}{messages.map((m) => <article key={m.id} className={m.user_id === user.id ? "mine" : ""}><img src={m.profiles?.avatar_url || ""} alt="" /><div><b>{m.profiles?.display_name || "Runner"}</b><p>{m.body}</p></div></article>)}<div ref={listEnd} /></div>
+              <div className="hub-compose-wrap">{emojiOpen && <div className="emoji-tray" role="listbox" aria-label="Chat emoticons">{CHAT_EMOJI.map((emoji) => <button key={emoji} type="button" onClick={() => addEmoji(emoji)} aria-label={`Add ${emoji}`}>{emoji}</button>)}</div>}<div className="hub-compose"><button className="emoji-toggle" type="button" onClick={() => setEmojiOpen((value) => !value)} aria-expanded={emojiOpen} aria-label="Choose emoticon">☺</button><input value={message} maxLength={240} placeholder="Broadcast…" onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} /><button className="chat-send" onClick={send} disabled={!message.trim() || busy}>送</button></div></div>
+            </>}
           </>
       </aside>}
     </>

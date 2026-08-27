@@ -29,10 +29,19 @@ npm run dev
 6. Run `supabase/20260828_gridhold_pvp.sql` to enable co-op room creation, room codes, browsing and Quick Match. The historical filename is retained so existing installations do not need a replacement migration.
 7. Run `supabase/20260829_raid_specializations.sql` to add specializations, four-slot raid rooms, phased raid actions and optional bot filling. Bot-assisted rooms receive exactly 50% equipment-drop chance and 50% material yield.
 8. Run `supabase/20260830_neo_economy.sql` to add the Auction House, secure escrow, Life Skills, 80 crafting recipes, expanded side-grade sets and Megachip drops.
-9. Copy `.env.example` to `.env` and add the project URL and public publishable/anon key.
-10. Enable Google in Supabase Auth and configure the Google OAuth client and redirect URL.
+9. Run `supabase/20260831_runner_crews_endless.sql` to add Runner Crews, weekly City Crisis events and server-resolved Endless Circuit grinding.
+10. Copy `.env.example` to `.env` and add the project URL and public publishable/anon key.
+11. Enable Google in Supabase Auth and configure the Google OAuth client and redirect URL.
 
 Co-op supports Quick Match, public room browsing and shareable room codes. A room starts when its combined runner power satisfies the dungeon requirement.
+
+## Runner Crews and Endless Circuit
+
+Social opens to Runner Crews with public discovery, 24-player rosters, weekly three-track City Crisis preparation, a shared command-unit fight, contribution limits, rankings and server-owned rewards. Chat remains one tap away.
+
+Battle uses a six-mode command center instead of one long scrolling page. Endless Circuit can start at any chosen stage, including stages above the player's recommended Combat Power. Successful server ticks award equipment and advance one stage; failure moves the runner back one stage and automatically continues farming there. Returned drops appear in the arena as rarity-coloured ground beams before entering the account armory.
+
+The original five seven-chapter romance routes are active again, including confession choices, partner state, jealousy consequences and compatible shared endings. Their historic character IDs are retained for old save compatibility.
 
 ## Linked Raid Operations
 
