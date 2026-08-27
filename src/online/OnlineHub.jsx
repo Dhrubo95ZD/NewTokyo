@@ -16,6 +16,7 @@ import { validateRunnerIdentity } from "./progressionRules.js";
 import { normalizeCombatSkills } from "../game/combatSkills.js";
 import { normalizeRaidState } from "../game/raidRules.js";
 import { normalizeEndlessState } from "../game/endlessRules.js";
+import { normalizeDepthsState } from "../game/neonDepthsRules.js";
 import CrewCommand from "../social/CrewCommand.jsx";
 import { normalizeCrewState } from "../social/crewRules.js";
 import "./online-hub.css";
@@ -57,6 +58,8 @@ export default function OnlineHub({ children }) {
   const [raidState, setRaidState] = useState(() => normalizeRaidState(null));
   const [endlessAuthority, setEndlessAuthority] = useState(false);
   const [endlessState, setEndlessState] = useState(() => normalizeEndlessState(null));
+  const [depthsAuthority, setDepthsAuthority] = useState(false);
+  const [depthsState, setDepthsState] = useState(() => normalizeDepthsState(null));
   const [crewAuthority, setCrewAuthority] = useState(false);
   const [crewState, setCrewState] = useState(() => normalizeCrewState(null));
   const [socialTab, setSocialTab] = useState("crew");
@@ -114,7 +117,7 @@ export default function OnlineHub({ children }) {
     let appUrlListener;
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setBooting(false); });
     const { data: auth } = supabase.auth.onAuthStateChange((_event, next) => {
-      if (!next?.user) { window.storage.setUser(null); accountRef.current = null; setAccountSave(null); setArmoryAuthority(false); setProgressionAuthority(false); setProgressionState(null); setRaidAuthority(false); setRaidState(normalizeRaidState(null)); setEndlessAuthority(false); setEndlessState(normalizeEndlessState(null)); setCrewAuthority(false); setCrewState(normalizeCrewState(null)); setCampaignAuthority(false); setWalletAuthority(false); setWalletBalance(null); setCampaignProgress({ serverState: "not_started", serverStage: 0 }); setAccountReady(false); setCharacterProfile(null); setEditingCharacter(false); setInventoryOpen(false); setMasteryOpen(false); setExchangeOpen(false); setEconomyOpen(false); setEconomyAuthority(false); setEconomyState(normalizeEconomyState(null)); setInventoryState(null); }
+      if (!next?.user) { window.storage.setUser(null); accountRef.current = null; setAccountSave(null); setArmoryAuthority(false); setProgressionAuthority(false); setProgressionState(null); setRaidAuthority(false); setRaidState(normalizeRaidState(null)); setEndlessAuthority(false); setEndlessState(normalizeEndlessState(null)); setDepthsAuthority(false); setDepthsState(normalizeDepthsState(null)); setCrewAuthority(false); setCrewState(normalizeCrewState(null)); setCampaignAuthority(false); setWalletAuthority(false); setWalletBalance(null); setCampaignProgress({ serverState: "not_started", serverStage: 0 }); setAccountReady(false); setCharacterProfile(null); setEditingCharacter(false); setInventoryOpen(false); setMasteryOpen(false); setExchangeOpen(false); setEconomyOpen(false); setEconomyAuthority(false); setEconomyState(normalizeEconomyState(null)); setInventoryState(null); }
       setSession(next); setBooting(false);
     });
     if (Capacitor.isNativePlatform()) {
@@ -166,6 +169,9 @@ export default function OnlineHub({ children }) {
       const { data: serverEndless, error: endlessError } = await supabase.rpc("get_my_endless_state");
       if (!endlessError && serverEndless) { setEndlessState(normalizeEndlessState(serverEndless)); setEndlessAuthority(true); }
       else { setEndlessState(normalizeEndlessState(null)); setEndlessAuthority(false); }
+      const { data: serverDepths, error: depthsError } = await supabase.rpc("get_my_neon_depths_state");
+      if (!depthsError && serverDepths) { setDepthsState(normalizeDepthsState(serverDepths)); setDepthsAuthority(true); }
+      else { setDepthsState(normalizeDepthsState(null)); setDepthsAuthority(false); }
       const { data: serverCrew, error: crewError } = await supabase.rpc("get_my_crew_state");
       if (!crewError && serverCrew) { setCrewState(normalizeCrewState(serverCrew)); setCrewAuthority(true); }
       else { setCrewState(normalizeCrewState(null)); setCrewAuthority(false); }
@@ -534,6 +540,24 @@ export default function OnlineHub({ children }) {
   const stopEndless = useCallback(() => runEndlessAction("stop_endless_grind"), [runEndlessAction]);
   const resolveEndless = useCallback(() => runEndlessAction("resolve_endless_grind"), [runEndlessAction]);
 
+  const refreshDepths = useCallback(async () => {
+    if (!depthsAuthority) return null;
+    const { data, error } = await supabase.rpc("get_my_neon_depths_state");
+    if (error) throw error;
+    const next = normalizeDepthsState(data); setDepthsState(next); return next;
+  }, [depthsAuthority]);
+  const runDepthsAction = useCallback(async (rpc, args = {}) => {
+    if (!depthsAuthority) throw new Error("Run the Neon Depths SQL migration first");
+    const { data, error } = await supabase.rpc(rpc, args); if (error) throw error;
+    if (data?.armory) { const armory = normalizeInventory(data.armory); setInventoryState(armory); await commitSections({ armory }); }
+    const rawState = data?.state || data; if (rawState) setDepthsState(normalizeDepthsState(rawState));
+    return data;
+  }, [commitSections, depthsAuthority]);
+  const startDepths = useCallback((tier, partyMode) => runDepthsAction("start_neon_depths", { p_tier: tier, p_party_mode: partyMode }), [runDepthsAction]);
+  const advanceDepths = useCallback((runId, roomIndex, outcome, choice) => runDepthsAction("advance_neon_depths", { p_run_id: runId, p_room_index: roomIndex, p_outcome: outcome, p_choice: choice }), [runDepthsAction]);
+  const extractDepths = useCallback((runId) => runDepthsAction("extract_neon_depths", { p_run_id: runId }), [runDepthsAction]);
+  const abandonDepths = useCallback((runId) => runDepthsAction("abandon_neon_depths", { p_run_id: runId }), [runDepthsAction]);
+
   const refreshCrew = useCallback(async () => {
     if (!crewAuthority) return null;
     const { data, error } = await supabase.rpc("get_my_crew_state"); if (error) throw error;
@@ -686,7 +710,7 @@ export default function OnlineHub({ children }) {
       <TradingTerminal open={exchangeOpen} balance={walletBalance ?? accountSave?.core?.money ?? 0} onClose={() => setExchangeOpen(false)} onWalletChange={acceptExchangeBalance} />
       <EconomyHub key={economyTab} open={economyOpen} initialTab={economyTab} state={economyAuthority ? economyState : null} inventory={inventoryState} balance={walletBalance ?? accountSave?.core?.money ?? 0} busy={busy} onClose={() => setEconomyOpen(false)} onRefresh={refreshEconomy} onStartSkill={startLifeSkill} onClaimSkill={claimLifeSkill} onCraft={craftRecipe} onList={listAuction} onBuy={buyAuction} onCancel={cancelAuction} />
       {masteryOpen && <div className="mastery-overlay"><MasteryBoard value={accountSave?.meta?.mastery} level={accountSave?.core?.level || 1} busy={busy} onUpgrade={investMastery} onClose={() => setMasteryOpen(false)} /></div>}
-      {inventoryOpen && <Inventory initialTab={progressionTab} profile={characterProfile} player={accountSave?.core || {}} value={inventoryState} masteryStats={masteryBonuses(accountSave?.meta?.mastery)} combatSkills={accountSave?.meta?.combatSkills} onCombatSkillsChange={saveCombatSkills} onChange={saveInventory} onPlayerChange={saveCore} onClose={() => setInventoryOpen(false)} onStartRun={armoryAuthority ? startDistrictRun : null} onCompleteRun={armoryAuthority ? completeDistrictRun : null} onSaveLoadout={armoryAuthority ? saveArmoryLoadout : null} onEnhanceItem={armoryAuthority ? enhanceArmoryItem : null} progressionState={progressionState} onManageArmory={progressionAuthority ? manageArmory : null} onStartAfk={progressionAuthority ? startAfkDungeon : null} onClaimAfk={progressionAuthority ? claimAfkDungeon : null} onQueueCoop={progressionAuthority ? queueCoopDungeon : null} onCreateCoopRoom={progressionAuthority ? createCoopRoom : null} onJoinCoopRoom={progressionAuthority ? joinCoopRoom : null} onListCoopRooms={progressionAuthority ? listCoopRooms : null} onLeaveCoop={progressionAuthority ? leaveCoopDungeon : null} onClaimCoop={progressionAuthority ? claimCoopDungeon : null} onRefreshProgression={progressionAuthority ? refreshProgression : null} raidState={raidState} onSetRaidSpecialization={raidAuthority ? setRaidSpecialization : null} onQueueRaid={raidAuthority ? queueRaid : null} onJoinRaid={raidAuthority ? joinRaid : null} onFillRaidBots={raidAuthority ? fillRaidBots : null} onAdvanceRaid={raidAuthority ? advanceRaid : null} onClaimRaid={raidAuthority ? claimRaid : null} onLeaveRaid={raidAuthority ? leaveRaid : null} onRefreshRaid={raidAuthority ? refreshRaid : null} endlessState={endlessAuthority ? endlessState : null} onStartEndless={endlessAuthority ? startEndless : null} onStopEndless={endlessAuthority ? stopEndless : null} onResolveEndless={endlessAuthority ? resolveEndless : null} onRefreshEndless={endlessAuthority ? refreshEndless : null} campaignValue={campaignProgress} onCampaignChange={saveCampaign} onStartCampaign={startDistrictOne} onCampaignCheckpoint={advanceDistrictOne} onClaimCampaign={claimDistrictOne} onCalibrateCampaign={armoryAuthority ? enhanceArmoryItem : null} onCampaignComplete={completeCampaign} />}
+      {inventoryOpen && <Inventory initialTab={progressionTab} profile={characterProfile} player={accountSave?.core || {}} value={inventoryState} masteryStats={masteryBonuses(accountSave?.meta?.mastery)} combatSkills={accountSave?.meta?.combatSkills} onCombatSkillsChange={saveCombatSkills} onChange={saveInventory} onPlayerChange={saveCore} onClose={() => setInventoryOpen(false)} onStartRun={armoryAuthority ? startDistrictRun : null} onCompleteRun={armoryAuthority ? completeDistrictRun : null} onSaveLoadout={armoryAuthority ? saveArmoryLoadout : null} onEnhanceItem={armoryAuthority ? enhanceArmoryItem : null} progressionState={progressionState} onManageArmory={progressionAuthority ? manageArmory : null} onStartAfk={progressionAuthority ? startAfkDungeon : null} onClaimAfk={progressionAuthority ? claimAfkDungeon : null} onQueueCoop={progressionAuthority ? queueCoopDungeon : null} onCreateCoopRoom={progressionAuthority ? createCoopRoom : null} onJoinCoopRoom={progressionAuthority ? joinCoopRoom : null} onListCoopRooms={progressionAuthority ? listCoopRooms : null} onLeaveCoop={progressionAuthority ? leaveCoopDungeon : null} onClaimCoop={progressionAuthority ? claimCoopDungeon : null} onRefreshProgression={progressionAuthority ? refreshProgression : null} raidState={raidState} onSetRaidSpecialization={raidAuthority ? setRaidSpecialization : null} onQueueRaid={raidAuthority ? queueRaid : null} onJoinRaid={raidAuthority ? joinRaid : null} onFillRaidBots={raidAuthority ? fillRaidBots : null} onAdvanceRaid={raidAuthority ? advanceRaid : null} onClaimRaid={raidAuthority ? claimRaid : null} onLeaveRaid={raidAuthority ? leaveRaid : null} onRefreshRaid={raidAuthority ? refreshRaid : null} endlessState={endlessAuthority ? endlessState : null} onStartEndless={endlessAuthority ? startEndless : null} onStopEndless={endlessAuthority ? stopEndless : null} onResolveEndless={endlessAuthority ? resolveEndless : null} onRefreshEndless={endlessAuthority ? refreshEndless : null} depthsState={depthsAuthority ? depthsState : null} onStartDepths={depthsAuthority ? startDepths : null} onAdvanceDepths={depthsAuthority ? advanceDepths : null} onExtractDepths={depthsAuthority ? extractDepths : null} onAbandonDepths={depthsAuthority ? abandonDepths : null} onRefreshDepths={depthsAuthority ? refreshDepths : null} campaignValue={campaignProgress} onCampaignChange={saveCampaign} onStartCampaign={startDistrictOne} onCampaignCheckpoint={advanceDistrictOne} onClaimCampaign={claimDistrictOne} onCalibrateCampaign={armoryAuthority ? enhanceArmoryItem : null} onCampaignComplete={completeCampaign} />}
       <button className="online-orb" onClick={() => { setEmojiOpen(false); setOpen((v) => !v); }} aria-label="Open online hub">
         <RunnerPortrait profile={characterProfile} compact />
         <i className={user ? "online" : ""} />
