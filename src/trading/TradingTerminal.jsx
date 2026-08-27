@@ -3,7 +3,7 @@ import { supabase } from "../online/supabase.js";
 import TradingChart from "./TradingChart.jsx";
 import {
   EXCHANGE_SYMBOL, LEVERAGE_OPTIONS, MIN_MARGIN_YEN, normalizeQuote, orderPreview,
-  marketSourceView, positionPnl, quoteAge, quoteHealth, validateOrder,
+  marketSourceView, positionPnl, protectionPresets, quoteAge, quoteHealth, validateOrder, validateProtection,
 } from "./tradingRules.js";
 import "./trading-terminal.css";
 
@@ -19,7 +19,7 @@ function PositionRow({ position, quote, busy, onClose }) {
   return (
     <article className="nx-position">
       <span className={`nx-side-tag ${position.side}`}>{position.side === "buy" ? "BUY" : "SELL"}</span>
-      <div><b>{position.leverage}× · {fmtYen(position.margin_yen)} risk</b><small>{fmtPrice(position.entry_price)} entry</small></div>
+      <div><b>{position.leverage}× · {fmtYen(position.margin_yen)} risk</b><small>{fmtPrice(position.entry_price)} entry · SL {position.stop_loss ? fmtPrice(position.stop_loss) : "—"} · TP {position.take_profit ? fmtPrice(position.take_profit) : "—"}</small></div>
       <strong className={pnl >= 0 ? "up" : "down"}>{pnl >= 0 ? "+" : ""}{fmtYen(pnl)}</strong>
       <button disabled={busy || quoteHealth(quote) !== "live"} onClick={() => onClose(position.id)}>Close</button>
     </article>
@@ -121,18 +121,26 @@ export default function TradingTerminal({ open, balance = 0, onClose, onWalletCh
   const totalPnl = useMemo(() => positions.reduce((sum, position) => sum + positionPnl(position, quote), 0), [positions, quote]);
   const preview = useMemo(() => orderPreview({ side, marginYen: margin, leverage, quote }), [side, margin, leverage, quote]);
   const validation = validateOrder({ side, marginYen: margin, leverage, availableYen: account.balance, quote, now: clock });
+  const protection = validateProtection({ side, entryPrice: preview.entryPrice, stopLoss, takeProfit, liquidation: preview.liquidationPrice });
+
+  const applyProtectionPreset = () => {
+    const preset = protectionPresets({ side, entryPrice: preview.entryPrice });
+    setStopLoss(fmtPrice(preset.stopLoss)); setTakeProfit(fmtPrice(preset.takeProfit)); setAdvanced(true);
+  };
 
   const submit = async (orderSide = side) => {
     const orderValidation = validateOrder({ side: orderSide, marginYen: margin, leverage, availableYen: account.balance, quote, now: clock });
-    if (!orderValidation.ok || busy) { if (!orderValidation.ok) setNotice(orderValidation.error); return; }
+    const orderPreviewValue = orderPreview({ side: orderSide, marginYen: margin, leverage, quote });
+    const orderProtection = validateProtection({ side: orderSide, entryPrice: orderPreviewValue.entryPrice, stopLoss, takeProfit, liquidation: orderPreviewValue.liquidationPrice });
+    if (!orderValidation.ok || !orderProtection.ok || busy) { setNotice(orderValidation.ok ? orderProtection.error : orderValidation.error); return; }
     setSide(orderSide);
     setBusy(true); setNotice("Sending order to the matching engine…");
     const { data, error } = await supabase.rpc("open_my_exchange_position", {
       p_side: orderSide,
       p_margin_yen: orderValidation.value.marginYen,
       p_leverage: orderValidation.value.leverage,
-      p_stop_loss: stopLoss ? Number(stopLoss) : null,
-      p_take_profit: takeProfit ? Number(takeProfit) : null,
+      p_stop_loss: orderProtection.value.stopLoss,
+      p_take_profit: orderProtection.value.takeProfit,
       p_client_order_id: makeId(),
     });
     if (error) setNotice(error.message);
@@ -181,17 +189,18 @@ export default function TradingTerminal({ open, balance = 0, onClose, onWalletCh
 
         <section className="nx-quick-order" aria-label="Quick trade controls">
           <div className="nx-quick-primary">
-            <button className="nx-market-action buy" disabled={!validation.ok || busy || !ready} onClick={() => submit("buy")}><small>MARKET</small><b>BUY</b></button>
+            <button className="nx-market-action buy" disabled={!validation.ok || !protection.ok || busy || !ready} onClick={() => submit("buy")}><small>MARKET</small><b>BUY</b></button>
             <label className="nx-quick-risk"><small>RISK</small><span>¥<input aria-label="Risk from wallet" inputMode="numeric" value={margin} onChange={(event) => setMargin(Math.max(0, Math.floor(Number(event.target.value) || 0)))} /></span></label>
             <label className="nx-quick-leverage"><small>LEVERAGE</small><select aria-label="Risk multiplier" value={leverage} onChange={(event) => setLeverage(Number(event.target.value))}>{LEVERAGE_OPTIONS.map((value) => <option key={value} value={value}>{value}×</option>)}</select></label>
-            <button className="nx-market-action sell" disabled={!validation.ok || busy || !ready} onClick={() => submit("sell")}><small>MARKET</small><b>SELL</b></button>
+            <button className="nx-market-action sell" disabled={!validation.ok || !protection.ok || busy || !ready} onClick={() => submit("sell")}><small>MARKET</small><b>SELL</b></button>
           </div>
           <div className="nx-quick-secondary">
             <span className="nx-risk-presets"><small>Wallet</small>{[10, 25, 50, 100].map((pct) => <button key={pct} onClick={() => setMargin(Math.max(MIN_MARGIN_YEN, Math.floor(account.balance * pct / 100)))}>{pct}%</button>)}</span>
             <span className="nx-order-preview"><small>Exposure</small><b>{fmtYen(preview.exposureYen)}</b><small>Est. entry</small><b>{fmtPrice(preview.entryPrice)}</b></span>
             <button className={`nx-protect-toggle ${advanced ? "on" : ""}`} onClick={() => setAdvanced((value) => !value)}>SL / TP <b>{advanced ? "−" : "+"}</b></button>
+            <button className="nx-protect-preset" onClick={applyProtectionPreset}>AUTO 0.4% / 0.8%</button>
           </div>
-          {advanced && <div className="nx-quick-protection"><label>Stop loss<input inputMode="decimal" placeholder="Optional price" value={stopLoss} onChange={(event) => setStopLoss(event.target.value)} /></label><label>Take profit<input inputMode="decimal" placeholder="Optional price" value={takeProfit} onChange={(event) => setTakeProfit(event.target.value)} /></label></div>}
+          {advanced && <div className={`nx-quick-protection ${protection.ok ? "valid" : "invalid"}`}><label>Stop loss<input inputMode="decimal" placeholder="Required direction-aware price" value={stopLoss} onChange={(event) => setStopLoss(event.target.value)} /></label><label>Take profit<input inputMode="decimal" placeholder="Required direction-aware price" value={takeProfit} onChange={(event) => setTakeProfit(event.target.value)} /></label><p>{protection.ok ? `Server armed · liquidation ${fmtPrice(preview.liquidationPrice)}` : protection.error}</p></div>}
         </section>
 
         <main className="nx-workspace">

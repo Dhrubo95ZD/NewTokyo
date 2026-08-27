@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./visual-v3.css";
 import { AndroidRunnerSprite, androidSpriteFrame } from "./game/AndroidRunner.jsx";
+import { CricketGameV2, NeonReflex, CircuitMemory } from "./arcade/ArcadeGames.jsx";
 
 /* ============================================================
    NEO-TOKYO UNDERWORLD — a Torn-style anime crime RPG
@@ -2533,6 +2534,13 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, runnerProfile
     else if (netF < 0) float(`-${fmt(-netF)}`, "#E23A6B");
   };
 
+  const arcadeSkillEnd = ({ score = 0, reward = 0 }) => {
+    const safeReward = clamp(Math.floor(reward), 0, 500);
+    if (safeReward) setP((pl) => ({ ...pl, money: pl.money + safeReward }));
+    pushLog(`Arcade skill run · ${Math.floor(score).toLocaleString()} pts${safeReward ? ` · +${fmt(safeReward)}` : ""}.`, "good");
+    if (safeReward) float(`+${fmt(safeReward)}`, "#55eaff");
+  };
+
   const bjStart = () => {
     if (locked) return;
     const b = clamp(bet, 10, Math.floor(p.money));
@@ -3105,6 +3113,8 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, runnerProfile
             <button className="arcade-launch blackjack" onClick={() => { setBjMode("blackjack"); setScreen("casino"); }}><i>♠</i><span><small>TABLE GAME</small><b>Blackjack</b><em>Hit · stand · double</em></span></button>
             <button className="arcade-launch ichi" onClick={() => { setBjMode("ichi"); setScreen("casino"); }}><i>一</i><span><small>CARD ARENA</small><b>ICHI</b><em>Four-seat shedding game</em></span></button>
             <button className="arcade-launch cricket" onClick={() => { setBjMode("cricket"); setScreen("casino"); }}><i>🏏</i><span><small>SKILL GAME</small><b>Street Cricket</b><em>One-over showdown</em></span></button>
+            <button className="arcade-launch reflex" onClick={() => { setBjMode("reflex"); setScreen("casino"); }}><i>◎</i><span><small>REACTION GRID</small><b>Neon Reflex</b><em>Twenty shrinking signals</em></span></button>
+            <button className="arcade-launch memory" onClick={() => { setBjMode("memory"); setScreen("casino"); }}><i>回</i><span><small>MEMORY CIRCUIT</small><b>Signal Stack</b><em>Repeat an expanding pattern</em></span></button>
             <button className="arcade-launch slots" onClick={() => { setBjMode("classic"); setScreen("casino"); }}><i>777</i><span><small>ARCADE CLASSICS</small><b>Slots + Coin</b><em>Fast optional games</em></span></button>
             <button className="arcade-launch exchange featured" onClick={() => onOpenTrading?.()}><i>金</i><span><small>MARKET TERMINAL</small><b>XAU/USD SIM</b><em>Trade with your game yen</em></span><strong>OPEN</strong></button>
           </div>
@@ -3525,8 +3535,12 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, runnerProfile
             <button className={`chip ${bjMode === "blackjack" ? "on" : ""}`} onClick={() => setBjMode("blackjack")}>♠ Blackjack table</button>
             <button className={`chip ${bjMode === "ichi" ? "on" : ""}`} onClick={() => setBjMode("ichi")}>一 ICHI</button>
             <button className={`chip ${bjMode === "cricket" ? "on" : ""}`} onClick={() => setBjMode("cricket")}>🏏 Street cricket</button>
+            <button className={`chip ${bjMode === "reflex" ? "on" : ""}`} onClick={() => setBjMode("reflex")}>◎ Neon Reflex</button>
+            <button className={`chip ${bjMode === "memory" ? "on" : ""}`} onClick={() => setBjMode("memory")}>回 Signal Stack</button>
             <button className={`chip ${bjMode === "classic" ? "on" : ""}`} onClick={() => setBjMode("classic")}>Slots & coin</button>
           </div>
+          {bjMode === "reflex" && <NeonReflex onFinish={arcadeSkillEnd}/>}
+          {bjMode === "memory" && <CircuitMemory onFinish={arcadeSkillEnd}/>}
           {bjMode === "ichi" && (
             <div>
               {ichi ? (
@@ -3548,10 +3562,10 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, runnerProfile
           {bjMode === "cricket" && (
             <div>
               {cricket ? (
-                <CricketGame key={cricket.id} bet={cricket.bet} onEnd={cricketEnd} />
+                <CricketGameV2 key={cricket.id} bet={cricket.bet} onEnd={cricketEnd} />
               ) : (
                 <div>
-                  <p className="flavor">A taped tennis ball, a bat older than the ward, and bookies who never lose twice. One over — six balls — against Tetsu the Yorker King.</p>
+                  <p className="flavor">A two-over rooftop chase with changing delivery lines, shot selection, timing windows and three-wicket pressure. Read the bowler instead of tapping one repeated animation.</p>
                   <div className="bet-row">
                     {[100, 500, 2000, 10000].map((b) => (
                       <button key={b} className={`chip ${bet === b ? "on" : ""}`} onClick={() => setBet(b)}>{fmt(b)}</button>

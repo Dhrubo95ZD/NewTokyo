@@ -3,7 +3,7 @@ export const QUOTE_STALE_MS = 2500;
 export const QUOTE_DEAD_MS = 8000;
 export const SIM_QUOTE_STALE_MS = 8000;
 export const SIM_QUOTE_DEAD_MS = 18000;
-export const LEVERAGE_OPTIONS = [1, 3, 5, 10];
+export const LEVERAGE_OPTIONS = [1, 3, 5, 10, 100, 500];
 export const MIN_MARGIN_YEN = 100;
 
 export function finiteNumber(value, fallback = 0) {
@@ -105,6 +105,35 @@ export function orderPreview({ side, marginYen, leverage, quote }) {
     exposureYen: margin * lev,
     liquidationPrice: liquidationPrice({ side, entryPrice, leverage: lev }),
   };
+}
+
+export function protectionPresets({ side, entryPrice }) {
+  const entry = finiteNumber(entryPrice);
+  const direction = side === "sell" ? -1 : 1;
+  return {
+    stopLoss: entry * (1 - direction * 0.004),
+    takeProfit: entry * (1 + direction * 0.008),
+  };
+}
+
+export function validateProtection({ side, entryPrice, stopLoss, takeProfit, liquidation }) {
+  const entry = finiteNumber(entryPrice);
+  const sl = stopLoss === "" || stopLoss == null ? null : finiteNumber(stopLoss, NaN);
+  const tp = takeProfit === "" || takeProfit == null ? null : finiteNumber(takeProfit, NaN);
+  const liq = finiteNumber(liquidation);
+  if (!entry) return { ok: false, error: "Waiting for an entry quote." };
+  if (sl != null && (!Number.isFinite(sl) || sl <= 0)) return { ok: false, error: "Stop loss must be a positive price." };
+  if (tp != null && (!Number.isFinite(tp) || tp <= 0)) return { ok: false, error: "Take profit must be a positive price." };
+  if (side === "sell") {
+    if (sl != null && sl <= entry) return { ok: false, error: "A short stop loss must be above entry." };
+    if (tp != null && tp >= entry) return { ok: false, error: "A short take profit must be below entry." };
+    if (sl != null && liq && sl >= liq) return { ok: false, error: "Stop loss must trigger before liquidation." };
+  } else {
+    if (sl != null && sl >= entry) return { ok: false, error: "A long stop loss must be below entry." };
+    if (tp != null && tp <= entry) return { ok: false, error: "A long take profit must be above entry." };
+    if (sl != null && liq && sl <= liq) return { ok: false, error: "Stop loss must trigger before liquidation." };
+  }
+  return { ok: true, value: { stopLoss: sl, takeProfit: tp } };
 }
 
 export function validateOrder({ side, marginYen, leverage, availableYen, quote, now = Date.now() }) {
