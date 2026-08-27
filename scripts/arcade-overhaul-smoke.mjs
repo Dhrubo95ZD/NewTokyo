@@ -14,7 +14,7 @@ const [androidAtlas,cricketArt]=await Promise.all([
   stat(new URL("../public/assets/arcade-v2/neon-cricket-arena-v1.webp", import.meta.url)),
 ]);
 
-for (const token of ["CricketGameV2","NeonReflex","CircuitMemory","12 BALL CHASE","SHOT LINE","INTENT"])
+for (const token of ["CricketGameV2","NeonReflex","CircuitMemory","12 BALL CHASE","SWIPE TO SWING","swipeCricketShot"])
   assert.ok(arcade.includes(token), `arcade contract missing ${token}`);
 assert.ok(shell.includes("<CricketGameV2"), "legacy cricket runtime must be replaced");
 assert.ok(shell.includes('setBjMode("reflex")') && shell.includes('setBjMode("memory")'), "new games need direct Arcade routes");
