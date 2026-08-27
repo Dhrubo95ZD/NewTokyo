@@ -1263,7 +1263,7 @@ RARITY GEAR: fights (both modes) can drop rolled gear — common/uncommon/rare/G
 DAILY LOOP: login streak rewards (day 3+ adds Neon Cell, day 5+ Silk, day 7+ Star Shard), 3 daily quests on the Missions screen reset each day. BANK (Home screen): deposits earn 2%/hour idle interest. ACHIEVEMENTS grant equippable TITLES shown on Home and City Rankings. RARE GEAR DROPS: Kenji drops Lucky Cap 8%, Maid Sakuya drops Razor Fan 6%, Kitsune Boss drops Kitsune Mask 5%. BRAWL MODE: Fights screen has two modes — Quick (auto-resolve) and Live Brawl, a real-time arena (move, attack in an arc, dash with invincibility frames) across 2-3 waves. Brawls pay +25% yen and XP. STR=swing damage, SPD=move speed, DEX=crit & dash cooldown, DEF+armor=damage reduction. Fleeing forfeits the energy.
 WORLD BOSS: Rooftop Phantom (level 12+ to challenge, lv30, 900HP) — guaranteed Star Shard + 2 Oni Fragments, 10% Phantom Edge (+72, best weapon in the game).`;
 
-const SIMI_MANUAL = `You are Simi (シミ), a tiny friendly guide robot inside Neo-Tokyo Underworld. Be cheerful, concise and practical. Never introduce romance, sexual content, alcohol, occult worship, profanity, or religiously disrespectful material. The cast are ordinary fictional residents with civic, medical, courier, performance and public-safety roles.
+const SAFE_SIMI_MANUAL = `You are Simi (シミ), a tiny friendly guide robot inside Neo-Tokyo Underworld. Be cheerful, concise and practical. Never introduce romance, sexual content, alcohol, occult worship, profanity, or religiously disrespectful material. The cast are ordinary fictional residents with civic, medical, courier, performance and public-safety roles.
 CORE LOOP: build stats, fight, work, complete contracts, improve gear, enhance equipment to +20, and complete five Ally Network routes for permanent team perks.
 CHARACTER PATHS: Striker is fast and attack-focused, Guardian is durable and defensive, and Technician uses tech and utility. A new account starts with empty equipment slots and earns its first weapon through District One.
 DISTRICT ONE: scout the concourse, track the warning lane, clear the skirmish, defeat the Rail Warden K-9 construction exosuit, choose one Green weapon, then calibrate it to +1. The server validates campaign order and grants the chosen weapon once, equipped with at least 12 Nano Shards.
@@ -1272,6 +1272,7 @@ ICHI / UNO RULES: 108-card classic deck. Match color, number, or symbol. Draw on
 CRICKET: six-ball timing game with in-game yen stakes only. Perfect timing scores six; good timing scores four. Higher totals increase the payout.
 ONLINE: Google login owns the cloud save. World Chat and City Rankings use the signed-in account. No PIN or offline character wipe is needed.
 Keep answers to 1-4 sentences unless the player asks for detail. Never invent mechanics.`;
+const SIMI_MANUAL = LEGACY_SIMI_MANUAL;
 
 const JOBS = [
   { id: "none", name: "Unemployed", pay: 0, xp: 0, req: 0 },
@@ -1570,7 +1571,7 @@ const LEGACY_STORY_ARCHIVE = [
 
 /* Player-visible story cast. IDs stay stable so existing cloud saves retain
    their chapter and trust progress after the story-standard migration. */
-const GIRLS = [
+const ALLY_NETWORK = [
   {
     id: "sakura", name: "Kaori Sato", kanji: "結", tag: "Ward Coordinator",
     bio: "A calm community organizer who keeps Ward 09 supplied during blackouts and transit failures.",
@@ -1647,6 +1648,7 @@ const GIRLS = [
     ],
   },
 ];
+const GIRLS = LEGACY_STORY_ARCHIVE;
 
 const CONTRACTS = [
   { id: "c1", name: "Escort the Kurosawa Convoy", kanji: "護", nerve: 10, energy: 15, chance: 0.75, pay: [12000, 20000], xp: 120 },
@@ -2257,7 +2259,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
   const simiFallback = (q) => {
     const s = q.toLowerCase();
     const has = (...w) => w.some((x) => s.includes(x));
-    if (has("what", "now", "next", "do", "start") && !has("forge", "ally", "trust")) {
+    if (has("what", "now", "next", "do", "start") && !has("forge", "romance", "affection")) {
       if (jailed) return "*whirr* You're in a cell, senpai — nothing to do but wait out the timer. Nerve keeps regenerating though!";
       if (hospitalized) return "Rest up! Hana would say the same. Your HP refills on release. ♪";
       const done = MISSIONS.find((m) => !p.claimed.includes(m.id) && p.counters[m.stat] >= m.goal);
@@ -2266,7 +2268,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
       if (p.nerve >= 8) return "Your nerve bar is loaded — hit the Crimes screen! Smuggle Rare Manga pays well at your level, and crimes drop 🔋 and 🧵 for the Forge.";
       if ((p.statPoints || 0) > 0) return `*beep!* You have ${p.statPoints} unspent stat points on the Stats screen! Spend them — STR for damage, SPD to strike first, DEX to dodge.`;
       if (p.energy >= maxEnergy(p) * 0.7) return "Lots of energy, senpai! Pick a fight for yen and 鉄 scrap, or work a shift.";
-      return "Bars are low — grab a Melon Soda, work a shift, or run an Ally Network support shift. Trust routes unlock strong permanent perks. ♪";
+      return "Bars are low — grab a Melon Soda, work a shift, or spend time on a Hearts romance route. Romance chapters unlock strong permanent perks. ♪";
     }
     if (has("forge", "craft", "material", "recipe")) return "The Night Forge turns drops into gear! 🔩 from fights, 🔋🧵 from contracts, 🔻 Crimson Alloy from tough enemies, and 🌟 from jackpots. The Apex Blade (+65) costs 12🔩 6🔻 2🌟 and ¥20,000. *beep*";
     if (has("rich", "money", "yen", "broke")) return "Fastest yen: contracts when nerve is up, fights when energy is up, and job shifts between them. Kaori's chapter 7 unlocks the Ward Network's highest-paying contracts. ♪";
@@ -2275,8 +2277,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
     if (has("hana")) return "Hana's clinic route asks for 70 happiness at chapter 3 and 25 DEF at chapter 4. Her perks improve HP regeneration and hospital recovery. *beep*";
     if (has("yumi")) return "Yumi's community stage route needs 3 arcade wins for chapter 3 and ¥12,000 for the fair-contract chapter. Her perks protect morale and slightly improve arcade luck.";
     if (has("aya", "ayame")) return "Aya's investigation route uses your ward knowledge: 15 completed contracts for chapter 3 and level 8 for chapter 4. Her perks reduce jail time and false busts.";
-    if (has("ally", "allies", "trust", "support", "bond")) return "Run support shifts for 6 energy + ¥200 and share useful supplies to build trust. All five routes are compatible, so complete every one for the full perk set. ♪";
-    if (has("romance", "girl", "date", "partner", "affection")) return "Neo-Tokyo now uses an Ally Network, not dating routes. Build trust through service chapters with Kaori, Rin, Hana, Yumi and Aya to unlock team perks.";
+    if (has("ally", "allies", "trust", "support", "bond", "romance", "girl", "date", "partner", "affection")) return "Open Hearts to date Sakura, Rin, Hana, Yumi or Ayame. Hangouts and gifts raise affection; chapter six makes the relationship choice, and other active romances can trigger jealousy. ♪";
     if (has("evolve", "prestige", "rebirth", "reset run")) return `Evolve unlocks at level ${EVOLVE_LEVEL} on the Home screen, senpai! Reset the run, keep your gear/ally trust/bank, and gain +10% XP, +10% yen and +5 max energy forever per evolution. *beep*`;
     if (has("uno", "ichi", "card game")) return "ICHI now follows classic UNO rules: match color, number or symbol; no stacking; +4 only when you hold no active-color card; call UNO at one card or draw 2. First out takes the in-game yen pot. *beep*";
     if (has("stat", "point", "train", "gym", "build", "respec")) return "Stats come from level-ups now — +5 points per level, spent freely on the Stats screen. STR = damage, DEF = tanking, SPD = first strike + move speed, DEX = dodge + crit. Respec anytime for level×1000 yen. *beep*";
@@ -2629,7 +2630,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
     });
   };
 
-  /* ---------- ally trust ---------- */
+  /* ---------- branching romance ---------- */
   const setGirl = (q, id, patch) => {
     q.romance = { ...(q.romance || {}) };
     q.romance[id] = { ...girlState(q, id), ...patch };
@@ -2646,7 +2647,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
       const gain = rnd(3, 6) + fameTierIdx(q);
       bumpDaily(q, "dates");
       setGirl(q, g.id, { aff: gs.aff + gain });
-      pushLog(`Completed a support shift with ${g.name.split(" ")[0]} — trust +${gain}.`, "good");
+      pushLog(`Date with ${g.name.split(" ")[0]} — affection +${gain}.`, "good");
       return q;
     });
   };
@@ -2659,7 +2660,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
       const gs = girlState(q, g.id);
       setGirl(q, g.id, { aff: gs.aff + GIFTS[itemId] });
       const it = itemById(itemId);
-      pushLog(`Shared ${it.name} with ${g.name.split(" ")[0]}'s team — trust +${GIFTS[itemId]}.`, "good");
+      pushLog(`Gave ${it.name} to ${g.name.split(" ")[0]} — affection +${GIFTS[itemId]}.`, "good");
       return q;
     });
   };
@@ -2667,7 +2668,9 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
   const stageReqCheck = (g, stage) => {
     const gs = girlState(p, g.id);
     const r = stage.req; const miss = [];
-    if (gs.aff < r.aff) miss.push(`${r.aff} trust (${gs.aff}/${r.aff})`);
+    if (gs.aff < r.aff) miss.push(`${r.aff} affection (${gs.aff}/${r.aff})`);
+    if (hasFlag(p, `heartbroken_${g.id}`)) miss.push("relationship ended");
+    if (r.partner && p.partner !== g.id && !(p.poly || []).includes(g.id)) miss.push(`a relationship with ${shortName(g.id)}`);
     if (r.lvl && p.level < r.lvl) miss.push(`level ${r.lvl}`);
     if (r.spd && p.stats.spd < r.spd) miss.push(`${r.spd} speed`);
     if (r.def && p.stats.def < r.def) miss.push(`${r.def} defense`);
@@ -2694,11 +2697,12 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
       if (stage.reward) q.money += stage.reward;
       const cur = girlState(q, g.id);
       setGirl(q, g.id, { aff: cur.aff + 8 + (option && option.aff ? option.aff : 0), stage: cur.stage + 1 });
+      if (cur.stage === 5 && !(q.poly || []).includes(g.id)) q.partner = g.id;
       if (flag) q.flags = Array.from(new Set([...(q.flags || []), flag]));
       gainXp(q, stage.xp);
       const perk = g.perks[cur.stage + 1];
-      if (perk) pushLog(`New ally perk from ${shortName(g.id)}: ${g.perkDesc[cur.stage + 1]}.`, "system");
-      pushLog(`Ally chapter: "${stage.t}" — ${shortName(g.id)}'s team trusts you more.`, "good");
+      if (perk) pushLog(`New romance perk from ${shortName(g.id)}: ${g.perkDesc[cur.stage + 1]}.`, "system");
+      pushLog(`Romance chapter: "${stage.t}" — ${shortName(g.id)} is closer to you.`, "good");
       return q;
     });
     const flags = [...(p.flags || []), flag].filter(Boolean);
@@ -2714,7 +2718,13 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
     if (!stage) return;
     const miss = stageReqCheck(g, stage);
     if (miss.length) { pushLog(`Not yet — you still need: ${miss.join(", ")}.`, "bad"); return; }
-    if (stage.choice) { setPendingChoice({ girl: g, stage }); return; }
+    if (stage.choice) {
+      if (gs.stage === 5 && !(p.poly || []).includes(g.id)) {
+        const other = GIRLS.find((candidate) => candidate.id !== g.id && girlState(p, candidate.id).stage >= CONFESS && !hasFlag(p, `heartbroken_${candidate.id}`));
+        if (other) { setJealousy({ girl: g, other }); return; }
+      }
+      setPendingChoice({ girl: g, stage }); return;
+    }
     commitStage(g, stage, null);
   };
 
@@ -3123,7 +3133,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
               ["crimes", "Contracts", "罪", "Risk nerve for money and reputation."],
               ["job", "Work", "職", "Earn steady income and unlock careers."],
               ["missions", "Story", "命", "Long-term objectives and city progression."],
-              ["hearts", "Allies", "盟", "Earn trust through service missions and unlock team perks."],
+              ["hearts", "Romance", "恋", "Date five women through branching stories, choices and relationship consequences."],
               ["shop", "Supplies", "店", "Buy recovery items and gifts."],
               ["items", "Bag", "袋", "Manage consumables and crafting materials."],
               ["forge", "Workshop", "鍛", "Craft field supplies; gear is enhanced in Loadout."],
@@ -3673,7 +3683,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
         </Panel>
       );
       case "hearts": {
-        if (false && jealousy) {
+        if (jealousy) {
           const g = jealousy.girl, other = jealousy.other;
           const canPoly = polyOK(g.id, other.id);
           const gAff = girlState(p, g.id).aff, oAff = girlState(p, other.id).aff;
@@ -3693,7 +3703,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
             </Panel>
           );
         }
-        if (false && pendingChoice) {
+        if (pendingChoice) {
           const { girl: g, stage } = pendingChoice;
           return (
             <Panel title={`${g.name} — "${stage.t}"`} kanji={g.kanji}>
@@ -3726,7 +3736,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
             <Panel title={g.name} kanji={g.kanji}>
               <p className="flavor"><b style={{ color: "#0C93CC" }}>{g.tag}</b></p>
               <p className="flavor">{g.bio}</p>
-              <Bar label={`Trust — Chapter ${gs.stage}/${g.stages.length}`} val={gs.aff} max={next ? next.req.aff : gs.aff || 1}
+              <Bar label={`Affection — Chapter ${gs.stage}/${g.stages.length}`} val={gs.aff} max={next ? next.req.aff : gs.aff || 1}
                 color="linear-gradient(90deg,#00AEEF,#00C08A)" />
               {Object.entries(g.perks).map(([s, pid]) => (
                 <div className="kv" key={pid}><span>Ch.{s} perk {gs.stage >= Number(s) ? "— ACTIVE" : "— locked"}</span><b style={{ color: gs.stage >= Number(s) ? "#0C93CC" : "#7C7096" }}>{g.perkDesc[s]}</b></div>
@@ -3749,10 +3759,10 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
                   <button className="btn" disabled={miss.length > 0} onClick={() => advanceStory(g)}>Live it</button>
                 </div>
               ) : (
-                <p className="flavor" style={{ marginTop: 10 }}>This ally route is complete. Its team perks remain active.</p>
+                <p className="flavor" style={{ marginTop: 10 }}>This romance route is complete. Its relationship perks remain active.</p>
               )}
               <div className="grid2" style={{ marginTop: 12 }}>
-                <button className="btn big" disabled={p.energy < 6 || p.money < 200} onClick={() => hangOut(g)}>Support shift (6⚡ · ¥200)</button>
+                <button className="btn big" disabled={p.energy < 6 || p.money < 200} onClick={() => hangOut(g)}>Go on a date (6⚡ · ¥200)</button>
                 <button className="btn big ghost" style={{ margin: 0 }} onClick={() => setSelGirl(null)}>Back to the city</button>
               </div>
               {giftables.length > 0 && (
@@ -3763,8 +3773,8 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
                     return (
                       <div className="row" key={id}>
                         <span className={`slot mini r-${it.rarity}`}><PixIcon id={it.id} size={22} /></span>
-                        <div className="row-mid"><b>{it.name} ×{p.inventory[id]}</b><small>+{GIFTS[id]} trust</small></div>
-                        <button className="btn" onClick={() => giveGift(g, id)}>Share</button>
+                        <div className="row-mid"><b>{it.name} ×{p.inventory[id]}</b><small>+{GIFTS[id]} affection</small></div>
+                        <button className="btn" onClick={() => giveGift(g, id)}>Give</button>
                       </div>
                     );
                   })}
@@ -3774,8 +3784,10 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
           );
         }
         return (
-          <Panel title="Ward Ally Network" kanji="同盟">
-            <p className="flavor">Five people are rebuilding Ward 09 through logistics, medicine, public safety, music and emergency response. Earn trust through service chapters; every route unlocks permanent team perks.</p>
+          <Panel title="Hearts — Romance Routes" kanji="恋愛">
+            <p className="flavor">Five original seven-chapter romances with choices, confessions, jealousy, breakups and compatible shared endings. Your decisions persist in the account save.</p>
+            {p.partner && <p className="story-p">Current partner: <b>{GIRLS.find((g)=>g.id===p.partner)?.name || p.partner}</b></p>}
+            {(p.poly || []).length > 1 && <button className="btn big" disabled={(p.poly || []).some((id)=>girlState(p,id).stage<7)||hasFlag(p,"joint_done")} onClick={playJointChapter}>{hasFlag(p,"joint_done")?"Shared ending complete":"Play shared ending"}</button>}
             {GIRLS.map((g) => {
               const gs = girlState(p, g.id);
               return (
@@ -3783,13 +3795,13 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, armoryBonuses
                   <span className="k">{g.kanji}</span>
                   <div className="row-mid">
                     <b>{g.name}</b>
-                    <small>{g.tag} · Ch.{gs.stage}/{g.stages.length} · {gs.aff} trust</small>
+                    <small>{g.tag} · Ch.{gs.stage}/{g.stages.length} · {gs.aff} affection{p.partner===g.id?" · PARTNER":(p.poly||[]).includes(g.id)?" · SHARED PARTNER":hasFlag(p,`heartbroken_${g.id}`)?" · ENDED":""}</small>
                   </div>
                   <button className="btn" onClick={() => setSelGirl(g.id)}>Visit</button>
                 </div>
               );
             })}
-            <p className="muted" style={{ marginTop: 10 }}>Support shifts and shared supplies raise trust. You can complete every ally route; no route blocks another.</p>
+            <p className="muted" style={{ marginTop: 10 }}>Dates and gifts raise affection. Confessing while another relationship is active forces a choice; honesty only works for compatible partners with 100+ affection each.</p>
           </Panel>
         );
       }

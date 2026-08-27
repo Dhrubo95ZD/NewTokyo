@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import DistrictCampaign from "../game/DistrictCampaign.jsx";
 import RaidCommand from "../game/RaidCommand.jsx";
 import OperationEncounter from "../game/OperationEncounter.jsx";
+import EndlessCircuit from "../game/EndlessCircuit.jsx";
 import { operationEncounterProfile } from "../game/operationEncounterRules.js";
 import { RunnerPortrait } from "./CharacterCreator.jsx";
 import {
@@ -14,6 +15,7 @@ import {
 } from "./progressionHubRules.js";
 import { COMBAT_SKILLS, combatSkillById, equipCombatSkill, normalizeCombatSkills } from "../game/combatSkills.js";
 import "./inventory.css";
+import "../game/battle-command.css";
 
 export { getArmoryBonuses, normalizeInventory };
 
@@ -30,6 +32,7 @@ export default function ProgressionHub({
   onCreateCoopRoom, onJoinCoopRoom, onListCoopRooms,
   raidState, onSetRaidSpecialization, onQueueRaid, onJoinRaid, onFillRaidBots,
   onAdvanceRaid, onClaimRaid, onLeaveRaid, onRefreshRaid,
+  endlessState, onStartEndless, onStopEndless, onResolveEndless, onRefreshEndless,
   campaignValue, onCampaignChange, onStartCampaign, onCampaignCheckpoint,
   onClaimCampaign, onCalibrateCampaign, onCampaignComplete,
 }) {
@@ -49,6 +52,7 @@ export default function ProgressionHub({
   const [drop, setDrop] = useState(null);
   const [afkBattleOpen, setAfkBattleOpen] = useState(false);
   const [coopBrowserOpen, setCoopBrowserOpen] = useState(false);
+  const [battleMode, setBattleMode] = useState("operations");
   const [, tick] = useState(0);
 
   useEffect(() => {
@@ -219,21 +223,26 @@ export default function ProgressionHub({
     </section>}
 
     {tab === "journey" && !campaignDone && <DistrictCampaign profile={profile} value={campaignValue} onChange={onCampaignChange} onBegin={onStartCampaign} onCheckpoint={onCampaignCheckpoint} onClaim={onClaimCampaign} onCalibrate={onCalibrateCampaign} onComplete={onCampaignComplete} onExit={() => setTab("character")}/>} 
-    {tab === "journey" && campaignDone && <section className="journey-v3">
-      <div className="next-step-card"><div><small>NEXT MEANINGFUL STEP</small><h2>{nextObjective.title}</h2><p>{nextObjective.detail}</p></div><button onClick={routeObjective}>{nextObjective.done ? "View progress" : "Go"}</button></div>
-      <RaidCommand player={player} combatPower={combatPower} state={raidState} busy={busy} onSpecialize={onSetRaidSpecialization} onQueue={onQueueRaid} onJoin={onJoinRaid} onFillBots={onFillRaidBots} onAdvance={onAdvanceRaid} onClaim={onClaimRaid} onLeave={onLeaveRaid} onRefresh={onRefreshRaid}/>
-      <div className="journey-columns">
-        <aside className="quest-rail"><header><small>PROGRESSION PATH</small><b>{objectives.filter((q) => q.done).length}/{objectives.length}</b></header>{objectives.map((quest) => <button key={quest.id} className={quest.done ? "done" : ""} onClick={() => setTab(quest.route === "enhance" ? "enhance" : quest.route)}><i>{quest.done ? "✓" : "○"}</i><span><b>{quest.title}</b><small>{quest.detail}</small></span></button>)}</aside>
-        <div className="dungeon-directory"><header><div><small>ALL QUESTS + DUNGEONS</small><h2>City Operations</h2></div><span>Solo needs 100% CP · Co-op needs 75%</span></header><div className="dungeon-grid">{DUNGEONS.map((dungeon) => { const solo = dungeonAccess(dungeon,{level:player.level,cp:combatPower},"solo"); const coop = dungeonAccess(dungeon,{level:player.level,cp:combatPower},"coop"); const clears = Number(progressionState?.clears?.[dungeon.id] || 0); const encounter = operationEncounterProfile(dungeon); return <button key={dungeon.id} className={`${selectedDungeon.id === dungeon.id ? "selected" : ""} ${solo.unlocked ? "ready" : coop.unlocked ? "coop-only" : "locked"}`} onClick={() => selectDungeon(dungeon)}><div><small>LV {dungeon.level} · {dungeon.district}</small><b>{dungeon.name}</b><span>{dungeon.boss}</span></div><em>{encounter.label} · {dungeon.rarity}</em><footer><span>{dungeon.cp.toLocaleString()} CP</span><span>{clears} clears</span></footer></button>;})}</div></div>
-      </div>
-      <div className="dungeon-command">
-        <header><div><small>SELECTED OPERATION · LV {selectedDungeon.level}</small><h2>{selectedDungeon.name}</h2><p>Target: {selectedDungeon.boss} · {selectedDungeon.rarity} loot</p></div><div className="cp-gate"><span>YOUR CP <b>{combatPower.toLocaleString()}</b></span><span>SOLO <b>{selectedDungeon.cp.toLocaleString()}</b></span><span>CO-OP <b>{Math.ceil(selectedDungeon.cp*.75).toLocaleString()}</b></span></div></header>
-        <div className="operation-modes">
-          <article className="afk-mode-card"><small>AFK AUTO-BATTLE</small><h3>{afk ? "Horde battle active" : "Choose a grind zone"}</h3>{afk ? <><p>Your runner is visibly fighting waves in {DUNGEONS.find((d) => d.id === afk.dungeonId)?.name || afk.dungeonId}. Rewards stack for up to 8 hours.</p><button className="watch-battle" onClick={openAfkBattle}>Watch auto-battle</button></> : <><p>Select any unlocked dungeon, preview its horde and rewards, then watch your runner auto-fight.</p><button disabled={busy || !onStartAfk} onClick={openAfkBattle}>Choose location</button></>}</article>
-          <article className="coop-card"><small>2–3 RUNNER CO-OP</small><h3>Power-Link Expedition</h3>{party ? <><p>{party.state === "waiting" ? "Room is open. Share its code or wait for Quick Match runners." : party.state === "active" ? `Expedition completes at ${formatTime(party.completes_at)}.` : "Expedition complete."}</p>{party.room_code&&<div className="coop-room-code"><small>ROOM CODE</small><b>{party.room_code}</b></div>}<div className="party-roster">{(party.roster || []).map((member) => <span key={member.userId}><b>{member.name}</b>{Number(member.cp).toLocaleString()} CP</span>)}</div>{party.state === "waiting" ? <><button onClick={()=>setCoopBrowserOpen(true)}>Open room lobby</button><button onClick={() => act(onLeaveCoop,"Left co-op room")}>Leave room</button></> : <button disabled={!coopReady || busy} onClick={() => act(onClaimCoop,"Co-op rewards claimed")}>{coopReady ? "Claim team loot" : "Expedition active"}</button>}</> : <><p>Quick Match fills a public room. Or create a room and share its code with friends.</p><div className="coop-actions"><button disabled={!dungeonAccess(selectedDungeon,{level:player.level,cp:combatPower},"coop").unlocked || busy || !onQueueCoop} onClick={() => act(() => onQueueCoop(selectedDungeon.id),"Quick Match started")}>Quick Match</button><button disabled={busy||!onCreateCoopRoom} onClick={()=>act(()=>onCreateCoopRoom(selectedDungeon.id,"public"),"Co-op room created")}>Create Room</button><button disabled={!onListCoopRooms} onClick={()=>setCoopBrowserOpen(true)}>Browse Rooms</button></div></>}</article>
-          <article className="manual-mode-card"><small>FULL-SCREEN ACTIVE PLAY</small><h3>{operationEncounterProfile(selectedDungeon).label}</h3><p>{operationEncounterProfile(selectedDungeon).detail} Enemy family: {operationEncounterProfile(selectedDungeon).family}.</p><button disabled={!dungeonAccess(selectedDungeon,{level:player.level,cp:combatPower},"solo").unlocked || busy || !onStartRun} onClick={startRun}>Launch full-screen fight</button></article>
+    {tab === "journey" && campaignDone && <section className="journey-v3 battle-command-center">
+      <nav className="battle-mode-tabs" aria-label="Battle modes">{[
+        ["operations","⚔","Operations","Manual fights"],["endless","∞","Endless","Forever grind"],["afk","⟳","AFK","Timed zones"],
+        ["coop","隊","Co-op","Rooms + queue"],["raids","王","Raids","Four runners"],["progress","◎","Progress","Objectives"],
+      ].map(([id,glyph,label,detail])=><button key={id} className={battleMode===id?"active":""} onClick={()=>setBattleMode(id)}><i>{glyph}</i><span><b>{label}</b><small>{detail}</small></span>{id==="endless"&&endlessState?.active&&<em>LIVE</em>}</button>)}</nav>
+
+      {battleMode === "progress" && <div className="battle-mode-panel progress-panel"><div className="next-step-card"><div><small>NEXT MEANINGFUL STEP</small><h2>{nextObjective.title}</h2><p>{nextObjective.detail}</p></div><button onClick={routeObjective}>{nextObjective.done ? "View progress" : "Go"}</button></div><aside className="quest-rail"><header><small>PROGRESSION PATH</small><b>{objectives.filter((q) => q.done).length}/{objectives.length}</b></header>{objectives.map((quest) => <button key={quest.id} className={quest.done ? "done" : ""} onClick={() => setTab(quest.route === "enhance" ? "enhance" : quest.route)}><i>{quest.done ? "✓" : "○"}</i><span><b>{quest.title}</b><small>{quest.detail}</small></span></button>)}</aside></div>}
+
+      {battleMode === "raids" && <div className="battle-mode-panel"><RaidCommand player={player} combatPower={combatPower} state={raidState} busy={busy} onSpecialize={onSetRaidSpecialization} onQueue={onQueueRaid} onJoin={onJoinRaid} onFillBots={onFillRaidBots} onAdvance={onAdvanceRaid} onClaim={onClaimRaid} onLeave={onLeaveRaid} onRefresh={onRefreshRaid}/></div>}
+
+      {battleMode === "endless" && <div className="battle-mode-panel"><EndlessCircuit combatPower={combatPower} state={endlessState} busy={busy} onStart={onStartEndless} onStop={onStopEndless} onResolve={onResolveEndless} onRefresh={onRefreshEndless}/></div>}
+
+      {["operations","afk","coop"].includes(battleMode) && <div className="battle-mode-panel operation-panel">
+        <div className="dungeon-directory"><header><div><small>ALL QUESTS + DUNGEONS</small><h2>{battleMode === "operations" ? "Full-Screen Encounters" : battleMode === "afk" ? "AFK Grind Zones" : "Co-op Expeditions"}</h2></div><span>{battleMode === "coop" ? "Co-op needs 75% CP" : "Select one mission"}</span></header><div className="dungeon-grid">{DUNGEONS.map((dungeon) => { const solo = dungeonAccess(dungeon,{level:player.level,cp:combatPower},"solo"); const coop = dungeonAccess(dungeon,{level:player.level,cp:combatPower},"coop"); const access = battleMode === "coop" ? coop : solo; const clears = Number(progressionState?.clears?.[dungeon.id] || 0); const encounter = operationEncounterProfile(dungeon); return <button key={dungeon.id} className={`${selectedDungeon.id === dungeon.id ? "selected" : ""} ${access.unlocked ? "ready" : "locked"}`} onClick={() => setSelectedDungeonId(dungeon.id)}><div><small>LV {dungeon.level} · {dungeon.district}</small><b>{dungeon.name}</b><span>{dungeon.boss}</span></div><em>{encounter.label} · {dungeon.rarity}</em><footer><span>{dungeon.cp.toLocaleString()} CP</span><span>{clears} clears</span></footer></button>;})}</div></div>
+        <div className="dungeon-command compact-command"><header><div><small>SELECTED · LV {selectedDungeon.level}</small><h2>{selectedDungeon.name}</h2><p>{operationEncounterProfile(selectedDungeon).label} · {operationEncounterProfile(selectedDungeon).family}</p></div><div className="cp-gate"><span>YOUR CP <b>{combatPower.toLocaleString()}</b></span><span>{battleMode === "coop" ? "CO-OP" : "TARGET"} <b>{Math.ceil(selectedDungeon.cp * (battleMode === "coop" ? 0.75 : 1)).toLocaleString()}</b></span></div></header>
+          {battleMode === "operations" && <article className="focused-operation manual-mode-card"><div><small>FULL-SCREEN ACTIVE PLAY</small><h3>{operationEncounterProfile(selectedDungeon).label}</h3><p>{operationEncounterProfile(selectedDungeon).detail} The encounter opens alone, without menus or cards covering the playfield.</p></div><button disabled={!dungeonAccess(selectedDungeon,{level:player.level,cp:combatPower},"solo").unlocked || busy || !onStartRun} onClick={startRun}>Launch full-screen fight</button></article>}
+          {battleMode === "afk" && <article className="focused-operation afk-mode-card"><div><small>AFK AUTO-BATTLE</small><h3>{afk ? "Horde battle active" : "Deploy to this zone"}</h3><p>{afk ? `Your runner is fighting in ${DUNGEONS.find((d)=>d.id===afk.dungeonId)?.name||afk.dungeonId}. Rewards stack for up to 8 hours.` : "Watch the autonomous fight or hide it while the server continues tracking time."}</p></div><button disabled={busy||!onStartAfk} onClick={openAfkBattle}>{afk?"Watch auto-battle":"Open deployment screen"}</button></article>}
+          {battleMode === "coop" && <article className="focused-operation coop-card"><div><small>2–3 RUNNER CO-OP</small><h3>Power-Link Expedition</h3>{party ? <><p>{party.state === "waiting" ? "Share the room code or wait for Quick Match runners." : party.state === "active" ? `Expedition completes at ${formatTime(party.completes_at)}.` : "Expedition complete."}</p>{party.room_code&&<div className="coop-room-code"><small>ROOM CODE</small><b>{party.room_code}</b></div>}</> : <p>Quick Match fills a public room. You can also create or browse joinable rooms.</p>}</div>{party ? <div className="coop-actions">{party.state==="waiting"?<><button onClick={()=>setCoopBrowserOpen(true)}>Room lobby</button><button onClick={()=>act(onLeaveCoop,"Left co-op room")}>Leave</button></>:<button disabled={!coopReady||busy} onClick={()=>act(onClaimCoop,"Co-op rewards claimed")}>{coopReady?"Claim team loot":"Expedition active"}</button>}</div>:<div className="coop-actions"><button disabled={!dungeonAccess(selectedDungeon,{level:player.level,cp:combatPower},"coop").unlocked||busy||!onQueueCoop} onClick={()=>act(()=>onQueueCoop(selectedDungeon.id),"Quick Match started")}>Quick Match</button><button disabled={busy||!onCreateCoopRoom} onClick={()=>act(()=>onCreateCoopRoom(selectedDungeon.id,"public"),"Room created")}>Create Room</button><button disabled={!onListCoopRooms} onClick={()=>setCoopBrowserOpen(true)}>Browse</button></div>}</article>}
         </div>
-      </div>
+      </div>}
     </section>}
 
     {tab === "character" && <section className="character-v4">
