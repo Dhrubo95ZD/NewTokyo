@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Brawl } from "../NeoTokyoUnderworld.jsx";
 import DistrictCampaign from "../game/DistrictCampaign.jsx";
 import RaidCommand from "../game/RaidCommand.jsx";
+import OperationEncounter from "../game/OperationEncounter.jsx";
+import { operationEncounterProfile } from "../game/operationEncounterRules.js";
 import { RunnerPortrait } from "./CharacterCreator.jsx";
 import {
   GEAR_SLOTS, LOOT, RARITIES, RARITY_ORDER, SETS, SLOT_ORDER, ItemArt,
@@ -44,6 +45,7 @@ export default function ProgressionHub({
   const [busy, setBusy] = useState(false);
   const [running, setRunning] = useState(false);
   const [runToken, setRunToken] = useState(null);
+  const [encounterResult, setEncounterResult] = useState(null);
   const [drop, setDrop] = useState(null);
   const [afkBattleOpen, setAfkBattleOpen] = useState(false);
   const [coopBrowserOpen, setCoopBrowserOpen] = useState(false);
@@ -157,18 +159,21 @@ export default function ProgressionHub({
 
   const startRun = () => act(async () => {
     const result = await onStartRun?.();
-    setRunToken(result?.token || null); setRunning(true);
+    setRunToken(result?.token || null); setEncounterResult(null); setRunning(true);
   });
 
-  const finishRun = ({ win }) => act(async () => {
-    if (!win) { setRunning(false); throw new Error("Extraction failed · raise CP or improve your timing"); }
-    const result = await onCompleteRun?.(runToken);
-    if (result?.state) {
-      const next = normalizeInventory(result.state); const item = byId(result.drop?.id);
-      onChange(next); setSelectedId(item?.id || null); setDrop(item ? { item, duplicate: result.drop?.duplicate, shards: result.drop?.shards || 0 } : null);
-    }
-    setRunToken(null); setRunning(false); await onRefreshProgression?.();
-  });
+  const finishRun = ({ win }) => {
+    if (!win) { setRunToken(null); setEncounterResult("defeat"); return; }
+    act(async () => {
+      const result = await onCompleteRun?.(runToken);
+      if (result?.state) {
+        const next = normalizeInventory(result.state); const item = byId(result.drop?.id);
+        onChange(next); setSelectedId(item?.id || null); setDrop(item ? { item, duplicate: result.drop?.duplicate, shards: result.drop?.shards || 0 } : null);
+      }
+      setRunToken(null); setEncounterResult("victory"); await onRefreshProgression?.();
+    });
+  };
+  const exitRun = () => { setRunning(false); setRunToken(null); setEncounterResult(null); };
 
   const openAfkBattle = () => setAfkBattleOpen(true);
   const startAfkBattle = (dungeon) => act(async () => {
@@ -193,6 +198,9 @@ export default function ProgressionHub({
     return onCombatSkillsChange(equipCombatSkill(skillLoadout, skillId, slot, player.level));
   }, `${combatSkillById(skillId)?.name || "Technique"} equipped`);
 
+  const encounterStats = {hp:110+(combatTotals.def||0)*2+(combatTotals.hp||0),maxHp:110+(combatTotals.def||0)*2+(combatTotals.hp||0),str:12+(combatTotals.str||0),def:6+(combatTotals.def||0),spd:8+(combatTotals.spd||0),dex:8+(combatTotals.dex||0),crit:2+(combatTotals.crit||0),wPow:0,aPow:0};
+  if (running) return <OperationEncounter dungeon={selectedDungeon} stats={encounterStats} techniques={equippedTechniques} runKey={runToken || `${selectedDungeon.id}-local`} result={encounterResult} busy={busy} onEnd={finishRun} onRetry={startRun} onExit={exitRun}/>;
+
   return <main className="inventory-v2 progression-hub">
     <header className="v2-header progression-header">
       <div><small>NEO GRID // RUNNER COMMAND</small><h1>Progression Hub</h1></div>
@@ -216,14 +224,14 @@ export default function ProgressionHub({
       <RaidCommand player={player} combatPower={combatPower} state={raidState} busy={busy} onSpecialize={onSetRaidSpecialization} onQueue={onQueueRaid} onJoin={onJoinRaid} onFillBots={onFillRaidBots} onAdvance={onAdvanceRaid} onClaim={onClaimRaid} onLeave={onLeaveRaid} onRefresh={onRefreshRaid}/>
       <div className="journey-columns">
         <aside className="quest-rail"><header><small>PROGRESSION PATH</small><b>{objectives.filter((q) => q.done).length}/{objectives.length}</b></header>{objectives.map((quest) => <button key={quest.id} className={quest.done ? "done" : ""} onClick={() => setTab(quest.route === "enhance" ? "enhance" : quest.route)}><i>{quest.done ? "✓" : "○"}</i><span><b>{quest.title}</b><small>{quest.detail}</small></span></button>)}</aside>
-        <div className="dungeon-directory"><header><div><small>ALL QUESTS + DUNGEONS</small><h2>City Operations</h2></div><span>Solo needs 100% CP · Co-op needs 75%</span></header><div className="dungeon-grid">{DUNGEONS.map((dungeon) => { const solo = dungeonAccess(dungeon,{level:player.level,cp:combatPower},"solo"); const coop = dungeonAccess(dungeon,{level:player.level,cp:combatPower},"coop"); const clears = Number(progressionState?.clears?.[dungeon.id] || 0); return <button key={dungeon.id} className={`${selectedDungeon.id === dungeon.id ? "selected" : ""} ${solo.unlocked ? "ready" : coop.unlocked ? "coop-only" : "locked"}`} onClick={() => selectDungeon(dungeon)}><div><small>LV {dungeon.level} · {dungeon.district}</small><b>{dungeon.name}</b><span>{dungeon.boss}</span></div><em>{dungeon.rarity}</em><footer><span>{dungeon.cp.toLocaleString()} CP</span><span>{clears} clears</span></footer></button>;})}</div></div>
+        <div className="dungeon-directory"><header><div><small>ALL QUESTS + DUNGEONS</small><h2>City Operations</h2></div><span>Solo needs 100% CP · Co-op needs 75%</span></header><div className="dungeon-grid">{DUNGEONS.map((dungeon) => { const solo = dungeonAccess(dungeon,{level:player.level,cp:combatPower},"solo"); const coop = dungeonAccess(dungeon,{level:player.level,cp:combatPower},"coop"); const clears = Number(progressionState?.clears?.[dungeon.id] || 0); const encounter = operationEncounterProfile(dungeon); return <button key={dungeon.id} className={`${selectedDungeon.id === dungeon.id ? "selected" : ""} ${solo.unlocked ? "ready" : coop.unlocked ? "coop-only" : "locked"}`} onClick={() => selectDungeon(dungeon)}><div><small>LV {dungeon.level} · {dungeon.district}</small><b>{dungeon.name}</b><span>{dungeon.boss}</span></div><em>{encounter.label} · {dungeon.rarity}</em><footer><span>{dungeon.cp.toLocaleString()} CP</span><span>{clears} clears</span></footer></button>;})}</div></div>
       </div>
       <div className="dungeon-command">
         <header><div><small>SELECTED OPERATION · LV {selectedDungeon.level}</small><h2>{selectedDungeon.name}</h2><p>Target: {selectedDungeon.boss} · {selectedDungeon.rarity} loot</p></div><div className="cp-gate"><span>YOUR CP <b>{combatPower.toLocaleString()}</b></span><span>SOLO <b>{selectedDungeon.cp.toLocaleString()}</b></span><span>CO-OP <b>{Math.ceil(selectedDungeon.cp*.75).toLocaleString()}</b></span></div></header>
         <div className="operation-modes">
           <article className="afk-mode-card"><small>AFK AUTO-BATTLE</small><h3>{afk ? "Horde battle active" : "Choose a grind zone"}</h3>{afk ? <><p>Your runner is visibly fighting waves in {DUNGEONS.find((d) => d.id === afk.dungeonId)?.name || afk.dungeonId}. Rewards stack for up to 8 hours.</p><button className="watch-battle" onClick={openAfkBattle}>Watch auto-battle</button></> : <><p>Select any unlocked dungeon, preview its horde and rewards, then watch your runner auto-fight.</p><button disabled={busy || !onStartAfk} onClick={openAfkBattle}>Choose location</button></>}</article>
           <article className="coop-card"><small>2–3 RUNNER CO-OP</small><h3>Power-Link Expedition</h3>{party ? <><p>{party.state === "waiting" ? "Room is open. Share its code or wait for Quick Match runners." : party.state === "active" ? `Expedition completes at ${formatTime(party.completes_at)}.` : "Expedition complete."}</p>{party.room_code&&<div className="coop-room-code"><small>ROOM CODE</small><b>{party.room_code}</b></div>}<div className="party-roster">{(party.roster || []).map((member) => <span key={member.userId}><b>{member.name}</b>{Number(member.cp).toLocaleString()} CP</span>)}</div>{party.state === "waiting" ? <><button onClick={()=>setCoopBrowserOpen(true)}>Open room lobby</button><button onClick={() => act(onLeaveCoop,"Left co-op room")}>Leave room</button></> : <button disabled={!coopReady || busy} onClick={() => act(onClaimCoop,"Co-op rewards claimed")}>{coopReady ? "Claim team loot" : "Expedition active"}</button>}</> : <><p>Quick Match fills a public room. Or create a room and share its code with friends.</p><div className="coop-actions"><button disabled={!dungeonAccess(selectedDungeon,{level:player.level,cp:combatPower},"coop").unlocked || busy || !onQueueCoop} onClick={() => act(() => onQueueCoop(selectedDungeon.id),"Quick Match started")}>Quick Match</button><button disabled={busy||!onCreateCoopRoom} onClick={()=>act(()=>onCreateCoopRoom(selectedDungeon.id,"public"),"Co-op room created")}>Create Room</button><button disabled={!onListCoopRooms} onClick={()=>setCoopBrowserOpen(true)}>Browse Rooms</button></div></>}</article>
-          <article className="manual-mode-card"><small>ACTIVE PLAY</small><h3>Manual District Sweep</h3>{running ? <Brawl techniques={equippedTechniques} stats={{hp:110+(combatTotals.def||0)*2+(combatTotals.hp||0),maxHp:110+(combatTotals.def||0)*2+(combatTotals.hp||0),str:12+(combatTotals.str||0),def:6+(combatTotals.def||0),spd:8+(combatTotals.spd||0),dex:8+(combatTotals.dex||0),crit:2+(combatTotals.crit||0),wPow:0,aPow:0}} enemy={{id:"sentinel",name:selectedDungeon.boss,kanji:"守",lvl:selectedDungeon.level,hp:Math.max(70,selectedDungeon.cp/8),atk:12+selectedDungeon.level*.8}} onEnd={finishRun}/> : <><p>Skill-based combat gives an immediate equipment roll. Start with an accessible operation.</p><button disabled={!dungeonAccess(selectedDungeon,{level:player.level,cp:combatPower},"solo").unlocked || busy || !onStartRun} onClick={startRun}>Enter manually</button></>}</article>
+          <article className="manual-mode-card"><small>FULL-SCREEN ACTIVE PLAY</small><h3>{operationEncounterProfile(selectedDungeon).label}</h3><p>{operationEncounterProfile(selectedDungeon).detail} Enemy family: {operationEncounterProfile(selectedDungeon).family}.</p><button disabled={!dungeonAccess(selectedDungeon,{level:player.level,cp:combatPower},"solo").unlocked || busy || !onStartRun} onClick={startRun}>Launch full-screen fight</button></article>
         </div>
       </div>
     </section>}

@@ -10,7 +10,7 @@ assert.match(main, /\["fights", "Battle", "斬"\]/, "main navigation names the d
 assert.match(main, /id === "fights" && onOpenBattle/, "Battle routes to the consolidated hub");
 assert.match(online, /setProgressionTab\("journey"\)/, "Battle opens the battle surface");
 assert.match(online, /setProgressionTab\("character"\)/, "Loadout opens character management");
-for (const feature of ["ALL QUESTS + DUNGEONS", "AFK AUTO-BATTLE", "2–3 RUNNER CO-OP", "Manual District Sweep"]) assert.ok(hub.includes(feature), `${feature} is under Battle`);
+for (const feature of ["ALL QUESTS + DUNGEONS", "AFK AUTO-BATTLE", "2–3 RUNNER CO-OP", "FULL-SCREEN ACTIVE PLAY"]) assert.ok(hub.includes(feature), `${feature} is under Battle`);
 assert.match(hub, /Technique Loadout/);
 assert.match(hub, /techniques=\{equippedTechniques\}/);
 console.log("battle navigation contract smoke test passed");
