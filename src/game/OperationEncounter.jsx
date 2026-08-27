@@ -96,7 +96,7 @@ function PuzzleEncounter({ dungeon, profile, onEnd }) {
   </div>;
 }
 
-export default function OperationEncounter({ dungeon, stats, techniques, runKey, result, busy, onEnd, onRetry, onExit }) {
+export default function OperationEncounter({ dungeon, stats, techniques, profile: runnerProfile, runKey, result, busy, onEnd, onRetry, onExit }) {
   const baseProfile = useMemo(() => operationEncounterProfile(dungeon), [dungeon]);
   const profile = baseProfile.mode === "hybrid"
     ? { ...baseProfile, mode: ["melee", "shooter", "puzzle"][Math.abs(String(runKey || "").split("").reduce((sum, char) => sum + char.charCodeAt(0), 0)) % 3] }
@@ -106,7 +106,7 @@ export default function OperationEncounter({ dungeon, stats, techniques, runKey,
   return <main className="operation-encounter" style={{ "--enemy": profile.color }}>
     <header><button onClick={onExit} aria-label="Exit operation">‹</button><div><small>{profile.label} // LV {dungeon.level}</small><h1>{dungeon.name}</h1><p>{profile.family} · {profile.detail}</p></div><span><small>DIFFICULTY</small><b>{dungeon.cp.toLocaleString()} CP</b></span></header>
     <section className={`encounter-playfield mode-${profile.mode}`}>
-      {profile.mode === "melee" && <Brawl key={runKey} techniques={techniques} stats={stats} enemy={enemy} onEnd={onEnd}/>} 
+      {profile.mode === "melee" && <Brawl key={runKey} techniques={techniques} stats={stats} enemy={enemy} profile={runnerProfile} onEnd={onEnd}/>}
       {profile.mode === "shooter" && <ShooterEncounter key={runKey} dungeon={dungeon} profile={profile} onEnd={onEnd}/>} 
       {profile.mode === "puzzle" && <PuzzleEncounter key={runKey} dungeon={dungeon} profile={profile} onEnd={onEnd}/>} 
     </section>

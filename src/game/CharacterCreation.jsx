@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { AndroidRunnerModel, ANDROID_FINISHES, ANDROID_MODELS, ANDROID_OPTICS, normalizeAndroidProfile } from "./AndroidRunner.jsx";
 import "./character-creation.css";
 
 export const EMPTY_EQUIPMENT = Object.freeze({
@@ -58,7 +59,7 @@ export function cleanCharacterName(value = "") {
  * three-role identity while `legacyRole` preserves compatibility hints for
  * older combat/save migrations.
  */
-export function createCharacterProfile({ codename, roleId = "striker" } = {}) {
+export function createCharacterProfile({ codename, roleId = "striker", androidModel = 0, optic = 0, finish = 0 } = {}) {
   const role = CHARACTER_ROLE_BY_ID[roleId] || CHARACTER_ROLES[0];
   return {
     codename: cleanCharacterName(codename),
@@ -66,13 +67,10 @@ export function createCharacterProfile({ codename, roleId = "striker" } = {}) {
     legacyRole: role.legacyRole,
     archetype: role.id,
     frame: role.frame,
-    skin: 1,
-    eyes: role.id === "technician" ? 0 : role.id === "guardian" ? 2 : 1,
-    jacket: role.id === "technician" ? 1 : role.id === "guardian" ? 2 : 0,
-    hair: 0,
-    augment: role.id === "technician" ? 1 : 0,
+    androidModel, helmet: ANDROID_MODELS[androidModel]?.helmet || 0, optic, finish,
+    eyes: optic, jacket: finish, hair: 0, augment: 0,
     equipment: { ...EMPTY_EQUIPMENT },
-    creationVersion: 1,
+    creationVersion: 2,
   };
 }
 
@@ -83,17 +81,20 @@ export function normalizeCharacterCreation(initial = {}) {
   return {
     codename: cleanCharacterName(initial.codename || ""),
     roleId: CHARACTER_ROLE_BY_ID[inferred] ? inferred : "striker",
+    androidModel: normalizeAndroidProfile(initial).androidModel,
+    optic: normalizeAndroidProfile(initial).optic,
+    finish: normalizeAndroidProfile(initial).finish,
   };
 }
 
-function RolePortrait({ role, codename }) {
+function RolePortrait({ role, codename, appearance }) {
   return (
     <figure
       className={`nt-create__portrait nt-create__portrait--${role.id}`}
       style={{ "--role-a": role.colors[0], "--role-b": role.colors[1] }}
     >
       <div className="nt-create__role-aura" aria-hidden="true" />
-      <img src="/assets/characters/runner-equipment-v2.webp" alt={`${codename || "New runner"}, ${role.name} preview`} />
+      <AndroidRunnerModel profile={{codename,role:role.id,archetype:role.id,...appearance}} label={`${codename || "New runner"}, fully helmeted ${role.name} android preview`}/>
       <div className="nt-create__role-chip"><i>{role.name.slice(0,1)}</i><span><small>DISCIPLINE</small><b>{role.name}</b></span></div>
       <figcaption>
         <strong>{codename || "UNNAMED"}</strong>
@@ -126,12 +127,13 @@ export default function CharacterCreation({
   const normalized = useMemo(() => normalizeCharacterCreation(initial || {}), [initial]);
   const [codename, setCodename] = useState(normalized.codename);
   const [roleId, setRoleId] = useState(normalized.roleId);
+  const [appearance,setAppearance]=useState({androidModel:normalized.androidModel,optic:normalized.optic,finish:normalized.finish});
   const role = CHARACTER_ROLE_BY_ID[roleId];
   const validName = /^[A-Za-z0-9_]{3,14}$/.test(codename);
 
   const finish = () => {
     if (!validName || busy || typeof onComplete !== "function") return;
-    onComplete(createCharacterProfile({ codename, roleId }));
+    onComplete(createCharacterProfile({ codename, roleId, ...appearance }));
   };
 
   return (
@@ -149,7 +151,7 @@ export default function CharacterCreation({
       <div className="nt-create__layout">
         <section className="nt-create__visual" aria-live="polite">
           <div className="nt-create__district-label"><span /> EAST WARD INTAKE</div>
-          <RolePortrait role={role} codename={codename} />
+          <RolePortrait role={role} codename={codename} appearance={appearance} />
           <div className="nt-create__loadout-note"><b>Clean loadout</b><span>Weapon, helmet, armor and boots unlock through District One.</span></div>
         </section>
 
@@ -201,6 +203,7 @@ export default function CharacterCreation({
             <span>{role.specialty}</span>
             <p>{role.description}</p>
           </div>
+          <section className="nt-create__android-custom" aria-label="Android customization"><label>Android configuration</label><div className="nt-create__model-grid">{ANDROID_MODELS.map((model)=><button type="button" key={model.id} className={appearance.androidModel===model.id?"is-selected":""} onClick={()=>setAppearance((value)=>({...value,androidModel:model.id}))}><AndroidRunnerModel profile={{...appearance,androidModel:model.id}} compact/><span><b>{model.name}</b><small>{model.frame} chassis</small></span></button>)}</div><div className="nt-create__signals"><span>OPTIC{ANDROID_OPTICS.map((color,index)=><button type="button" key={color} className={appearance.optic===index?"is-selected":""} style={{"--signal":color}} onClick={()=>setAppearance((value)=>({...value,optic:index}))}/>)}</span><span>FINISH{ANDROID_FINISHES.map((color,index)=><button type="button" key={color} className={appearance.finish===index?"is-selected":""} style={{"--signal":color}} onClick={()=>setAppearance((value)=>({...value,finish:index}))}/>)}</span></div></section>
           <StatIdentity role={role} />
 
           <footer className="nt-create__actions">

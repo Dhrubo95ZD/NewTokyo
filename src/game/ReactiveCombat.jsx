@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { RunnerPortrait } from "../online/CharacterCreator.jsx";
+import { AndroidRunnerSprite } from "./AndroidRunner.jsx";
 import {
   ARENA_HEIGHT, ARENA_WIDTH, createReactiveCombat, reactiveCombatSnapshot, stepReactiveCombat,
 } from "./reactiveCombatEngine.js";
@@ -104,6 +104,7 @@ export default function ReactiveCombat({ role = "striker", profile = null, weapo
   const [hud, setHud] = useState(() => reactiveCombatSnapshot(simulation.current));
   const [message, setMessage] = useState("Move freely. Attack in range, dash through danger, and keep pressure on the target.");
   const [advancing, setAdvancing] = useState(false);
+  const [runnerAction,setRunnerAction]=useState("idle");
   const roleProfile = useMemo(() => ({ ...(profile || {}), role: resolvedRole, archetype: resolvedRole }), [profile, resolvedRole]);
 
   const reset = useCallback(() => {
@@ -169,7 +170,7 @@ export default function ReactiveCombat({ role = "striker", profile = null, weapo
     return () => cancelAnimationFrame(frame);
   }, [ui.label]);
 
-  const queue = (action) => { if (hud.status === "active") input.current[action] = true; };
+  const queue = (action) => { if (hud.status !== "active") return; input.current[action] = true; const visual=action==="attackPressed"?"slash":action==="dashPressed"?"run":"shoot";setRunnerAction(visual);window.setTimeout(()=>setRunnerAction("idle"),420); };
   const updateStick = (event) => {
     if (!joystick.current.active) return;
     const rect = event.currentTarget.getBoundingClientRect();
@@ -201,7 +202,7 @@ export default function ReactiveCombat({ role = "striker", profile = null, weapo
       </header>
       <div className={`rc-stage ${enemyWindup ? "danger" : ""}`}>
         <canvas ref={canvasRef} width={ARENA_WIDTH} height={ARENA_HEIGHT} aria-label="Real-time District One combat arena" />
-        <div className="rc-player" ref={playerRef}><RunnerPortrait profile={roleProfile} compact /><i /></div>
+        <div className="rc-player" ref={playerRef}><AndroidRunnerSprite profile={roleProfile} action={runnerAction}/><i /></div>
         <div className="rc-objective">{enemyWindup ? <><b>EVADE!</b><span>Move or dash outside the red impact zone</span></> : <><b>PRESSURE</b><span>Close distance and chain attacks</span></>}</div>
         <div className="rc-joystick" onPointerDown={stickDown} onPointerMove={updateStick} onPointerUp={stickUp} onPointerCancel={stickUp}><i /></div>
         <div className="rc-actions">
