@@ -3,6 +3,7 @@ import DistrictCampaign from "../game/DistrictCampaign.jsx";
 import RaidCommand from "../game/RaidCommand.jsx";
 import OperationEncounter from "../game/OperationEncounter.jsx";
 import EndlessCircuit from "../game/EndlessCircuit.jsx";
+import NeonDepths from "../game/NeonDepths.jsx";
 import { operationEncounterProfile } from "../game/operationEncounterRules.js";
 import { RunnerPortrait } from "./CharacterCreator.jsx";
 import {
@@ -33,6 +34,7 @@ export default function ProgressionHub({
   raidState, onSetRaidSpecialization, onQueueRaid, onJoinRaid, onFillRaidBots,
   onAdvanceRaid, onClaimRaid, onLeaveRaid, onRefreshRaid,
   endlessState, onStartEndless, onStopEndless, onResolveEndless, onRefreshEndless,
+  depthsState, onStartDepths, onAdvanceDepths, onExtractDepths, onAbandonDepths, onRefreshDepths,
   campaignValue, onCampaignChange, onStartCampaign, onCampaignCheckpoint,
   onClaimCampaign, onCalibrateCampaign, onCampaignComplete,
 }) {
@@ -225,7 +227,7 @@ export default function ProgressionHub({
     {tab === "journey" && !campaignDone && <DistrictCampaign profile={profile} value={campaignValue} onChange={onCampaignChange} onBegin={onStartCampaign} onCheckpoint={onCampaignCheckpoint} onClaim={onClaimCampaign} onCalibrate={onCalibrateCampaign} onComplete={onCampaignComplete} onExit={() => setTab("character")}/>} 
     {tab === "journey" && campaignDone && <section className="journey-v3 battle-command-center">
       <nav className="battle-mode-tabs" aria-label="Battle modes">{[
-        ["operations","⚔","Operations","Manual fights"],["endless","∞","Endless","Forever grind"],["afk","⟳","AFK","Timed zones"],
+        ["depths","深","Neon Depths","Explore + extract"],["operations","⚔","Operations","Manual fights"],["endless","∞","Endless","Forever grind"],["afk","⟳","AFK","Timed zones"],
         ["coop","隊","Co-op","Rooms + queue"],["raids","王","Raids","Four runners"],["progress","◎","Progress","Objectives"],
       ].map(([id,glyph,label,detail])=><button key={id} className={battleMode===id?"active":""} onClick={()=>setBattleMode(id)}><i>{glyph}</i><span><b>{label}</b><small>{detail}</small></span>{id==="endless"&&endlessState?.active&&<em>LIVE</em>}</button>)}</nav>
 
@@ -234,6 +236,8 @@ export default function ProgressionHub({
       {battleMode === "raids" && <div className="battle-mode-panel"><RaidCommand player={player} combatPower={combatPower} state={raidState} busy={busy} onSpecialize={onSetRaidSpecialization} onQueue={onQueueRaid} onJoin={onJoinRaid} onFillBots={onFillRaidBots} onAdvance={onAdvanceRaid} onClaim={onClaimRaid} onLeave={onLeaveRaid} onRefresh={onRefreshRaid}/></div>}
 
       {battleMode === "endless" && <div className="battle-mode-panel"><EndlessCircuit combatPower={combatPower} state={endlessState} busy={busy} onStart={onStartEndless} onStop={onStopEndless} onResolve={onResolveEndless} onRefresh={onRefreshEndless}/></div>}
+
+      {battleMode === "depths" && <div className="battle-mode-panel depths-mode-panel"><NeonDepths combatPower={combatPower} state={depthsState} busy={busy} onStart={onStartDepths} onAdvance={onAdvanceDepths} onExtract={onExtractDepths} onAbandon={onAbandonDepths} onRefresh={onRefreshDepths}/></div>}
 
       {["operations","afk","coop"].includes(battleMode) && <div className="battle-mode-panel operation-panel">
         <div className="dungeon-directory"><header><div><small>ALL QUESTS + DUNGEONS</small><h2>{battleMode === "operations" ? "Full-Screen Encounters" : battleMode === "afk" ? "AFK Grind Zones" : "Co-op Expeditions"}</h2></div><span>{battleMode === "coop" ? "Co-op needs 75% CP" : "Select one mission"}</span></header><div className="dungeon-grid">{DUNGEONS.map((dungeon) => { const solo = dungeonAccess(dungeon,{level:player.level,cp:combatPower},"solo"); const coop = dungeonAccess(dungeon,{level:player.level,cp:combatPower},"coop"); const access = battleMode === "coop" ? coop : solo; const clears = Number(progressionState?.clears?.[dungeon.id] || 0); const encounter = operationEncounterProfile(dungeon); return <button key={dungeon.id} className={`${selectedDungeon.id === dungeon.id ? "selected" : ""} ${access.unlocked ? "ready" : "locked"}`} onClick={() => setSelectedDungeonId(dungeon.id)}><div><small>LV {dungeon.level} · {dungeon.district}</small><b>{dungeon.name}</b><span>{dungeon.boss}</span></div><em>{encounter.label} · {dungeon.rarity}</em><footer><span>{dungeon.cp.toLocaleString()} CP</span><span>{clears} clears</span></footer></button>;})}</div></div>
