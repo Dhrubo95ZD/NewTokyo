@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { cricketDeliveryDuration, resolveCricketSwing, swipeCricketShot } from "./arcadeRules.js";
 import "./arcade-games.css";
 
 const lanes=["leg","straight","off"];
@@ -16,7 +17,7 @@ export function CricketGameV2({bet,onEnd}){
   const [progress,setProgress]=useState(0);
   const [score,setScore]=useState({runs:0,wickets:0,balls:[]});
   const [callout,setCallout]=useState("Choose a lane and shot, then read the delivery.");
-  const raf=useRef(0);const flight=useRef(null);const ended=useRef(false);
+  const raf=useRef(0);const flight=useRef(null);const gesture=useRef(null);const ended=useRef(false);
 
   useEffect(()=>()=>cancelAnimationFrame(raf.current),[]);
   const finish=(next)=>{
@@ -36,30 +37,30 @@ export function CricketGameV2({bet,onEnd}){
     const kind=deliveries[Math.floor(Math.random()*deliveries.length)];
     const delivery={...kind,lane:Math.random()<.62?kind.bias:lanes[Math.floor(Math.random()*lanes.length)]};
     setBall(delivery);setCallout(`${delivery.name} · ${delivery.lane.toUpperCase()} LINE`);setState("flight");
-    const started=performance.now();flight.current={started,duration:650+delivery.speed*2,delivery};
+    const started=performance.now();flight.current={started,duration:cricketDeliveryDuration(delivery.speed),delivery};
     const tick=(now)=>{const f=flight.current;if(!f)return;const p=Math.min(1.18,(now-f.started)/f.duration);setProgress(p);if(p>=1.12){flight.current=null;record("W",0,"BEATEN · STUMPS LIT",true);return;}raf.current=requestAnimationFrame(tick);};
     raf.current=requestAnimationFrame(tick);
   };
-  const swing=()=>{
+  const swing=(shot={lane,intent})=>{
     if(state!=="flight"||!flight.current)return;cancelAnimationFrame(raf.current);const f=flight.current;flight.current=null;
-    const timing=Math.abs(progress-.84);const laneMatch=lane===f.delivery.lane;
-    if(!laneMatch){record("·",0,"WRONG LINE · BEATEN");return;}
-    if(timing<.055){const runs=intent==="power"?6:4;record(String(runs),runs,intent==="power"?"PERFECT ARC · SIX":"PURE TIMING · FOUR");return;}
-    if(timing<.12){const runs=intent==="power"?4:3;record(String(runs),runs,`${runs} RUNS · CLEAN CONTACT`);return;}
-    if(timing<.22){record(intent==="power"?"1":"2",intent==="power"?1:2,"MISTIMED · SCRAMBLED RUNS");return;}
-    const wicket=intent==="power"&&Math.random()<.55;record(wicket?"W":"·",0,wicket?"SKIED · CAUGHT":"SWING AND MISS",wicket);
+    const tapProgress=Math.min(1.18,(performance.now()-f.started)/f.duration);
+    const result=resolveCricketSwing({progress:tapProgress,laneMatch:shot.lane===f.delivery.lane,intent:shot.intent,random:Math.random()});
+    setLane(shot.lane);setIntent(shot.intent);setProgress(tapProgress);
+    record(result.symbol,result.runs,result.text,result.wicket);
   };
+  const beginSwipe=(event)=>{if(state!=="flight")return;event.currentTarget.setPointerCapture?.(event.pointerId);gesture.current={x:event.clientX,y:event.clientY,at:performance.now()};};
+  const finishSwipe=(event)=>{const start=gesture.current;gesture.current=null;if(!start||state!=="flight")return;const shot=swipeCricketShot({dx:event.clientX-start.x,dy:event.clientY-start.y,duration:performance.now()-start.at});if(!shot){setCallout("SWIPE UP, LEFT OR RIGHT TO PLAY");return;}swing(shot);};
   return <section className="arcade-game cricket-v2">
     <header><div><small>ROOFTOP LEAGUE // 12 BALL CHASE</small><b>{score.runs}/{score.wickets}</b></div><span>{score.balls.length}.0 / 2 OVERS</span></header>
-    <div className="cricket-field" style={{"--ball-y":`${8+progress*77}%`,"--ball-x":ball?.lane==="leg"?"38%":ball?.lane==="off"?"62%":"50%"}} onPointerDown={swing}>
-      <div className="cricket-hud"><span>{callout}</span><b>{ball?"TAP TO SWING":"SET YOUR SHOT"}</b></div>
+    <div className="cricket-field" style={{"--ball-y":`${8+progress*77}%`,"--ball-x":ball?.lane==="leg"?"38%":ball?.lane==="off"?"62%":"50%"}} onPointerDown={beginSwipe} onPointerUp={finishSwipe}>
+      <div className="cricket-hud"><span>{callout}</span><b>{ball?"SWIPE TO SWING":"READY"}</b></div>
       {ball&&<i className="cricket-ball"/>}<div className={`cricket-swing ${state==="flight"?"armed":""}`}/>
-      <div className="timing-rail"><i style={{transform:`translateX(${Math.min(100,progress*100)}%)`}}/><em/></div>
+      <div className="swipe-guide"><i>↖<small>LEG</small></i><i>↑<small>STRAIGHT</small></i><i>↗<small>OFF</small></i></div>
+      <div className="timing-rail"><i style={{left:`${Math.min(100,progress*100)}%`}}/><em/></div>
     </div>
     <div className="cricket-scorecard">{Array.from({length:12},(_,i)=><i key={i} className={score.balls[i]==="W"?"wicket":score.balls[i]?"scored":""}>{score.balls[i]||i+1}</i>)}</div>
-    {state!=="done"&&<><div className="cricket-choices"><div><small>SHOT LINE</small>{lanes.map((value)=><button key={value} className={lane===value?"on":""} onClick={()=>setLane(value)}>{value}</button>)}</div><div><small>INTENT</small>{["drive","power"].map((value)=><button key={value} className={intent===value?"on":""} onClick={()=>setIntent(value)}>{value}</button>)}</div></div>
-    {state!=="flight"&&<button className="arcade-primary" onClick={bowl}>{state==="brief"?"ENTER THE CREASE":"FACE NEXT BALL"}</button>}{state==="flight"&&<button className="arcade-primary danger" onPointerDown={swing}>SWING</button>}</>}
-    <p>Read the announced line, choose where to play, then time the strike inside the cyan window. Power shots score higher but mistimed contact can cost a wicket. Stake: ¥{Number(bet||0).toLocaleString()}.</p>
+    {state!=="done"&&state!=="flight"&&<button className="arcade-primary" onClick={bowl}>{state==="brief"?"ENTER THE CREASE":"FACE NEXT BALL"}</button>}
+    <p>Swipe up for straight, up-left for leg, or up-right for off. A fast, long swipe plays a power shot. Release inside the cyan timing window. Stake: ¥{Number(bet||0).toLocaleString()}.</p>
   </section>;
 }
 
