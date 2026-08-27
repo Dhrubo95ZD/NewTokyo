@@ -44,10 +44,10 @@ export default function TradingChart({ candles = [], quote = null, positions = [
     const plot = { left: 14, top: 16, right: width - 66, bottom: height - 28 };
     const plotWidth = plot.right - plot.left;
     const plotHeight = plot.bottom - plot.top;
-    ctx.fillStyle = "#f8f5eb";
+    ctx.fillStyle = "#050d18";
     ctx.fillRect(0, 0, width, height);
 
-    ctx.strokeStyle = "rgba(36,49,73,.09)";
+    ctx.strokeStyle = "rgba(88,215,255,.10)";
     ctx.lineWidth = 1;
     for (let i = 0; i <= 5; i += 1) {
       const y = plot.top + (plotHeight / 5) * i;
@@ -59,11 +59,11 @@ export default function TradingChart({ candles = [], quote = null, positions = [
     }
 
     if (series.length < 2) {
-      ctx.fillStyle = "#26324a";
+      ctx.fillStyle = "#dceeff";
       ctx.font = "800 16px system-ui";
       ctx.textAlign = "center";
       ctx.fillText(sourceView?.simulated ? "Starting the market simulation" : "Waiting for verified live candles", width / 2, height / 2 - 5);
-      ctx.fillStyle = "#778197";
+      ctx.fillStyle = "#7e9bb7";
       ctx.font = "12px system-ui";
       ctx.fillText(sourceView?.simulated ? "Trading unlocks after the first server ticks." : "Trading stays locked until the gateway is healthy.", width / 2, height / 2 + 19);
       return;
@@ -80,7 +80,7 @@ export default function TradingChart({ candles = [], quote = null, positions = [
     const bodyWidth = Math.max(3, Math.min(9, step * 0.62));
 
     const gradient = ctx.createLinearGradient(0, plot.top, 0, plot.bottom);
-    gradient.addColorStop(0, "rgba(57,107,255,.13)");
+    gradient.addColorStop(0, "rgba(53,218,255,.18)");
     gradient.addColorStop(1, "rgba(57,107,255,0)");
     ctx.beginPath();
     visible.forEach((bar, index) => {
@@ -95,8 +95,8 @@ export default function TradingChart({ candles = [], quote = null, positions = [
       const up = bar.close >= bar.open;
       const x = plot.left + step * (index + 0.5);
       const openY = priceY(bar.open); const closeY = priceY(bar.close);
-      ctx.strokeStyle = up ? "#0d9f82" : "#e24b5d";
-      ctx.fillStyle = up ? "#0d9f82" : "#e24b5d";
+      ctx.strokeStyle = up ? "#31e5b0" : "#ff537f";
+      ctx.fillStyle = up ? "#31e5b0" : "#ff537f";
       ctx.lineWidth = 1.2;
       ctx.beginPath(); ctx.moveTo(x, priceY(bar.high)); ctx.lineTo(x, priceY(bar.low)); ctx.stroke();
       ctx.fillRect(x - bodyWidth / 2, Math.min(openY, closeY), bodyWidth, Math.max(2, Math.abs(closeY - openY)));
@@ -107,25 +107,21 @@ export default function TradingChart({ candles = [], quote = null, positions = [
     for (let i = 0; i <= 5; i += 1) {
       const value = high - ((high - low) / 5) * i;
       const y = plot.top + (plotHeight / 5) * i;
-      ctx.fillStyle = "#69758b";
+      ctx.fillStyle = "#7894ad";
       ctx.fillText(compactPrice(value), plot.right + 7, y + 3);
     }
 
     positions.forEach((position) => {
-      const entry = finiteNumber(position.entry_price);
-      if (entry < low || entry > high) return;
-      const y = priceY(entry);
-      ctx.save();
-      ctx.setLineDash([5, 5]); ctx.strokeStyle = position.side === "sell" ? "#e24b5d" : "#3b6df6";
-      ctx.beginPath(); ctx.moveTo(plot.left, y); ctx.lineTo(plot.right, y); ctx.stroke();
-      ctx.restore();
+      [[position.entry_price,position.side === "sell" ? "#ff537f" : "#55dfff", "ENTRY"],[position.stop_loss,"#ffad4d","SL"],[position.take_profit,"#5dffae","TP"]].forEach(([raw,color,label])=>{
+        const value=finiteNumber(raw);if(value<low||value>high)return;const y=priceY(value);ctx.save();ctx.setLineDash(label==="ENTRY"?[5,5]:[2,4]);ctx.strokeStyle=color;ctx.beginPath();ctx.moveTo(plot.left,y);ctx.lineTo(plot.right,y);ctx.stroke();ctx.fillStyle=color;ctx.font="800 8px ui-monospace,monospace";ctx.fillText(label,plot.left+4,y-3);ctx.restore();
+      });
     });
 
     if (quote?.price) {
       const y = priceY(finiteNumber(quote.price));
-      ctx.strokeStyle = "#243149"; ctx.lineWidth = 1.5;
+      ctx.strokeStyle = "#d8f7ff"; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(plot.left, y); ctx.lineTo(plot.right, y); ctx.stroke();
-      ctx.fillStyle = "#243149";
+      ctx.fillStyle = "#16344c";
       ctx.fillRect(plot.right, y - 10, 64, 20);
       ctx.fillStyle = "#fff"; ctx.font = "800 10px ui-monospace, monospace";
       ctx.fillText(compactPrice(quote.price), plot.right + 5, y + 3.5);
@@ -135,12 +131,12 @@ export default function TradingChart({ candles = [], quote = null, positions = [
       const index = Math.max(0, Math.min(visible.length - 1, Math.floor((cursor.x - plot.left) / step)));
       const bar = visible[index];
       const x = plot.left + step * (index + 0.5);
-      ctx.save(); ctx.setLineDash([3, 4]); ctx.strokeStyle = "rgba(36,49,73,.42)";
+      ctx.save(); ctx.setLineDash([3, 4]); ctx.strokeStyle = "rgba(130,225,255,.42)";
       ctx.beginPath(); ctx.moveTo(x, plot.top); ctx.lineTo(x, plot.bottom); ctx.moveTo(plot.left, cursor.y); ctx.lineTo(plot.right, cursor.y); ctx.stroke(); ctx.restore();
       const label = `O ${compactPrice(bar.open)}  H ${compactPrice(bar.high)}  L ${compactPrice(bar.low)}  C ${compactPrice(bar.close)}`;
       ctx.font = "800 10px ui-monospace, monospace";
       const labelWidth = ctx.measureText(label).width + 18;
-      ctx.fillStyle = "rgba(36,49,73,.9)"; ctx.fillRect(12, 12, labelWidth, 25);
+      ctx.fillStyle = "rgba(5,18,34,.94)"; ctx.fillRect(12, 12, labelWidth, 25);
       ctx.fillStyle = "#fff"; ctx.fillText(label, 21, 28);
     }
   }, [cursor, positions, quote, series, size, sourceView]);

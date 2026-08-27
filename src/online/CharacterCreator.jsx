@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { AndroidRunnerModel, ANDROID_FINISHES, ANDROID_HELMETS, ANDROID_MODELS, ANDROID_OPTICS, normalizeAndroidProfile } from "../game/AndroidRunner.jsx";
+import { AndroidRunnerModel, AndroidRunnerSprite, ANDROID_FINISHES, ANDROID_HELMETS, ANDROID_MODELS, ANDROID_OPTICS, normalizeAndroidProfile } from "../game/AndroidRunner.jsx";
 import "./character-creator.css";
 
 const ROLES=[{id:"striker",name:"Striker",text:"Power · timing · pressure"},{id:"guardian",name:"Guardian",text:"Defense · recovery · control"},{id:"technician",name:"Technician",text:"Tech · tools · preparation"}];
@@ -7,7 +7,7 @@ const defaults={codename:"",frame:"neutral",role:"striker",archetype:"striker",a
 
 export function RunnerPortrait({profile=defaults,compact=false}) {
   const resolved=normalizeAndroidProfile(profile);
-  return <div className={`runner-portrait android-identity ${compact?"compact":""}`} style={{"--eye":ANDROID_OPTICS[resolved.optic],"--jacket":ANDROID_FINISHES[resolved.finish]}}><AndroidRunnerModel profile={resolved} compact={compact}/>{!compact&&<div className="portrait-tag"><span>{resolved.codename||"UNNAMED"}</span><small>{ANDROID_MODELS[resolved.androidModel].name} · {ROLES.find((r)=>r.id===(resolved.archetype||resolved.role))?.name||"Runner"}</small></div>}</div>;
+  return <div className={`runner-portrait android-identity ${compact?"compact":""}`} style={{"--eye":ANDROID_OPTICS[resolved.optic],"--jacket":ANDROID_FINISHES[resolved.finish]}}>{compact?<AndroidRunnerSprite profile={resolved} action="idle"/>:<AndroidRunnerModel profile={resolved}/>} {!compact&&<div className="portrait-tag"><span>{resolved.codename||"UNNAMED"}</span><small>{ANDROID_MODELS[resolved.androidModel].name} · {ROLES.find((r)=>r.id===(resolved.archetype||resolved.role))?.name||"Runner"}</small></div>}</div>;
 }
 
 function Swatches({values,active,onChange,label}){return <div className="creator-field"><label>{label}</label><div className="swatches">{values.map((color,i)=><button key={color} type="button" className={active===i?"active":""} style={{"--swatch":color}} onClick={()=>onChange(i)} aria-label={`${label} ${i+1}`}/>)}</div></div>}
