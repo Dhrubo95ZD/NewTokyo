@@ -2,6 +2,8 @@ name: Build Android APK
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
 
@@ -27,7 +29,9 @@ jobs:
           java-version: 21
           cache: gradle
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+      - name: Test core game loop
+        run: npm test
       - name: Build and sync Android project
         run: npm run android:sync
       - name: Make Gradle executable
