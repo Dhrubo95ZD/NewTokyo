@@ -1,8 +1,11 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { lazy, Suspense, useState, useEffect, useRef, useCallback } from "react";
 import "./visual-v3.css";
 import { AndroidRunnerSprite, androidSpriteFrame } from "./game/AndroidRunner.jsx";
-import { CricketGameV2, NeonReflex, CircuitMemory } from "./arcade/ArcadeGames.jsx";
-import SyndicateCampaign from "./game/SyndicateCampaign.jsx";
+
+const CricketGameV2 = lazy(() => import("./arcade/ArcadeGames.jsx").then((module) => ({ default: module.CricketGameV2 })));
+const NeonReflex = lazy(() => import("./arcade/ArcadeGames.jsx").then((module) => ({ default: module.NeonReflex })));
+const CircuitMemory = lazy(() => import("./arcade/ArcadeGames.jsx").then((module) => ({ default: module.CircuitMemory })));
+const SyndicateCampaign = lazy(() => import("./game/SyndicateCampaign.jsx"));
 
 /* ============================================================
    NEO-TOKYO UNDERWORLD — a Torn-style anime crime RPG
@@ -2895,7 +2898,13 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, runnerProfile
     });
   };
 
-  const applySyndicateChoice = (amount, result) => {\n    setP((pl) => ({ ...pl, money: Math.max(0, pl.money + Number(amount || 0)) }));\n    pushLog(`${result}${amount >= 0 ? ` +${fmt(amount)}` : ` −${fmt(Math.abs(amount))}`}`, amount >= 0 ? "good" : "bad");\n    if (amount > 0) float(`+${fmt(amount)}`, "#7dffca");\n  };\n\n  const evolve = () => {
+  const applySyndicateChoice = (amount, result) => {
+    setP((pl) => ({ ...pl, money: Math.max(0, pl.money + Number(amount || 0)) }));
+    pushLog(`${result}${amount >= 0 ? ` +${fmt(amount)}` : ` −${fmt(Math.abs(amount))}`}`, amount >= 0 ? "good" : "bad");
+    if (amount > 0) float(`+${fmt(amount)}`, "#7dffca");
+  };
+
+  const evolve = () => {
     if (p.level < EVOLVE_LEVEL) return;
     setEvoConfirm(false);
     setP((pl) => {
@@ -3155,14 +3164,21 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, runnerProfile
       case "home": return (
         <Panel title={`${p.name}${(p.evo || 0) > 0 ? " " + "★".repeat(Math.min(p.evo, 5)) : ""} — Level ${p.level}`} kanji="家">
           <div className="city-brief"><small>NEO-TOKYO // WARD 09</small><b>The city remembers</b><span>Rain over Shinjuku. Syndicate traffic is rising beneath the mag-rail.</span></div>
+          <div className="city-command" aria-label="Tonight's priorities">
+            <button className="city-command-primary" onClick={() => onOpenBattle ? onOpenBattle() : setScreen("fights")}><small>PRIMARY OPERATION</small><b>Enter Battle</b><span>Push the campaign and earn gear</span></button>
+            <button onClick={() => setScreen("story")}><small>SYNDICATE RISE</small><b>Continue Story</b><span>Make choices that reshape Ward 09</span></button>
+            <button onClick={() => setScreen("missions")}><small>FIELD OBJECTIVES</small><b>Claim Rewards</b><span>Daily and long-term contracts</span></button>
+          </div>
           <div className="city-home-actions">
-            <button className="btn city-activity-cta" onClick={() => setScreen("activities")}>Open City Activities</button>
+            <button className="btn city-activity-cta" onClick={() => setScreen("activities")}>More City Activities</button>
             {p.title && <p className="flavor city-home-status"><span>「{p.title}」</span><i aria-hidden="true">·</i><b>🔥 {p.streak || 1}-day streak</b></p>}
           </div>
-          {armoryProgress < 3 && <div className="progression-callout"><small>RUNNER INITIATION · {armoryProgress + 1}/3</small><b>{armoryProgress === 0 ? "Secure District One" : armoryProgress === 1 ? "Choose and equip your first weapon" : "Calibrate that weapon to +1"}</b><span>{armoryProgress === 0 ? "Read danger lanes, use your role skill, and protect the ward supply convoy." : armoryProgress === 1 ? "Your first clear grants one of three Green weapons and at least 12 Nano Shards." : "Calibration permanently strengthens the weapon; later gear can reach +20."}</span><button className="chip" onClick={onOpenArmory}>Continue initiation</button></div>}
+          {armoryProgress < 3 && <div className="progression-callout"><small>RUNNER INITIATION · {armoryProgress + 1}/3</small><b>{armoryProgress === 0 ? "Secure District One" : armoryProgress === 1 ? "Choose and equip your first weapon" : "Calibrate that weapon to +1"}</b><span>{armoryProgress === 0 ? "Read danger lanes, use your role skill, and protect the ward supply convoy." : armoryProgress === 1 ? "Your first clear grants one of three Green weapons and at least 12 Nano Shards." : "Calibration permanently strengthens the weapon; later gear can reach +20."}</span><button className="chip" onClick={() => armoryProgress === 0 ? (onOpenBattle ? onOpenBattle() : setScreen("fights")) : onOpenArmory?.()}>Continue initiation</button></div>}
           {(p.statPoints || 0) > 0 && (
-            <p className="flavor" style={{ color: "#D98600" }}>You have {p.statPoints} unspent stat points — visit the Stats screen to grow stronger.</p>
+            <button className="stat-alert" onClick={() => setScreen("gym")}>You have {p.statPoints} unspent stat points <span>Build runner →</span></button>
           )}
+          <details className="runner-details">
+          <summary><span>Runner overview</span><b>Power, allies, bank and attributes</b></summary>
           <div className="grid2">
             <div className="stat-card"><span className="k">力</span><div><b>Strength</b><em>{p.stats.str}</em></div></div>
             <div className="stat-card"><span className="k">守</span><div><b>Defense</b><em>{p.stats.def}</em></div></div>
@@ -3181,6 +3197,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, runnerProfile
             <button className="chip" onClick={() => bankMove("all")}>Deposit all</button>
             <button className="chip" onClick={() => bankMove("out")}>Withdraw</button>
           </div>
+          </details>
           <h3 className="sub">Evolution ★{p.evo || 0}</h3>
           {(p.evo || 0) > 0 && (
             <p className="muted">Permanent: +{(p.evo || 0) * 10}% XP · +{(p.evo || 0) * 10}% yen · +{(p.evo || 0) * 5} max energy.</p>
@@ -4320,7 +4337,7 @@ export default function NeoTokyoUnderworld({ initialPlayer = null, runnerProfile
       <div className="floaters">
         {floaters.map((f) => <div key={f.id} className="floater" style={{ left: `${f.x}%`, color: f.color }}>{f.text}</div>)}
       </div>
-      <main><div className="screen-in" key={screen}>{screenBody()}</div></main>
+      <main><Suspense fallback={<Panel title="Opening district link" kanji="接"><p className="muted">Loading the next operation…</p></Panel>}><div className="screen-in" key={screen}>{screenBody()}</div></Suspense></main>
 
       <div className="log">
         {log.slice(0, 8).map((l, i) => <div key={i} className={`log-line ${l.t}`}>{l.msg}</div>)}

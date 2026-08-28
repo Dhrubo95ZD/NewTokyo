@@ -1,0 +1,19 @@
+node_modules/
+dist/
+.tmp/
+.env
+.env.*
+!.env.example
+
+# Capacitor regenerates this web bundle during `npm run android:sync`.
+android/app/src/main/assets/public/
+
+# Android and editor build output.
+android/.gradle/
+android/app/build/
+android/build/
+*.iml
+.idea/
+.DS_Store
+npm-debug.log*
+

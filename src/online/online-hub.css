@@ -7,3 +7,16 @@
 
 /* Live chat v2: command-deck treatment and an accessible emoticon tray. */
 .online-hub{border-color:#1c6c9d;background:#061426;color:#eef6ff;box-shadow:0 0 0 1px #53dfff33,0 18px 55px #000c}.online-hub>header{border-bottom-color:#205778;background:linear-gradient(100deg,#06182e,#102f54 60%,#351c63)}.hub-profile{border-bottom-color:#1c4668;background:#0a1d34}.hub-profile small{color:#64e9d0}.hub-profile button{background:#102b49;color:#cee2f6}.hub-channel{background:#10223c;color:#55e1ff}.hub-messages{background:radial-gradient(circle at 100% 0,#652e8d20,transparent 38%),linear-gradient(#071629,#06111f)}.hub-messages article div{border-color:#245071;background:#0d243d}.hub-messages article.mine div{border-color:#315ed2;background:linear-gradient(135deg,#123862,#252a6b)}.hub-messages article b{color:#69dcff}.hub-messages article p{color:#f0f6ff}.hub-static{color:#9cb0c8}.hub-compose-wrap{position:relative;border-top:1px solid #205275;background:#08192d}.hub-compose{border-top:0;background:transparent}.hub-compose input{border-color:#285b7d;background:#0c2239;color:#f2f7ff;outline:none}.hub-compose input::placeholder{color:#8199b2}.hub-compose input:focus{border-color:#42dcff;box-shadow:0 0 0 3px #24cfff1f}.hub-compose button{flex:0 0 43px;border-color:#31739b}.hub-compose .emoji-toggle{background:#102c4b;color:#ffd46a;font-size:21px}.hub-compose .chat-send{background:linear-gradient(135deg,#177ee8,#783ee5);color:#fff}.emoji-tray{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;padding:9px 10px 0}.emoji-tray button{min-height:38px;border:1px solid #285a7e;border-radius:10px;background:#0e2947;font-size:20px;touch-action:manipulation}.emoji-tray button:active{transform:scale(.92);background:#19466f}
+.surface-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 190;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: #dffcff;
+  background: rgba(5, 8, 20, .88);
+  font: 800 13px/1.4 "Nunito", sans-serif;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}

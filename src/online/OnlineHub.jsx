@@ -1,4 +1,4 @@
-import { cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { cloneElement, isValidElement, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { App } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
@@ -6,10 +6,7 @@ import CharacterCreation from "../game/CharacterCreation.jsx";
 import { onlineConfigured, supabase } from "./supabase.js";
 import AppearanceEditor, { RunnerPortrait } from "./CharacterCreator.jsx";
 import Inventory, { getArmoryBonuses, normalizeInventory } from "./ProgressionHub.jsx";
-import MasteryBoard from "./MasteryBoard.jsx";
 import { masteryBonuses, normalizeMastery, upgradeMastery } from "./masteryRules.js";
-import TradingTerminal from "../trading/TradingTerminal.jsx";
-import EconomyHub from "../economy/EconomyHub.jsx";
 import { normalizeEconomyState } from "../economy/economyRules.js";
 import { migrateAccountSave, SAVE_KEY, serializeAccountSave } from "./accountSave.js";
 import { validateRunnerIdentity } from "./progressionRules.js";
@@ -17,12 +14,18 @@ import { normalizeCombatSkills } from "../game/combatSkills.js";
 import { normalizeRaidState } from "../game/raidRules.js";
 import { normalizeEndlessState } from "../game/endlessRules.js";
 import { normalizeDepthsState } from "../game/neonDepthsRules.js";
-import CrewCommand from "../social/CrewCommand.jsx";
 import { normalizeCrewState } from "../social/crewRules.js";
 import "./online-hub.css";
 import "./account-gate.css";
 import "./visual-v3-overlays.css";
 import "../social/social-tabs.css";
+
+const MasteryBoard = lazy(() => import("./MasteryBoard.jsx"));
+const TradingTerminal = lazy(() => import("../trading/TradingTerminal.jsx"));
+const EconomyHub = lazy(() => import("../economy/EconomyHub.jsx"));
+const CrewCommand = lazy(() => import("../social/CrewCommand.jsx"));
+
+const SurfaceLoader = () => <div className="surface-loader" role="status">Connecting to the district…</div>;
 
 const LEGACY_OWNER_KEY = "ntu:legacy-save-owner";
 const nativeRedirect = "com.neotokyo.underworld://auth/callback";
@@ -708,9 +711,9 @@ export default function OnlineHub({ children }) {
         },
         walletBalance,
       }) : children}
-      <TradingTerminal open={exchangeOpen} balance={walletBalance ?? accountSave?.core?.money ?? 0} onClose={() => setExchangeOpen(false)} onWalletChange={acceptExchangeBalance} />
-      <EconomyHub key={economyTab} open={economyOpen} initialTab={economyTab} state={economyAuthority ? economyState : null} inventory={inventoryState} balance={walletBalance ?? accountSave?.core?.money ?? 0} busy={busy} onClose={() => setEconomyOpen(false)} onRefresh={refreshEconomy} onStartSkill={startLifeSkill} onClaimSkill={claimLifeSkill} onCraft={craftRecipe} onList={listAuction} onBuy={buyAuction} onCancel={cancelAuction} />
-      {masteryOpen && <div className="mastery-overlay"><MasteryBoard value={accountSave?.meta?.mastery} level={accountSave?.core?.level || 1} busy={busy} onUpgrade={investMastery} onClose={() => setMasteryOpen(false)} /></div>}
+      {exchangeOpen && <Suspense fallback={<SurfaceLoader />}><TradingTerminal open balance={walletBalance ?? accountSave?.core?.money ?? 0} onClose={() => setExchangeOpen(false)} onWalletChange={acceptExchangeBalance} /></Suspense>}
+      {economyOpen && <Suspense fallback={<SurfaceLoader />}><EconomyHub key={economyTab} open initialTab={economyTab} state={economyAuthority ? economyState : null} inventory={inventoryState} balance={walletBalance ?? accountSave?.core?.money ?? 0} busy={busy} onClose={() => setEconomyOpen(false)} onRefresh={refreshEconomy} onStartSkill={startLifeSkill} onClaimSkill={claimLifeSkill} onCraft={craftRecipe} onList={listAuction} onBuy={buyAuction} onCancel={cancelAuction} /></Suspense>}
+      {masteryOpen && <div className="mastery-overlay"><Suspense fallback={<SurfaceLoader />}><MasteryBoard value={accountSave?.meta?.mastery} level={accountSave?.core?.level || 1} busy={busy} onUpgrade={investMastery} onClose={() => setMasteryOpen(false)} /></Suspense></div>}
       {inventoryOpen && <Inventory initialTab={progressionTab} profile={characterProfile} player={accountSave?.core || {}} value={inventoryState} masteryStats={masteryBonuses(accountSave?.meta?.mastery)} combatSkills={accountSave?.meta?.combatSkills} onCombatSkillsChange={saveCombatSkills} onChange={saveInventory} onPlayerChange={saveCore} onClose={() => setInventoryOpen(false)} onStartRun={armoryAuthority ? startDistrictRun : null} onCompleteRun={armoryAuthority ? completeDistrictRun : null} onSaveLoadout={armoryAuthority ? saveArmoryLoadout : null} onEnhanceItem={armoryAuthority ? enhanceArmoryItem : null} progressionState={progressionState} onManageArmory={progressionAuthority ? manageArmory : null} onStartAfk={progressionAuthority ? startAfkDungeon : null} onClaimAfk={progressionAuthority ? claimAfkDungeon : null} onQueueCoop={progressionAuthority ? queueCoopDungeon : null} onCreateCoopRoom={progressionAuthority ? createCoopRoom : null} onJoinCoopRoom={progressionAuthority ? joinCoopRoom : null} onListCoopRooms={progressionAuthority ? listCoopRooms : null} onLeaveCoop={progressionAuthority ? leaveCoopDungeon : null} onClaimCoop={progressionAuthority ? claimCoopDungeon : null} onRefreshProgression={progressionAuthority ? refreshProgression : null} raidState={raidState} onSetRaidSpecialization={raidAuthority ? setRaidSpecialization : null} onQueueRaid={raidAuthority ? queueRaid : null} onJoinRaid={raidAuthority ? joinRaid : null} onFillRaidBots={raidAuthority ? fillRaidBots : null} onAdvanceRaid={raidAuthority ? advanceRaid : null} onClaimRaid={raidAuthority ? claimRaid : null} onLeaveRaid={raidAuthority ? leaveRaid : null} onRefreshRaid={raidAuthority ? refreshRaid : null} endlessState={endlessAuthority ? endlessState : null} onStartEndless={endlessAuthority ? startEndless : null} onStopEndless={endlessAuthority ? stopEndless : null} onResolveEndless={endlessAuthority ? resolveEndless : null} onRefreshEndless={endlessAuthority ? refreshEndless : null} depthsState={depthsAuthority ? depthsState : null} onStartDepths={depthsAuthority ? startDepths : null} onAdvanceDepths={depthsAuthority ? advanceDepths : null} onExtractDepths={depthsAuthority ? extractDepths : null} onAbandonDepths={depthsAuthority ? abandonDepths : null} onRefreshDepths={depthsAuthority ? refreshDepths : null} campaignValue={campaignProgress} onCampaignChange={saveCampaign} onStartCampaign={startDistrictOne} onCampaignCheckpoint={advanceDistrictOne} onClaimCampaign={claimDistrictOne} onCalibrateCampaign={armoryAuthority ? enhanceArmoryItem : null} onCampaignComplete={completeCampaign} />}
       <button className="online-orb" onClick={() => { setEmojiOpen(false); setOpen((v) => !v); }} aria-label="Open online hub">
         <RunnerPortrait profile={characterProfile} compact />
@@ -721,7 +724,7 @@ export default function OnlineHub({ children }) {
         <>
             <div className="hub-profile"><RunnerPortrait profile={characterProfile} compact /><div><b>{characterProfile.codename}</b><small>{user.email}</small></div><button onClick={() => { setOpen(false); setProgressionTab("character"); setInventoryOpen(true); }}>Loadout</button><button onClick={() => { setOpen(false); setMasteryOpen(true); }}>Mastery</button><button onClick={() => setEditingCharacter(true)}>Edit</button><button onClick={() => supabase.auth.signOut()}>Exit</button></div>
             <nav className="social-mode-tabs" aria-label="Social sections"><button className={socialTab==="crew"?"active":""} onClick={()=>{setEmojiOpen(false);setSocialTab("crew")}}>隊 <span>Crew</span></button><button className={socialTab==="chat"?"active":""} onClick={()=>setSocialTab("chat")}>網 <span>Chat</span></button></nav>
-            {socialTab === "crew" ? <CrewCommand state={crewAuthority ? crewState : null} busy={busy} onCreate={createCrew} onJoin={joinCrew} onLeave={leaveCrew} onContribute={contributeCrisis} onStrike={strikeCrisis} onClaim={claimCrisis} onRefresh={refreshCrew}/> : <>
+            {socialTab === "crew" ? <Suspense fallback={<SurfaceLoader />}><CrewCommand state={crewAuthority ? crewState : null} busy={busy} onCreate={createCrew} onJoin={joinCrew} onLeave={leaveCrew} onContribute={contributeCrisis} onStrike={strikeCrisis} onClaim={claimCrisis} onRefresh={refreshCrew}/></Suspense> : <>
               <div className="hub-channel"><b>SHIBUYA FREQUENCY</b><span>PUBLIC · LIVE</span></div>
               <div className="hub-messages">{messages.length === 0 && <p className="hub-static">No voices on the frequency yet.</p>}{messages.map((m) => <article key={m.id} className={m.user_id === user.id ? "mine" : ""}><img src={m.profiles?.avatar_url || ""} alt="" /><div><b>{m.profiles?.display_name || "Runner"}</b><p>{m.body}</p></div></article>)}<div ref={listEnd} /></div>
               <div className="hub-compose-wrap">{emojiOpen && <div className="emoji-tray" role="listbox" aria-label="Chat emoticons">{CHAT_EMOJI.map((emoji) => <button key={emoji} type="button" onClick={() => addEmoji(emoji)} aria-label={`Add ${emoji}`}>{emoji}</button>)}</div>}<div className="hub-compose"><button className="emoji-toggle" type="button" onClick={() => setEmojiOpen((value) => !value)} aria-expanded={emojiOpen} aria-label="Choose emoticon">☺</button><input value={message} maxLength={240} placeholder="Broadcast…" onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} /><button className="chat-send" onClick={send} disabled={!message.trim() || busy}>送</button></div></div>
