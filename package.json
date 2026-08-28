@@ -24,7 +24,8 @@
     "test:arcade-overhaul": "node scripts/arcade-overhaul-smoke.mjs",
     "test:avatar-cricket": "node scripts/avatar-cricket-fix-smoke.mjs",
     "test:syndicate": "node scripts/syndicate-campaign-smoke.mjs",
-    "test": "npm run test:ichi && npm run test:progression && npm run test:campaign && npm run test:combat && npm run test:trading && npm run test:coop && npm run test:mastery && npm run test:skills && npm run test:raid && npm run test:economy && npm run test:crews && npm run test:endless && npm run test:romance && npm run test:depths && npm run test:android-identity && npm run test:arcade-overhaul && npm run test:avatar-cricket && npm run test:syndicate",
+    "test:shell": "node scripts/shell-overhaul-smoke.mjs",
+    "test": "npm run test:shell && npm run test:ichi && npm run test:progression && npm run test:campaign && npm run test:combat && npm run test:trading && npm run test:coop && npm run test:mastery && npm run test:skills && npm run test:raid && npm run test:economy && npm run test:crews && npm run test:endless && npm run test:romance && npm run test:depths && npm run test:android-identity && npm run test:arcade-overhaul && npm run test:avatar-cricket && npm run test:syndicate",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"
