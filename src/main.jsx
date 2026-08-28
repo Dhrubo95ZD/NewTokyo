@@ -1,11 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import NeoTokyoUnderworld from "./NeoTokyoUnderworld.jsx";
-import { createStorageBridge } from "./storage.js";
-import OnlineHub from "./online/OnlineHub.jsx";
-import { supabase } from "./online/supabase.js";
-import "./mobile.css";
-import "./command-deck-v7.css";
+import NewTokyoGame from "./NewTokyoGame.jsx";
 
 class CrashScreen extends React.Component {
   constructor(props) {
@@ -26,8 +21,6 @@ class CrashScreen extends React.Component {
   }
 }
 
-window.storage = createStorageBridge({ client: supabase });
-
 createRoot(document.getElementById("root")).render(
-  <CrashScreen><OnlineHub><NeoTokyoUnderworld /></OnlineHub></CrashScreen>,
+  <CrashScreen><NewTokyoGame /></CrashScreen>,
 );
