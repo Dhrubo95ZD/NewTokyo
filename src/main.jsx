@@ -1,11 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import NeoTokyoUnderworld from "./NeoTokyoUnderworld.jsx";
-import { createStorageBridge } from "./storage.js";
-import OnlineHub from "./online/OnlineHub.jsx";
-import { supabase } from "./online/supabase.js";
-import "./mobile.css";
-import "./command-deck-v7.css";
+import MafiaGame from "./MafiaGame.jsx";
+import "./mafia.css";
 
 class CrashScreen extends React.Component {
   constructor(props) {
@@ -13,12 +9,12 @@ class CrashScreen extends React.Component {
     this.state = { error: null };
   }
   static getDerivedStateFromError(error) { return { error }; }
-  componentDidCatch(error) { console.error("Neo-Tokyo crashed", error); }
+  componentDidCatch(error) { console.error("The Family failed to start", error); }
   render() {
     if (!this.state.error) return this.props.children;
     return (
       <main className="crash-screen">
-        <h1>Neo-Tokyo failed to start</h1>
+        <h1>The city went quiet.</h1>
         <p>{this.state.error.message || String(this.state.error)}</p>
         <button onClick={() => location.reload()}>Retry</button>
       </main>
@@ -26,8 +22,6 @@ class CrashScreen extends React.Component {
   }
 }
 
-window.storage = createStorageBridge({ client: supabase });
-
 createRoot(document.getElementById("root")).render(
-  <CrashScreen><OnlineHub><NeoTokyoUnderworld /></OnlineHub></CrashScreen>,
+  <CrashScreen><MafiaGame /></CrashScreen>,
 );

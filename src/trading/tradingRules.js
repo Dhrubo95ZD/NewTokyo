@@ -50,7 +50,7 @@ export function marketSourceView(quote) {
   return simulated ? {
     simulated: true,
     badge: "SIM",
-    desk: "WARD 09 · SYNTHETIC COMMODITIES",
+    desk: "BLACKWOOD · PRIVATE COMMODITIES",
     instrument: "XAU/USD SIM",
     subtitle: "Synthetic Gold · Training Market",
     connected: "Simulation engine online",
@@ -58,7 +58,7 @@ export function marketSourceView(quote) {
   } : {
     simulated: false,
     badge: "LIVE",
-    desk: "WARD 09 · LIVE COMMODITIES",
+    desk: "BLACKWOOD · LIVE COMMODITIES",
     instrument: "XAU/USD",
     subtitle: "Gold · US Dollar",
     connected: "Licensed market connected",

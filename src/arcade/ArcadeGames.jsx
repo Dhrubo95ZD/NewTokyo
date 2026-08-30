@@ -4,8 +4,8 @@ import "./arcade-games.css";
 
 const lanes=["leg","straight","off"];
 const deliveries=[
-  {name:"Neon Yorker",speed:115,bias:"straight"},{name:"Pulse Bouncer",speed:145,bias:"leg"},
-  {name:"Arc Cutter",speed:165,bias:"off"},{name:"Slow Orb",speed:205,bias:"straight"},
+  {name:"Fast Yorker",speed:115,bias:"straight"},{name:"High Bouncer",speed:145,bias:"leg"},
+  {name:"Late Cutter",speed:165,bias:"off"},{name:"Slow Ball",speed:205,bias:"straight"},
 ];
 const later=(fn,ms)=>setTimeout(fn,ms);
 
@@ -51,7 +51,7 @@ export function CricketGameV2({bet,onEnd}){
   const beginSwipe=(event)=>{if(state!=="flight")return;event.currentTarget.setPointerCapture?.(event.pointerId);gesture.current={x:event.clientX,y:event.clientY,at:performance.now()};};
   const finishSwipe=(event)=>{const start=gesture.current;gesture.current=null;if(!start||state!=="flight")return;const shot=swipeCricketShot({dx:event.clientX-start.x,dy:event.clientY-start.y,duration:performance.now()-start.at});if(!shot){setCallout("SWIPE UP, LEFT OR RIGHT TO PLAY");return;}swing(shot);};
   return <section className="arcade-game cricket-v2">
-    <header><div><small>ROOFTOP LEAGUE // 12 BALL CHASE</small><b>{score.runs}/{score.wickets}</b></div><span>{score.balls.length}.0 / 2 OVERS</span></header>
+    <header><div><small>ROSSI'S STREET LEAGUE · 12 BALL CHASE</small><b>{score.runs}/{score.wickets}</b></div><span>{score.balls.length}.0 / 2 OVERS</span></header>
     <div className="cricket-field" style={{"--ball-y":`${8+progress*77}%`,"--ball-x":ball?.lane==="leg"?"38%":ball?.lane==="off"?"62%":"50%"}} onPointerDown={beginSwipe} onPointerUp={finishSwipe}>
       <div className="cricket-hud"><span>{callout}</span><b>{ball?"SWIPE TO SWING":"READY"}</b></div>
       {ball&&<i className="cricket-ball"/>}<div className={`cricket-swing ${state==="flight"?"armed":""}`}/>
@@ -70,7 +70,7 @@ export function NeonReflex({onFinish}){
   const spawn=(nextRound)=>{if(nextRound>=20){setLive(false);onFinish?.({score:scoreRef.current,reward:Math.max(50,scoreRef.current*4)});return;}setRound(nextRound);setTarget(Math.floor(Math.random()*9));timer.current=later(()=>{setCombo(0);spawn(nextRound+1);},Math.max(430,850-nextRound*18));};
   const start=()=>{scoreRef.current=0;setScore(0);setCombo(0);setRound(0);setLive(true);spawn(0);};
   const hit=(index)=>{if(!live||index!==target)return;clearTimeout(timer.current);const nextCombo=combo+1,gain=10+nextCombo*2;scoreRef.current+=gain;setCombo(nextCombo);setScore(scoreRef.current);setTarget(-1);later(()=>spawn(round+1),120);};
-  return <section className="arcade-game reflex-game"><header><div><small>REACTION GRID</small><b>{score}</b></div><span>COMBO ×{combo}</span></header><div className="reflex-grid">{Array.from({length:9},(_,i)=><button key={i} className={i===target?"target":""} onPointerDown={()=>hit(i)}><i/></button>)}</div>{!live&&<button className="arcade-primary" onClick={start}>{round?"RUN AGAIN":"START REFLEX RUN"}</button>}<p>Hit only the illuminated drone ports. The response window contracts across twenty signals.</p></section>;
+  return <section className="arcade-game reflex-game"><header><div><small>QUICK HANDS</small><b>{score}</b></div><span>STREAK ×{combo}</span></header><div className="reflex-grid">{Array.from({length:9},(_,i)=><button key={i} className={i===target?"target":""} onPointerDown={()=>hit(i)}><i/></button>)}</div>{!live&&<button className="arcade-primary" onClick={start}>{round?"RUN AGAIN":"START THE CLOCK"}</button>}<p>Hit only the lit tiles. The response window contracts across twenty signals.</p></section>;
 }
 
 export function CircuitMemory({onFinish}){
@@ -79,5 +79,5 @@ export function CircuitMemory({onFinish}){
   const flash=(seq)=>{setState("showing");seq.forEach((value,i)=>{timers.current.push(later(()=>setLit(value),i*520));timers.current.push(later(()=>setLit(-1),i*520+300));});timers.current.push(later(()=>{setState("input");setInput(0);},seq.length*520+100));};
   const start=()=>{setLevel(1);const seq=[Math.floor(Math.random()*4)];setSequence(seq);flash(seq);};
   const press=(value)=>{if(state!=="input")return;setLit(value);timers.current.push(later(()=>setLit(-1),180));if(sequence[input]!==value){setState("done");onFinish?.({score:level*100,reward:level*45});return;}if(input+1===sequence.length){if(level>=8){setState("won");onFinish?.({score:800,reward:500});return;}const next=[...sequence,Math.floor(Math.random()*4)];setLevel((v)=>v+1);setSequence(next);timers.current.push(later(()=>flash(next),600));}else setInput((v)=>v+1);};
-  return <section className="arcade-game memory-game"><header><div><small>CIRCUIT MEMORY</small><b>LEVEL {level}</b></div><span>{state.toUpperCase()}</span></header><div className="memory-pads">{["CYAN","MAGENTA","AMBER","MINT"].map((name,i)=><button key={name} className={lit===i?"lit":""} onPointerDown={()=>press(i)}><i/>{name}</button>)}</div>{state==="ready"&&<button className="arcade-primary" onClick={start}>BOOT SEQUENCE</button>}{(state==="done"||state==="won")&&<button className="arcade-primary" onClick={start}>{state==="won"?"PERFECT · RESTART":"SIGNAL LOST · RETRY"}</button>}<p>Watch the circuit pulse, then repeat it. Each cleared layer adds one signal.</p></section>;
+  return <section className="arcade-game memory-game"><header><div><small>THE MEMORY TABLE</small><b>ROUND {level}</b></div><span>{state.toUpperCase()}</span></header><div className="memory-pads">{["CLUB","HEART","DIAMOND","SPADE"].map((name,i)=><button key={name} className={lit===i?"lit":""} onPointerDown={()=>press(i)}><i/>{name}</button>)}</div>{state==="ready"&&<button className="arcade-primary" onClick={start}>DEAL THE PATTERN</button>}{(state==="done"||state==="won")&&<button className="arcade-primary" onClick={start}>{state==="won"?"PERFECT · PLAY AGAIN":"WRONG MOVE · RETRY"}</button>}<p>Watch the table, then repeat the pattern. Each cleared round adds one signal.</p></section>;
 }

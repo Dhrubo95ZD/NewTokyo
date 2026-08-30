@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { App } from "@capacitor/app";
+import { Browser } from "@capacitor/browser";
+import { Capacitor } from "@capacitor/core";
 import { supabase } from "../online/supabase.js";
 import TradingChart from "./TradingChart.jsx";
 import {
@@ -13,6 +16,7 @@ const makeId = () => globalThis.crypto?.randomUUID?.() || "xxxxxxxx-xxxx-4xxx-yx
   const value = Math.floor(Math.random() * 16);
   return (char === "x" ? value : (value & 3) | 8).toString(16);
 });
+const nativeRedirect = "com.neotokyo.underworld://auth/callback";
 
 function PositionRow({ position, quote, busy, onClose }) {
   const pnl = positionPnl(position, quote);
@@ -27,6 +31,7 @@ function PositionRow({ position, quote, busy, onClose }) {
 }
 
 export default function TradingTerminal({ open, balance = 0, onClose, onWalletChange }) {
+  const [session, setSession] = useState(null);
   const [quote, setQuote] = useState(null);
   const [candles, setCandles] = useState([]);
   const [positions, setPositions] = useState([]);
@@ -40,7 +45,7 @@ export default function TradingTerminal({ open, balance = 0, onClose, onWalletCh
   const [stopLoss, setStopLoss] = useState("");
   const [takeProfit, setTakeProfit] = useState("");
   const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState("Connecting to the Neo Exchange simulation…");
+  const [notice, setNotice] = useState("Opening the private exchange desk…");
   const [ready, setReady] = useState(false);
   const [clock, setClock] = useState(Date.now());
   const reloadTimer = useRef(null);
@@ -76,15 +81,37 @@ export default function TradingTerminal({ open, balance = 0, onClose, onWalletCh
   const boot = useCallback(async () => {
     setReady(false); setNotice("Verifying the market engine…");
     try {
+      const { data: auth } = await supabase.auth.getSession();
+      setSession(auth.session);
+      if (!auth.session) { setNotice("Sign in to open your private trading account."); return; }
       await Promise.all([loadAccount(), loadMarket()]);
       setReady(true); setNotice("Market engine connected");
     } catch (error) {
       setReady(false);
       setNotice(error?.message?.includes("get_my_exchange_state") || error?.code === "PGRST202"
-        ? "Neo Exchange server migration is not installed yet."
+        ? "The Exchange server migration is not installed yet."
         : `Exchange unavailable: ${error?.message || "market engine not configured"}`);
     }
   }, [loadAccount, loadMarket]);
+
+  const signIn = async () => {
+    const native = Capacitor.isNativePlatform();
+    const { data, error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: native ? nativeRedirect : window.location.origin, skipBrowserRedirect: native } });
+    if (error) { setNotice(error.message); return; }
+    if (native && data?.url) await Browser.open({ url: data.url });
+  };
+
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((_event, next) => { setSession(next); if (next && open) boot(); });
+    let listener;
+    if (Capacitor.isNativePlatform()) App.addListener("appUrlOpen", async ({ url }) => {
+      if (!url.startsWith(nativeRedirect)) return;
+      const code = new URL(url).searchParams.get("code");
+      if (code) await supabase.auth.exchangeCodeForSession(code);
+      await Browser.close();
+    }).then((value) => { listener = value; });
+    return () => { data.subscription.unsubscribe(); listener?.remove(); };
+  }, [boot, open]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -161,10 +188,10 @@ export default function TradingTerminal({ open, balance = 0, onClose, onWalletCh
 
   if (!open) return null;
   return (
-    <div className="nx-overlay" role="dialog" aria-modal="true" aria-label="Neo Exchange trading terminal">
+    <div className="nx-overlay" role="dialog" aria-modal="true" aria-label="The Exchange trading desk">
       <section className="nx-terminal">
         <header className="nx-head">
-          <div className="nx-brand"><i>金</i><div><small>{sourceView.desk}</small><b>NEO EXCHANGE</b></div></div>
+          <div className="nx-brand"><i>$</i><div><small>{sourceView.desk}</small><b>THE EXCHANGE</b></div></div>
           <div className={`nx-feed ${health} ${sourceView.simulated ? "simulated" : ""}`}><i />{health === "live" ? `${sourceView.badge} · ${Math.round(age)}ms` : health === "stale" ? "STALE · ORDERS LOCKED" : "ENGINE OFFLINE"}</div>
           <button className="nx-close" onClick={onClose} aria-label="Close exchange">×</button>
         </header>
@@ -206,7 +233,7 @@ export default function TradingTerminal({ open, balance = 0, onClose, onWalletCh
         <main className="nx-workspace">
           <div className="nx-chart-column">
             <TradingChart candles={candles} quote={quote} positions={positions} sourceView={sourceView} />
-            <div className={`nx-notice ${health}`}>{notice}<span>{sourceView.authority}</span></div>
+            <div className={`nx-notice ${health}`}>{notice}{!session ? <button className="nx-signin" onClick={signIn}>SIGN IN WITH GOOGLE</button> : <span>{sourceView.authority}</span>}</div>
           </div>
 
         </main>
