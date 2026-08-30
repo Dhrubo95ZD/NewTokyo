@@ -1,6 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import MafiaGame from "./MafiaGame.jsx";
+import MafiaAccount from "./MafiaAccount.jsx";
 import "./mafia.css";
 
 class CrashScreen extends React.Component {
@@ -23,5 +23,5 @@ class CrashScreen extends React.Component {
 }
 
 createRoot(document.getElementById("root")).render(
-  <CrashScreen><MafiaGame /></CrashScreen>,
+  <CrashScreen><MafiaAccount /></CrashScreen>,
 );
