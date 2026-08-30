@@ -1,0 +1,19 @@
+.players-view{max-width:900px;margin:auto;padding:18px}
+.players-view>header{display:flex;align-items:center;justify-content:space-between;padding:10px 3px 15px;border-bottom:1px solid #37322d}
+.players-view header small,.players-view header b{display:block}
+.players-view header small{font-size:7px;color:#b99654;letter-spacing:1.2px}
+.players-view header b{font:700 18px 'Playfair Display',Georgia}
+.players-view header button{border:1px solid #49423a;background:#28241f;color:#aaa39a;padding:8px 12px;font-size:8px}
+.player-list{padding-top:8px}
+.player-list article{display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 6px;border-bottom:1px solid #302c28}
+.player-list article.mine{background:#2c271f;border-left:2px solid #b99654}
+.player-list article>i{width:38px;height:38px;display:grid;place-items:center;border-radius:50%;background:#312b24;color:#b99654;font:700 12px Georgia}
+.player-list article>div{flex:1}
+.player-list article b,.player-list article small{display:block}
+.player-list article b{font:700 12px 'Playfair Display'}
+.player-list article small{margin-top:4px;color:#716d67;font-size:8px}
+.player-list article>span{color:#777;font-size:8px}
+.player-list article>span>i{display:inline-block;width:6px;height:6px;margin-right:6px;border-radius:50%;background:#5f5b55}
+.player-list article>span.online{color:#81a184}
+.player-list article>span.online>i{background:#6c9d72;box-shadow:0 0 7px #6c9d72}
+@media(max-width:620px){.players-view{padding:12px 10px}}

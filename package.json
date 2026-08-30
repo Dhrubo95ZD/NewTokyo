@@ -9,7 +9,8 @@
     "test:trading": "node scripts/trading-rules-smoke.mjs && node scripts/exchange-simulator-contract-smoke.mjs && node scripts/trading-ui-contract-smoke.mjs",
     "test:arcade": "node scripts/arcade-overhaul-smoke.mjs",
     "test:account": "node scripts/account-ui-smoke.mjs",
-    "test": "npm run test:trading && npm run test:arcade && npm run test:account",
+    "test:community": "node scripts/community-online-smoke.mjs",
+    "test": "npm run test:trading && npm run test:arcade && npm run test:account && npm run test:community",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"
