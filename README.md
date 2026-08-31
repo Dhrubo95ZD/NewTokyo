@@ -1,16 +1,19 @@
 # Moretti: Blackwood City
 
-A responsive crime-city RPG built with React, Vite, Capacitor and Supabase. The game is centered on a clear daily loop inspired by persistent browser RPGs: spend regenerating energy and nerve, grow combat stats, commit progressively harder crimes, hold a legitimate job, build family respect and manage cash.
+A persistent online crime RPG built with React, Vite, Capacitor and Supabase for Android. Authenticated player state is owned by database RPCs: the client requests an action, while Supabase validates costs, rolls outcomes and records the result.
 
 ## Current game
 
-- Overview dashboard with resources, rank, goals and activity
-- Five-tier crime ladder with chance, skill, rewards, XP and jail consequences
-- Four-stat gym with happiness-scaled training gains
-- Employment and career progression
-- Family orders, member roster and respect
-- Inventory and consumables
-- City directory and persistent local save
+- Google login, character creation and authoritative cloud state
+- Twelve-tier crime ladder with skill progression, server rolls and persistent jail consequences
+- Real-player combat with leave, mug and hospitalize outcomes plus 24-hour new-player protection
+- Persistent hospital/jail registers, attack records, friends, enemies, targets and blocks
+- Four-stat gym with server-controlled energy and happiness-scaled gains
+- Five careers with timed shifts, pay and job points
+- Missions, claimable rewards, awards and authoritative Hall of Fame data
+- Shared Exchange wallet, protected bank balance, shops, server inventory and consumables
+- Purchasable properties with happiness and vault progression
+- World chat, private mail, forums, player directory and real families
 - Rossi's Arcade: street cricket, reaction and memory games
 - The Exchange: the existing authenticated, server-settled gold trading simulator
 - Responsive desktop and mobile layouts
@@ -29,16 +32,19 @@ npm test
 npm run build
 ```
 
-## Trading backend
+## Supabase backend
 
-The game itself saves locally. The Exchange remains account-owned and server-authoritative. Apply the retained Supabase schema and exchange migrations in this order:
+Apply the migrations once to the existing Supabase project, in this order:
 
 1. `supabase/schema.sql`
 2. `supabase/20260825_neo_exchange.sql`
 3. `supabase/20260826_neo_exchange_simulator.sql`
 4. `supabase/20260902_arcade_exchange_overhaul.sql`
+5. `supabase/20260901_blackwood_city_core.sql`
 
-Google authentication must be enabled in Supabase. Web and Android OAuth callbacks are both supported. Market quotes, orders, leverage, protection, liquidation and wallet settlement remain authoritative database operations.
+The final migration installs the connected city core, RLS policies, real families and authoritative ranking adapter. Existing cloud saves are imported the first time each player opens the upgraded game. It is idempotent and can be reapplied safely.
+
+Google authentication must be enabled in Supabase. Web and Android OAuth callbacks are both supported. Never put a service-role key in the app or in a `VITE_` environment variable.
 
 ## Android
 

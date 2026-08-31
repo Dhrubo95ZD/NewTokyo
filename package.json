@@ -10,7 +10,8 @@
     "test:arcade": "node scripts/arcade-overhaul-smoke.mjs",
     "test:account": "node scripts/account-ui-smoke.mjs",
     "test:community": "node scripts/community-online-smoke.mjs",
-    "test": "npm run test:trading && npm run test:arcade && npm run test:account && npm run test:community",
+    "test:city": "node scripts/city-core-contract-smoke.mjs",
+    "test": "npm run test:trading && npm run test:arcade && npm run test:account && npm run test:community && npm run test:city",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"

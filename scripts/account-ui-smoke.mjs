@@ -8,7 +8,7 @@ const [account, game, main, styles] = await Promise.all([
   readFile(new URL("../src/mafia.css", import.meta.url), "utf8"),
 ]);
 
-for (const token of ["signInWithOAuth", "exchangeCodeForSession", 'from("player_saves")', 'from("profiles")', "CharacterCreation", "schemaVersion: 4"])
+for (const token of ["signInWithOAuth", "exchangeCodeForSession", 'from("player_saves")', 'from("profiles")', "CharacterCreation", "schemaVersion: 5"])
   assert.ok(account.includes(token), `account flow missing ${token}`);
 assert.ok(main.includes("<MafiaAccount"), "the account gate must wrap the Android game");
 for (const label of ["Energy", "Nerve", "Health", "Happy"])
