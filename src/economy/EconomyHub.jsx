@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "../online/supabase.js";
 import TradingChart from "./TradingChart.jsx";
 import "./economy.css";
+import "./white-terminal.css";
 
 const LOTS = [0.01,0.05,0.10,0.50,1,2,5];
 const money = value => `$${Number(value || 0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;

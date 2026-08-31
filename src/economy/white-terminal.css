@@ -1,0 +1,223 @@
+.live-terminal {
+  --terminal: #fffdf9;
+  --terminal-2: #f6efe6;
+  --line: #d8cbbb;
+  --muted: #746b63;
+  --green: #087a55;
+  --red: #bd3f3a;
+  --amber: #a86732;
+}
+
+.broker-workspace {
+  border-color: #b9a995;
+  background: #fffdf9;
+  color: #241f1b;
+  box-shadow: 0 12px 34px rgba(64, 43, 27, 0.12);
+}
+
+.market-watch,
+.account-drawer,
+.instrument-bar,
+.trade-panel,
+.position-terminal {
+  background: #fffdf9;
+  color: #241f1b;
+}
+
+.market-watch {
+  border-color: #d8cbbb;
+}
+
+.market-watch > header,
+.market-watch > button,
+.instrument-bar,
+.pro-chart > header,
+.account-drawer > header,
+.account-drawer > section,
+.position-terminal > header,
+.position-row {
+  border-color: #e1d6ca;
+}
+
+.market-watch > header {
+  background: #f2e8dc;
+}
+
+.market-watch header span,
+.market-watch button span small,
+.market-watch button em small,
+.instrument-bar small,
+.chart-tools span,
+.trade-panel label > span,
+.account-drawer label > span,
+.account-drawer > header small,
+.account-drawer > section > small,
+.position-row.headings,
+.position-terminal header span {
+  color: #6f655d;
+}
+
+.market-watch > button {
+  background: #fffdf9;
+  color: #28231f;
+}
+
+.market-watch > button:hover {
+  background: #faf4ec;
+}
+
+.market-watch > button.active {
+  background: #eee2d4;
+  box-shadow: inset 4px 0 #a86732;
+}
+
+.pro-chart,
+.chart-bg {
+  background: #fbfaf7;
+  fill: #fbfaf7;
+}
+
+.pro-chart > header,
+.pro-chart > footer,
+.chart-readout {
+  background: #f7f1e9;
+  color: #665e57;
+}
+
+.chart-frames button,
+.chart-tools button {
+  color: #615951;
+}
+
+.chart-frames button.active {
+  border-color: #9c8068;
+  background: #e8ddd1;
+  color: #261f1a;
+}
+
+.grid-line {
+  stroke: #ded8d0;
+}
+
+.grid-line.vertical {
+  stroke: #ebe6df;
+}
+
+.axis-text {
+  fill: #675f57;
+}
+
+.wick.up {
+  stroke: #087a55;
+}
+
+.wick.down {
+  stroke: #bd3f3a;
+}
+
+.candle.up {
+  fill: #0b9166;
+}
+
+.candle.down {
+  fill: #d14c46;
+}
+
+.volume.up {
+  fill: #8bcbb5;
+  opacity: 0.55;
+}
+
+.volume.down {
+  fill: #e8aaa6;
+  opacity: 0.55;
+}
+
+.market-line {
+  stroke: #8c542a;
+}
+
+.market-price {
+  fill: #8c542a;
+}
+
+.market-price-text {
+  fill: #fff;
+}
+
+.crosshair line {
+  stroke: #6d6259;
+}
+
+.crosshair rect {
+  fill: #332a24;
+}
+
+.trade-panel {
+  border-color: #d2c5b7;
+  box-shadow: inset 0 1px #fff;
+}
+
+.deal-switch button,
+.account-drawer section button,
+.position-row button {
+  border-color: #bba997;
+  background: #f4ece2;
+  color: #302821;
+}
+
+.trade-panel input,
+.trade-panel select,
+.account-drawer input,
+.account-drawer select {
+  border-color: #bba997;
+  background: #fff;
+  color: #201b17;
+}
+
+.order-estimate span,
+.account-drawer dt {
+  color: #665e57;
+}
+
+.order-estimate b,
+.account-drawer dd {
+  color: #261f1a;
+}
+
+.account-drawer .risk-card {
+  border-left-color: #bd3f3a;
+  background: #fff0ed;
+}
+
+.risk-card b {
+  color: #9f312d;
+}
+
+.risk-card p {
+  color: #765c58;
+}
+
+.position-terminal {
+  border-color: #b9a995;
+  box-shadow: 0 8px 24px rgba(64, 43, 27, 0.09);
+}
+
+.position-terminal header button {
+  color: #675f57;
+}
+
+.position-terminal header button.active {
+  color: #241f1b;
+  border-color: #9a5e31;
+}
+
+.no-positions,
+.chart-empty {
+  color: #746b63;
+}
+
+.no-positions b,
+.chart-empty b {
+  color: #302821;
+}

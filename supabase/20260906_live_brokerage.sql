@@ -9,6 +9,8 @@ alter table public.bw_fx_pairs add column if not exists contract_size numeric(18
 alter table public.bw_fx_quotes add column if not exists source text not null default 'legacy';
 alter table public.bw_fx_quotes add column if not exists market_time timestamptz;
 alter table public.bw_fx_positions drop constraint if exists bw_fx_positions_leverage_check;
+alter table public.bw_fx_positions drop constraint if exists bw_fx_positions_margin_check;
+alter table public.bw_fx_positions add constraint bw_fx_positions_margin_check check(margin>=1);
 alter table public.bw_fx_positions add column if not exists lots numeric(8,2);
 alter table public.bw_fx_positions add column if not exists notional_usd numeric(18,2);
 alter table public.bw_fx_positions add column if not exists stop_loss numeric(20,8);

@@ -1,0 +1,38 @@
+@media (max-width: 760px) {
+  .market-watch > header {
+    min-width: 92px;
+    display: block;
+  }
+
+  .market-watch > header b,
+  .market-watch > header span {
+    display: block;
+  }
+
+  .market-watch > header span {
+    margin-top: 5px;
+  }
+
+  .market-watch > button {
+    min-width: 126px;
+  }
+
+  .adviser-fab {
+    right: 12px;
+    bottom: calc(76px + var(--safe-bottom));
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .adviser-fab span {
+    display: none;
+  }
+
+  .adviser-panel {
+    right: 12px;
+    bottom: calc(136px + var(--safe-bottom));
+  }
+}

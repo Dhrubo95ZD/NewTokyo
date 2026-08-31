@@ -28,6 +28,8 @@ Apply `supabase/20260904_casino_economy_careers.sql` and deploy `supabase/functi
 
 After the other migrations, apply `supabase/20260906_live_brokerage.sql`. Create a Twelve Data key, save it as the Supabase Edge Function secret `TWELVE_DATA_API_KEY`, then deploy `supabase/functions/market-feed`. The key stays on the server and is never included in the APK. The free provider tier is appropriate for development or a small closed test; confirm market-data display and redistribution rights before a public production launch.
 
+If `20260906_live_brokerage.sql` was installed before the micro-lot margin fix, run `supabase/20260907_broker_margin_hotfix.sql` once. It is safe to run again.
+
 For the one-time new-game wipe, manually run `supabase/RESET_FOR_NEW_GAME.sql` after every migration. It is deliberately separate and never runs during a build.
 - Responsive desktop and mobile layouts
 
@@ -58,6 +60,8 @@ Apply the migrations once to the existing Supabase project, in this order:
 7. `supabase/20260904_casino_economy_careers.sql`
 8. `supabase/20260905_families_wars.sql`
 9. `supabase/20260906_live_brokerage.sql`
+10. `supabase/20260907_broker_margin_hotfix.sql`
+11. `supabase/20260908_world_chat_hotfix.sql`
 
 The city-core migration installs the connected world, RLS policies, real families and authoritative ranking adapter. Later migrations add the catalog, tutorial, casino, Forex economy, careers and Families 2.0. The reset script is separate because it must run only once.
 
