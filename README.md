@@ -11,7 +11,9 @@ A persistent online crime RPG built with React, Vite, Capacitor and Supabase for
 - Four-stat gym with server-controlled energy and happiness-scaled gains
 - Five careers with timed shifts, pay and job points
 - Missions, claimable rewards, awards and authoritative Hall of Fame data
-- Shared Exchange wallet, protected bank balance, shops, server inventory and consumables
+- Shared Exchange wallet, protected bank balance, shops and server inventory
+- Eight server-owned equipment slots with combat bonuses and a 200-piece mafia equipment catalog
+- Seven-step guided tutorial persisted to each player account
 - Purchasable properties with happiness and vault progression
 - World chat, private mail, forums, player directory and real families
 - Rossi's Arcade: street cricket, reaction and memory games
@@ -41,8 +43,9 @@ Apply the migrations once to the existing Supabase project, in this order:
 3. `supabase/20260826_neo_exchange_simulator.sql`
 4. `supabase/20260902_arcade_exchange_overhaul.sql`
 5. `supabase/20260901_blackwood_city_core.sql`
+6. `supabase/20260903_inventory_equipment_tutorial.sql`
 
-The final migration installs the connected city core, RLS policies, real families and authoritative ranking adapter. Existing cloud saves are imported the first time each player opens the upgraded game. It is idempotent and can be reapplied safely.
+The city-core migration installs the connected world, RLS policies, real families and authoritative ranking adapter. The inventory migration adds the 200-piece catalog, equipment and tutorial. Existing cloud saves are imported the first time each player opens the upgraded game. Both upgrades are idempotent and can be reapplied safely.
 
 Google authentication must be enabled in Supabase. Web and Android OAuth callbacks are both supported. Never put a service-role key in the app or in a `VITE_` environment variable.
 

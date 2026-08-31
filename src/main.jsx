@@ -2,6 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import MafiaAccount from "./MafiaAccount.jsx";
 import "./mafia.css";
+import "./bright-theme.css";
 
 class CrashScreen extends React.Component {
   constructor(props) {

@@ -37,13 +37,13 @@ function normalizeCloudPlayer(save, user) {
     crimeSkill: finite(core.crimeSkill, INITIAL.crimeSkill), respect: finite(core.respect, INITIAL.respect),
     merits: finite(core.merits, INITIAL.merits), job: core.job || INITIAL.job,
     jobPoints: finite(core.jobPoints, INITIAL.jobPoints), inventory: Array.isArray(core.inventory) ? core.inventory : INITIAL.inventory,
-    log: Array.isArray(core.log) ? core.log : INITIAL.log, jailUntil: finite(core.jailUntil, 0),
+    log: Array.isArray(core.log) ? core.log : INITIAL.log, jailUntil: finite(core.jailUntil, 0), tutorialStep: finite(core.tutorialStep, INITIAL.tutorialStep), tutorialDone: Boolean(core.tutorialDone),
   };
 }
 
 function mergeAuthoritative(player, state) {
   const core = state?.player; if (!core) return player;
-  return { ...player, level: core.level, xp: core.xp, cash: core.cash, bank: core.bank, energy: core.energy, maxEnergy: core.max_energy, nerve: core.nerve, maxNerve: core.max_nerve, health: core.health, maxHealth: core.max_health, happy: core.happy, maxHappy: core.max_happy, strength: Number(core.strength), defense: Number(core.defense), speed: Number(core.speed), dexterity: Number(core.dexterity), crimeSkill: core.crime_skill, respect: core.respect, merits: core.merits, jobPoints: core.job_points };
+  return { ...player, level: core.level, xp: core.xp, cash: core.cash, bank: core.bank, energy: core.energy, maxEnergy: core.max_energy, nerve: core.nerve, maxNerve: core.max_nerve, health: core.health, maxHealth: core.max_health, happy: core.happy, maxHappy: core.max_happy, strength: Number(core.strength), defense: Number(core.defense), speed: Number(core.speed), dexterity: Number(core.dexterity), crimeSkill: core.crime_skill, respect: core.respect, merits: core.merits, jobPoints: core.job_points, tutorialStep: core.tutorial_step ?? player.tutorialStep, tutorialDone: core.tutorial_done ?? player.tutorialDone };
 }
 
 function CharacterCreation({ user, busy, onComplete }) {

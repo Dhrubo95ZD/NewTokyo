@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "./supabase.js";
+import { InventoryEquipment, ItemShop } from "./InventoryEquipment.jsx";
 import "./city-core.css";
 
 const money = value => `$${Number(value || 0).toLocaleString()}`;
@@ -26,7 +27,7 @@ function Empty({ title, text }) { return <div className="core-empty"><i>◇</i><
 function Meter({ value, max }) { return <figure className="core-meter"><i style={{ width: `${Math.min(100, Number(value || 0) / Math.max(1, Number(max || 1)) * 100)}%` }} /></figure>; }
 
 export default function CityCoreHub({ initialTab, user, onState }) {
-  const [data, setData] = useState(null), [directory, setDirectory] = useState([]), [mail, setMail] = useState([]), [forums, setForums] = useState({ threads: [], posts: [] });
+  const [data, setData] = useState(null), [loadout, setLoadout] = useState({ equipment: [], bonuses: {} }), [directory, setDirectory] = useState([]), [mail, setMail] = useState([]), [forums, setForums] = useState({ threads: [], posts: [] });
   const [busy, setBusy] = useState(false), [error, setError] = useState(""), [notice, setNotice] = useState(""), [selectedThread, setSelectedThread] = useState(null);
   const [amount, setAmount] = useState(1000), [attackMode, setAttackMode] = useState("leave"), [recipient, setRecipient] = useState(""), [subject, setSubject] = useState(""), [message, setMessage] = useState("");
   const [threadTitle, setThreadTitle] = useState(""), [threadBody, setThreadBody] = useState(""), [threadCategory, setThreadCategory] = useState("general"), [reply, setReply] = useState("");
@@ -34,7 +35,7 @@ export default function CityCoreHub({ initialTab, user, onState }) {
   const player = data?.player;
 
   const acceptState = useCallback(next => { const value = next?.state || next; if (value?.authority) { setData(value); onState?.(value.player); } return value; }, [onState]);
-  const load = useCallback(async () => { const { data: value, error: loadError } = await supabase.rpc("bw_get_state"); if (loadError) { setError(loadError.message); return; } setError(""); acceptState(value); }, [acceptState]);
+  const load = useCallback(async () => { const [stateResult, loadoutResult] = await Promise.all([supabase.rpc("bw_get_state"), supabase.rpc("bw_get_loadout")]); if (stateResult.error) { setError(stateResult.error.message); return; } setError(""); acceptState(stateResult.data); if (!loadoutResult.error) setLoadout(loadoutResult.data || { equipment: [], bonuses: {} }); }, [acceptState]);
   const loadDirectory = useCallback(async () => { const { data: value, error: loadError } = await supabase.rpc("bw_directory"); if (loadError) setError(loadError.message); else setDirectory(value || []); }, []);
   const loadMail = useCallback(async () => { const { data: value, error: loadError } = await supabase.rpc("bw_get_mail"); if (loadError) setError(loadError.message); else setMail(value || []); }, []);
   const loadForums = useCallback(async thread => { const { data: value, error: loadError } = await supabase.rpc("bw_get_forums", { p_thread: thread || null }); if (loadError) setError(loadError.message); else setForums(value || { threads: [], posts: [] }); }, []);
@@ -74,8 +75,8 @@ export default function CityCoreHub({ initialTab, user, onState }) {
 
     {initialTab === "property" && <div className="property-grid">{data.properties.map(property => <article className={property.active ? "active" : ""} key={property.id}><i>⌂</i><small>{property.active ? "CURRENT HOME" : property.owned ? "OWNED" : "FOR SALE"}</small><b>{property.name}</b><p>{property.description}</p><dl><div><dt>Price</dt><dd>{money(property.price)}</dd></div><div><dt>Happiness</dt><dd>{property.max_happy}</dd></div><div><dt>Vault</dt><dd>{money(property.vault_capacity)}</dd></div></dl><button disabled={busy || property.active || (!property.owned && player.cash < property.price)} onClick={() => act("bw_buy_property", { p_property_id: property.id }, property.owned ? `Moved into ${property.name}.` : `Purchased ${property.name}.`)}>{property.active ? "Living here" : property.owned ? "Move in" : "Purchase"}</button></article>)}</div>}
 
-    {initialTab === "inventory" && <div className="server-inventory">{data.inventory.length === 0 ? <Empty title="Inventory empty" text="Purchase or earn items through city activities." /> : data.inventory.map(item => <article key={item.item_id}><i>{item.kind === "weapon" ? "†" : item.kind === "armor" ? "◇" : "+"}</i><small>{item.kind} · {item.quantity} owned</small><b>{item.name}</b><p>{item.description}</p><span>{item.power ? `${item.power} power` : "Personal item"}</span>{item.usable && <button disabled={busy} onClick={() => act("bw_use_item", { p_item_id: item.item_id }, `${item.name} used.`)}>Use</button>}</article>)}</div>}
-    {initialTab === "shop" && <div className="server-inventory city-shop">{data.items.map(item => <article key={item.id}><i>{item.kind === "weapon" ? "†" : item.kind === "armor" ? "◇" : "+"}</i><small>{item.kind}</small><b>{item.name}</b><p>{item.description}</p><span>{money(item.price)} · {item.power} power</span><button disabled={busy || player.cash < item.price} onClick={() => act("bw_buy_item", { p_item_id: item.id, p_quantity: 1 }, `${item.name} purchased.`)}>Purchase</button></article>)}</div>}
+    {initialTab === "inventory" && <InventoryEquipment inventory={loadout.inventory || data.inventory} loadout={loadout} level={player.level} busy={busy} onAction={(rpc, params, success) => act(rpc, params, success, async value => { if (rpc === "bw_equip_item" || rpc === "bw_unequip_slot") setLoadout(value || { equipment: [], inventory: [], bonuses: {} }); else { const result = await supabase.rpc("bw_get_loadout"); if (!result.error) setLoadout(result.data); } })} />}
+    {initialTab === "shop" && <ItemShop items={data.items} cash={player.cash} level={player.level} busy={busy} onBuy={item => act("bw_buy_item", { p_item_id: item.id, p_quantity: 1 }, `${item.name} purchased.`)} />}
   </section></>;
 }
 

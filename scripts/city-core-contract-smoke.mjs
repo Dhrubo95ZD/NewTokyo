@@ -1,11 +1,15 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const [migration, hub, game, account] = await Promise.all([
+const [migration, equipmentMigration, hub, inventory, game, account, theme, tutorial] = await Promise.all([
   readFile(new URL("../supabase/20260901_blackwood_city_core.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/20260903_inventory_equipment_tutorial.sql", import.meta.url), "utf8"),
   readFile(new URL("../src/online/CityCoreHub.jsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/online/InventoryEquipment.jsx", import.meta.url), "utf8"),
   readFile(new URL("../src/MafiaGame.jsx", import.meta.url), "utf8"),
   readFile(new URL("../src/MafiaAccount.jsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/bright-theme.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/tutorial/GuidedTutorial.jsx", import.meta.url), "utf8"),
 ]);
 
 for (const table of ["bw_player_states", "bw_crimes", "bw_inventory", "bw_attack_logs", "bw_relations", "bw_mail", "bw_forum_threads", "bw_missions", "bw_player_awards", "bw_properties", "runner_crews"])
@@ -19,5 +23,14 @@ assert.ok(migration.includes("security definer") && migration.includes("revoke i
 assert.ok(migration.includes("new player protection is active"), "combat protection missing");
 assert.ok(account.includes('rpc("bw_get_state")'), "account boot must load authoritative state");
 assert.ok(account.includes('rpc("bw_create_character"'), "character creation must be server-authoritative");
+for (const rpc of ["bw_get_loadout", "bw_equip_item", "bw_unequip_slot", "bw_advance_tutorial", "bw_equipment_power"])
+  assert.ok(equipmentMigration.includes(`function public.${rpc}`), `missing equipment/tutorial RPC ${rpc}`);
+for (const slot of ["primary", "secondary", "melee", "armor", "helmet", "boots", "gloves", "accessory"])
+  assert.ok(equipmentMigration.includes(`'${slot}'`) && inventory.includes(`"${slot}"`), `missing equipment slot ${slot}`);
+assert.ok(equipmentMigration.includes("cross join archetypes") && equipmentMigration.includes("Twenty collections across ten archetypes"), "200-item deterministic catalog missing");
+assert.ok(equipmentMigration.includes("public.bw_equipment_power(uid)"), "equipment bonuses must affect authoritative combat");
+assert.ok(tutorial.includes("bw_advance_tutorial") && game.includes("GuidedTutorial"), "persistent guided tutorial missing");
+assert.ok(theme.includes("@media(max-width:360px)") && theme.includes("grid-template-columns:repeat(4,minmax(0,1fr))"), "narrow-phone resource overlap fix missing");
+assert.ok(theme.includes("--paper:#fffdf8") && theme.includes("--brown:#754729"), "ivory, black and brown theme missing");
 
 console.log("Blackwood server-authoritative city contracts passed");
