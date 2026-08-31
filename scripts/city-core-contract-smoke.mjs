@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const [migration, equipmentMigration, hub, inventory, game, account, theme, tutorial] = await Promise.all([
+const [migration, equipmentMigration, hub, inventory, game, account, theme, tutorial, android35] = await Promise.all([
   readFile(new URL("../supabase/20260901_blackwood_city_core.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/20260903_inventory_equipment_tutorial.sql", import.meta.url), "utf8"),
   readFile(new URL("../src/online/CityCoreHub.jsx", import.meta.url), "utf8"),
@@ -10,6 +10,7 @@ const [migration, equipmentMigration, hub, inventory, game, account, theme, tuto
   readFile(new URL("../src/MafiaAccount.jsx", import.meta.url), "utf8"),
   readFile(new URL("../src/bright-theme.css", import.meta.url), "utf8"),
   readFile(new URL("../src/tutorial/GuidedTutorial.jsx", import.meta.url), "utf8"),
+  readFile(new URL("../android/app/src/main/res/values-v35/styles.xml", import.meta.url), "utf8"),
 ]);
 
 for (const table of ["bw_player_states", "bw_crimes", "bw_inventory", "bw_attack_logs", "bw_relations", "bw_mail", "bw_forum_threads", "bw_missions", "bw_player_awards", "bw_properties", "runner_crews"])
@@ -32,5 +33,8 @@ assert.ok(equipmentMigration.includes("public.bw_equipment_power(uid)"), "equipm
 assert.ok(tutorial.includes("bw_advance_tutorial") && game.includes("GuidedTutorial"), "persistent guided tutorial missing");
 assert.ok(theme.includes("@media(max-width:360px)") && theme.includes("grid-template-columns:repeat(4,minmax(0,1fr))"), "narrow-phone resource overlap fix missing");
 assert.ok(theme.includes("--paper:#fffdf8") && theme.includes("--brown:#754729"), "ivory, black and brown theme missing");
+assert.ok(theme.includes('grid-template-areas:"number info action" "number chance action" ". take action"'), "crime mobile grid areas missing");
+assert.ok(theme.includes("safe-area-inset-top") && theme.includes("var(--safe-top)"), "display cutout safe-area handling missing");
+assert.ok(android35.includes("windowOptOutEdgeToEdgeEnforcement") && android35.includes("statusBarColor"), "Android 15 edge-to-edge protection missing");
 
 console.log("Blackwood server-authoritative city contracts passed");
