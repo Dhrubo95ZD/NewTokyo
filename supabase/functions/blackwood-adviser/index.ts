@@ -23,6 +23,7 @@ function advise(question: string, context: JsonMap) {
   const career = careerState.career;
   const forex = context.forex || {};
   const trader = forex.profile || {};
+  const broker = forex.account;
   const loadout = context.loadout || {};
   const equipment = Array.isArray(loadout.equipment) ? loadout.equipment : [];
   const inventory = Array.isArray(loadout.inventory) ? loadout.inventory : [];
@@ -48,8 +49,10 @@ function advise(question: string, context: JsonMap) {
       suggestions.push(suggestion("Review promotions", "work", "Check the next position's work-stat and profession-point requirements."));
     }
   } else if (/forex|trade|currency|economy|eur|gbp|jpy|leverage/.test(query)) {
-    answer = `Your trader rank is ${trader.rank || "Novice"} with ${trader.closed_trades || 0} closed trades and $${Number(trader.realized_pnl || 0).toLocaleString()} realized P&L. Forex is simulated and leverage can consume your full margin, so begin small.`;
-    suggestions.push(suggestion("Open the currency desk", "economy", "Review all six pairs, spreads, open positions, and trader progress."));
+    answer = broker
+      ? `Your live-market account ${broker.account_number} uses 1:${broker.leverage} leverage with $${Number(broker.equity || 0).toLocaleString()} equity. Your trader rank is ${trader.rank || "Novice"} with ${trader.closed_trades || 0} closed trades. High leverage can liquidate virtual funds quickly, so use small lot sizes.`
+      : "Open a Federal Trust trading account first. Choose 1:500 or 1:1000 leverage and fund it from your in-game cash before placing lot-based orders.";
+    suggestions.push(suggestion("Open the live market desk", "economy", "Trade provider-backed Forex and metals with candlestick charts and account margin controls."));
     if (!trader.bank_offer_unlocked) {
       suggestions.push(suggestion("Earn a bank invitation", "economy", "Close disciplined trades with positive realized P&L and controlled drawdown."));
     } else {
@@ -94,7 +97,7 @@ function advise(question: string, context: JsonMap) {
     suggestions.push(suggestion("View rankings", "rankings", "Compare real player progression and wealth."));
     suggestions.push(suggestion("Open family headquarters", "family", "Coordinate with your real-player criminal family."));
   } else {
-    answer = `You are level ${player.level || 1} with ${player.energy || 0} energy, ${player.nerve || 0} nerve, and $${Number(player.cash || forex.balance || 0).toLocaleString()} on hand. Here are the strongest available next moves.`;
+    answer = `You are level ${player.level || 1} with ${player.energy || 0} energy, ${player.nerve || 0} nerve, and $${Number(player.cash || forex.walletBalance || 0).toLocaleString()} on hand. Here are the strongest available next moves.`;
     if (!career) suggestions.push(suggestion("Start a profession", "work", "Pass an interview to unlock shifts, work stats, and career progression."));
     if (Number(player.nerve || 0) >= 2) suggestions.push(suggestion("Build crime skill", "crimes", "You have enough nerve for an available crime."));
     if (Number(player.energy || 0) >= 5) suggestions.push(suggestion("Train a combat stat", "gym", "You have energy available for permanent stat gains."));

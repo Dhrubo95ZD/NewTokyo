@@ -19,12 +19,14 @@ A persistent online crime RPG built with React, Vite, Capacitor and Supabase for
 - Family headquarters with applications, officer permissions, private/war chat, activity records, shared vault and armory
 - Real-member organized crimes, attack chains, ranked family wars and twelve income-producing territories
 - Rossi's Casino: server-settled blackjack, slots and single-zero European roulette
-- Economy: six continuously simulated Forex pairs, trader ranks and earned Federal Trust job offers
+- Prime FX brokerage accounts with 1:500/1:1000 leverage, lot-based orders, SL/TP, margin controls, live candlestick charts, Forex, XAU/USD and XAG/USD
 - Free account-aware Consigliere with direct links to recommended activities
 
-## 20260904 setup
+## Live market setup
 
 Apply `supabase/20260904_casino_economy_careers.sql` and deploy `supabase/functions/blackwood-adviser`. The adviser uses the player's live Supabase progress and the built-in game guide; it requires no external AI account, API key, or usage payment.
+
+After the other migrations, apply `supabase/20260906_live_brokerage.sql`. Create a Twelve Data key, save it as the Supabase Edge Function secret `TWELVE_DATA_API_KEY`, then deploy `supabase/functions/market-feed`. The key stays on the server and is never included in the APK. The free provider tier is appropriate for development or a small closed test; confirm market-data display and redistribution rights before a public production launch.
 
 For the one-time new-game wipe, manually run `supabase/RESET_FOR_NEW_GAME.sql` after every migration. It is deliberately separate and never runs during a build.
 - Responsive desktop and mobile layouts
@@ -55,6 +57,7 @@ Apply the migrations once to the existing Supabase project, in this order:
 6. `supabase/20260903_inventory_equipment_tutorial.sql`
 7. `supabase/20260904_casino_economy_careers.sql`
 8. `supabase/20260905_families_wars.sql`
+9. `supabase/20260906_live_brokerage.sql`
 
 The city-core migration installs the connected world, RLS policies, real families and authoritative ranking adapter. Later migrations add the catalog, tutorial, casino, Forex economy, careers and Families 2.0. The reset script is separate because it must run only once.
 
