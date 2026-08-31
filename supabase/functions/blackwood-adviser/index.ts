@@ -26,6 +26,8 @@ function advise(question: string, context: JsonMap) {
   const loadout = context.loadout || {};
   const equipment = Array.isArray(loadout.equipment) ? loadout.equipment : [];
   const inventory = Array.isArray(loadout.inventory) ? loadout.inventory : [];
+  const familyState = context.family || {};
+  const family = familyState.family;
   const suggestions: Suggestion[] = [];
   let answer = "I reviewed your current Blackwood City record.";
 
@@ -70,11 +72,27 @@ function advise(question: string, context: JsonMap) {
     answer = `You have ${player.energy || 0}/${player.max_energy || 0} energy. Gym training permanently improves combat stats and scales with happiness.`;
     suggestions.push(suggestion("Train at the gym", "gym", "Spend available energy on the combat stat you want to develop."));
     suggestions.push(suggestion("Check your equipment", "inventory", "Loadout bonuses complement permanent gym statistics."));
-  } else if (/chat|player|friend|message|forum|family|rank/.test(query)) {
-    answer = "Blackwood City is online. World chat, player rankings, families, private mail, forums, and contacts all use real authenticated accounts.";
+  } else if (/family|war|territor|operation|armory|vault|chain/.test(query)) {
+    if (!family) {
+      answer = "You are not in a family yet. Apply to a real player family or found your own order. Family operations require distinct authenticated members—there are no bot seats.";
+      suggestions.push(suggestion("Open the family registry", "family", "Apply to a family or found a new one."));
+    } else if (familyState.war) {
+      answer = `${family.name} is in a ranked war against ${familyState.war.opponent}. Your family has ${familyState.war.ourScore}/${familyState.war.target} points. Winning attacks against real opposing members score automatically.`;
+      suggestions.push(suggestion("Open the war room", "family", "Review the score, deadline, and latest valid hits."));
+      suggestions.push(suggestion("Find an opponent", "combat", "Attack a real member of the opposing family to score."));
+    } else if (familyState.operations?.length) {
+      answer = `${family.name} has ${familyState.operations[0].name} ${familyState.operations[0].status}. Fill its specialist seats with real members, ready up, and collect the server-settled payout when complete.`;
+      suggestions.push(suggestion("Review the operation", "family", "Choose a role, ready up, or collect a completed score."));
+    } else {
+      const openTerritories = (familyState.territories || []).filter((place: JsonMap) => !place.ownerId).length;
+      answer = `${family.name} is rated ${family.rating} in ${family.division} division with $${Number(family.vault || 0).toLocaleString()} in the family vault. ${openTerritories} territories are currently unclaimed.`;
+      suggestions.push(suggestion("Plan family business", "family", "Start an operation, manage the armory, claim territory, or enter ranked matchmaking."));
+    }
+  } else if (/chat|player|friend|message|forum|rank/.test(query)) {
+    answer = "Blackwood City is online. World chat, player rankings, private mail, forums, and contacts all use real authenticated accounts.";
     suggestions.push(suggestion("Open world chat", "chat", "Talk to currently registered players."));
     suggestions.push(suggestion("View rankings", "rankings", "Compare real player progression and wealth."));
-    suggestions.push(suggestion("Find a family", "family", "Join or manage an online criminal family."));
+    suggestions.push(suggestion("Open family headquarters", "family", "Coordinate with your real-player criminal family."));
   } else {
     answer = `You are level ${player.level || 1} with ${player.energy || 0} energy, ${player.nerve || 0} nerve, and $${Number(player.cash || forex.balance || 0).toLocaleString()} on hand. Here are the strongest available next moves.`;
     if (!career) suggestions.push(suggestion("Start a profession", "work", "Pass an interview to unlock shifts, work stats, and career progression."));

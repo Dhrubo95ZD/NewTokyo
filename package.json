@@ -11,7 +11,8 @@
     "test:account": "node scripts/account-ui-smoke.mjs",
     "test:community": "node scripts/community-online-smoke.mjs",
     "test:city": "node scripts/city-core-contract-smoke.mjs",
-    "test": "npm run test:economy && npm run test:casino && npm run test:account && npm run test:community && npm run test:city",
+    "test:family": "node scripts/families-war-contract-smoke.mjs",
+    "test": "npm run test:economy && npm run test:casino && npm run test:account && npm run test:community && npm run test:city && npm run test:family",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"

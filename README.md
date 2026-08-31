@@ -16,6 +16,8 @@ A persistent online crime RPG built with React, Vite, Capacitor and Supabase for
 - Seven-step guided tutorial persisted to each player account
 - Purchasable properties with happiness and vault progression
 - World chat, private mail, forums, player directory and real families
+- Family headquarters with applications, officer permissions, private/war chat, activity records, shared vault and armory
+- Real-member organized crimes, attack chains, ranked family wars and twelve income-producing territories
 - Rossi's Casino: server-settled blackjack, slots and single-zero European roulette
 - Economy: six continuously simulated Forex pairs, trader ranks and earned Federal Trust job offers
 - Free account-aware Consigliere with direct links to recommended activities
@@ -52,8 +54,9 @@ Apply the migrations once to the existing Supabase project, in this order:
 5. `supabase/20260901_blackwood_city_core.sql`
 6. `supabase/20260903_inventory_equipment_tutorial.sql`
 7. `supabase/20260904_casino_economy_careers.sql`
+8. `supabase/20260905_families_wars.sql`
 
-The city-core migration installs the connected world, RLS policies, real families and authoritative ranking adapter. Later migrations add the catalog, tutorial, casino, Forex economy and careers. The reset script is separate because it must run only once.
+The city-core migration installs the connected world, RLS policies, real families and authoritative ranking adapter. Later migrations add the catalog, tutorial, casino, Forex economy, careers and Families 2.0. The reset script is separate because it must run only once.
 
 Google authentication must be enabled in Supabase. Web and Android OAuth callbacks are both supported. Never put a service-role key in the app or in a `VITE_` environment variable.
 

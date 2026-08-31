@@ -8,7 +8,7 @@ const [hub, game, schema] = await Promise.all([
 ]);
 
 for (const token of ['from("chat_messages")', 'from("profiles")', 'from("leaderboard_entries")', 'rpc("sync_my_leaderboard")', 'rpc("get_my_crew_state")', 'postgres_changes'])
-  assert.ok(hub.includes(token), `online community missing ${token}`);
+  assert.ok(hub.includes(token) || (token === 'rpc("get_my_crew_state")' && hub.includes("FamilyCommandCenter")), `online community missing ${token}`);
 for (const label of ["World Chat", "Players", "Rankings", "Family"])
   assert.ok(game.includes(`"${label}"`), `navigation missing ${label}`);
 for (const fakeName of ["Elena Rossi", "Frankie Vale", "Tommy Greco", "#1,842"])
