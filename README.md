@@ -9,15 +9,22 @@ A persistent online crime RPG built with React, Vite, Capacitor and Supabase for
 - Real-player combat with leave, mug and hospitalize outcomes plus 24-hour new-player protection
 - Persistent hospital/jail registers, attack records, friends, enemies, targets and blocks
 - Four-stat gym with server-controlled energy and happiness-scaled gains
-- Five careers with timed shifts, pay and job points
+- Six professions with three-question interviews, position ladders, work stats, timed shifts and specials
 - Missions, claimable rewards, awards and authoritative Hall of Fame data
 - Shared Exchange wallet, protected bank balance, shops and server inventory
 - Eight server-owned equipment slots with combat bonuses and a 200-piece mafia equipment catalog
 - Seven-step guided tutorial persisted to each player account
 - Purchasable properties with happiness and vault progression
 - World chat, private mail, forums, player directory and real families
-- Rossi's Arcade: street cricket, reaction and memory games
-- The Exchange: the existing authenticated, server-settled gold trading simulator
+- Rossi's Casino: server-settled blackjack, slots and single-zero European roulette
+- Economy: six continuously simulated Forex pairs, trader ranks and earned Federal Trust job offers
+- Account-aware OpenAI Consigliere with direct links to recommended activities
+
+## 20260904 setup
+
+Apply `supabase/20260904_casino_economy_careers.sql`, deploy `supabase/functions/blackwood-adviser`, and store `OPENAI_API_KEY` as a Supabase Edge Function secret. `OPENAI_MODEL` is optional and defaults to `gpt-5.6`. Never expose this secret through Vite or the APK.
+
+For the one-time new-game wipe, manually run `supabase/RESET_FOR_NEW_GAME.sql` after every migration. It is deliberately separate and never runs during a build.
 - Responsive desktop and mobile layouts
 
 ## Local development
@@ -44,8 +51,9 @@ Apply the migrations once to the existing Supabase project, in this order:
 4. `supabase/20260902_arcade_exchange_overhaul.sql`
 5. `supabase/20260901_blackwood_city_core.sql`
 6. `supabase/20260903_inventory_equipment_tutorial.sql`
+7. `supabase/20260904_casino_economy_careers.sql`
 
-The city-core migration installs the connected world, RLS policies, real families and authoritative ranking adapter. The inventory migration adds the 200-piece catalog, equipment and tutorial. Existing cloud saves are imported the first time each player opens the upgraded game. Both upgrades are idempotent and can be reapplied safely.
+The city-core migration installs the connected world, RLS policies, real families and authoritative ranking adapter. Later migrations add the catalog, tutorial, casino, Forex economy and careers. The reset script is separate because it must run only once.
 
 Google authentication must be enabled in Supabase. Web and Android OAuth callbacks are both supported. Never put a service-role key in the app or in a `VITE_` environment variable.
 

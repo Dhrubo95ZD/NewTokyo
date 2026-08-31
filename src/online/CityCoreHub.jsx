@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "./supabase.js";
 import { InventoryEquipment, ItemShop } from "./InventoryEquipment.jsx";
+import JobCenter from "../jobs/JobCenter.jsx";
 import "./city-core.css";
 
 const money = value => `$${Number(value || 0).toLocaleString()}`;
@@ -57,7 +58,7 @@ export default function CityCoreHub({ initialTab, user, onState }) {
 
     {initialTab === "gym" && <div className="core-gym"><header><span><small>AVAILABLE ENERGY</small><b>{player.energy}/{player.max_energy}</b></span><p>Each repetition costs 5 energy. Gains scale with current happiness.</p></header><div>{[["strength","Strength","Damage dealt"],["defense","Defense","Damage resisted"],["speed","Speed","Hit probability"],["dexterity","Dexterity","Evasion probability"]].map(([id,name,desc]) => <article key={id}><small>{id.slice(0,3).toUpperCase()}</small><b>{name}</b><strong>{Number(player[id]).toFixed(2)}</strong><p>{desc}</p><button disabled={busy || player.energy < 5 || player.status !== "okay"} onClick={() => act("bw_train", { p_stat: id, p_reps: 1 }, `${name} training recorded.`)}>Train ×1</button></article>)}</div></div>}
 
-    {initialTab === "work" && <div className="core-work"><header><div><small>CURRENT POSITION</small><b>{data.jobs.find(job => job.id === player.job_id)?.name || player.job_id}</b><span>{player.job_points} job points</span></div><button className="core-primary" disabled={busy || player.status !== "okay"} onClick={() => act("bw_work", {}, "Shift completed.")}>Complete shift</button></header><div className="job-list">{data.jobs.map(job => <article className={job.id === player.job_id ? "active" : ""} key={job.id}><div><small>{job.company}</small><b>{job.name}</b><p>{job.description}</p></div><span><b>{money(job.pay)}</b><small>Level {job.level_required} · {job.energy_cost} energy</small></span><button disabled={busy || job.id === player.job_id || player.level < job.level_required} onClick={() => act("bw_take_job", { p_job_id: job.id }, `Started as ${job.name}.`)}>{job.id === player.job_id ? "Employed" : "Take job"}</button></article>)}</div></div>}
+    {initialTab === "work" && <JobCenter onState={onState} />}
 
     {initialTab === "missions" && <div className="mission-list">{data.missions.map(mission => <article key={mission.id}><i>{mission.claimedAt ? "✓" : "◆"}</i><div><small>CONTRACT</small><b>{mission.name}</b><p>{mission.description}</p><Meter value={mission.progress} max={mission.target} /><em>{mission.progress}/{mission.target}</em></div><span><b>{money(mission.cash_reward)}</b><small>{mission.xp_reward} XP · {mission.merit_reward} merit</small><button disabled={busy || mission.claimedAt || mission.progress < mission.target} onClick={() => act("bw_claim_mission", { p_mission_id: mission.id }, `${mission.name} claimed.`)}>{mission.claimedAt ? "Claimed" : "Claim"}</button></span></article>)}</div>}
 
