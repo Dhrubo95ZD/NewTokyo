@@ -18,11 +18,11 @@ A persistent online crime RPG built with React, Vite, Capacitor and Supabase for
 - World chat, private mail, forums, player directory and real families
 - Rossi's Casino: server-settled blackjack, slots and single-zero European roulette
 - Economy: six continuously simulated Forex pairs, trader ranks and earned Federal Trust job offers
-- Account-aware OpenAI Consigliere with direct links to recommended activities
+- Free account-aware Consigliere with direct links to recommended activities
 
 ## 20260904 setup
 
-Apply `supabase/20260904_casino_economy_careers.sql`, deploy `supabase/functions/blackwood-adviser`, and store `OPENAI_API_KEY` as a Supabase Edge Function secret. `OPENAI_MODEL` is optional and defaults to `gpt-5.6`. Never expose this secret through Vite or the APK.
+Apply `supabase/20260904_casino_economy_careers.sql` and deploy `supabase/functions/blackwood-adviser`. The adviser uses the player's live Supabase progress and the built-in game guide; it requires no external AI account, API key, or usage payment.
 
 For the one-time new-game wipe, manually run `supabase/RESET_FOR_NEW_GAME.sql` after every migration. It is deliberately separate and never runs during a build.
 - Responsive desktop and mobile layouts

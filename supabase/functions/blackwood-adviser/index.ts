@@ -6,118 +6,111 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const GAME_GUIDE = `You are The Consigliere, the in-world guide for Blackwood City, an online mafia RPG packaged for Android. Be concise, practical, and honest. Only recommend pages present in available_pages. The authoritative systems are: crimes use nerve; gym uses energy; combat targets real protected players; professions require a three-question interview and 20-hour shifts; inventory has eight equipment slots and consumables; the Economy has six simulated 24/7 Forex pairs with spread, margin, and leverage; Federal Trust banking careers require a proven Forex record; Rossi's casino offers blackjack, European roulette, and slots; family, world chat, mail, forums, and rankings are online. Never claim you performed an action. Never invent account values or players. Warn that leverage can lose the full margin. Use the supplied account context to identify what is currently possible and give at most three useful next moves.`;
+type Suggestion = { label: string; page: string; reason: string };
+type JsonMap = Record<string, any>;
 
-type AdviserContext = {
-  available_pages?: string[];
-  [key: string]: unknown;
-};
+const suggestion = (label: string, page: string, reason: string): Suggestion => ({
+  label,
+  page,
+  reason,
+});
+
+function advise(question: string, context: JsonMap) {
+  const query = question.toLowerCase();
+  const city = context.city || {};
+  const player = city.player || {};
+  const careerState = context.career || {};
+  const career = careerState.career;
+  const forex = context.forex || {};
+  const trader = forex.profile || {};
+  const loadout = context.loadout || {};
+  const equipment = Array.isArray(loadout.equipment) ? loadout.equipment : [];
+  const inventory = Array.isArray(loadout.inventory) ? loadout.inventory : [];
+  const suggestions: Suggestion[] = [];
+  let answer = "I reviewed your current Blackwood City record.";
+
+  if (/job|work|career|profession|interview|bank offer/.test(query)) {
+    if (!career) {
+      answer = trader.bank_offer_unlocked
+        ? "Federal Trust has noticed your trading record. You can interview for banking now, or choose another profession."
+        : "You are not employed yet. Choose a profession and pass its three-question interview to begin earning pay, work stats, and profession points.";
+      suggestions.push(suggestion("Visit employment", "work", "Choose an available profession and begin its interview."));
+      if (!trader.bank_offer_unlocked) {
+        suggestions.push(suggestion("Build a trading record", "economy", "Profitable, disciplined Forex trading can unlock the Federal Trust career."));
+      }
+    } else if (career.shift_ready) {
+      answer = `Your ${career.position_name || "current"} shift is ready. Completing it will pay wages and add profession points.`;
+      suggestions.push(suggestion("Complete your shift", "work", "Your timed shift is currently available."));
+    } else {
+      answer = `You are employed as ${career.position_name || "an associate"}. Your next shift is still on cooldown, so work on another progression system for now.`;
+      suggestions.push(suggestion("Review promotions", "work", "Check the next position's work-stat and profession-point requirements."));
+    }
+  } else if (/forex|trade|currency|economy|eur|gbp|jpy|leverage/.test(query)) {
+    answer = `Your trader rank is ${trader.rank || "Novice"} with ${trader.closed_trades || 0} closed trades and $${Number(trader.realized_pnl || 0).toLocaleString()} realized P&L. Forex is simulated and leverage can consume your full margin, so begin small.`;
+    suggestions.push(suggestion("Open the currency desk", "economy", "Review all six pairs, spreads, open positions, and trader progress."));
+    if (!trader.bank_offer_unlocked) {
+      suggestions.push(suggestion("Earn a bank invitation", "economy", "Close disciplined trades with positive realized P&L and controlled drawdown."));
+    } else {
+      suggestions.push(suggestion("Interview at Federal Trust", "work", "Your verified trading record has unlocked its banking profession."));
+    }
+  } else if (/casino|blackjack|roulette|slot|gambl/.test(query)) {
+    answer = "Rossi's Casino offers server-settled blackjack, three-reel slots, and single-zero European roulette. Treat it as entertainment—the house has an advantage.";
+    suggestions.push(suggestion("Visit Rossi's Casino", "arcade", "Choose blackjack, slots, or roulette and set a controlled stake."));
+    suggestions.push(suggestion("Protect your cash", "bank", "Money deposited at Federal Trust is protected from wagers and muggings."));
+  } else if (/equip|weapon|armor|inventory|item|loadout/.test(query)) {
+    const emptySlots = Math.max(0, 8 - equipment.length);
+    answer = `You have ${inventory.length} inventory types and ${emptySlots} empty equipment slot${emptySlots === 1 ? "" : "s"}. Equipped bonuses are included in server-authoritative combat.`;
+    suggestions.push(suggestion("Review your loadout", "inventory", "Fill empty body slots and compare attack, defense, speed, and dexterity bonuses."));
+    suggestions.push(suggestion("Browse equipment", "shop", "Purchase level-appropriate items from the city catalog."));
+  } else if (/crime|nerve|jail|money|cash/.test(query)) {
+    answer = `You currently have ${player.nerve || 0}/${player.max_nerve || 0} nerve and crime skill ${player.crime_skill || 1}. Choose crimes near your current skill for safer progression.`;
+    suggestions.push(suggestion("Choose a crime", "crimes", "Available odds and nerve costs are shown before every attempt."));
+    suggestions.push(suggestion("Protect earnings", "bank", "Deposit cash so other players cannot mug it."));
+  } else if (/gym|train|energy|strength|defense|speed|dexterity|stat/.test(query)) {
+    answer = `You have ${player.energy || 0}/${player.max_energy || 0} energy. Gym training permanently improves combat stats and scales with happiness.`;
+    suggestions.push(suggestion("Train at the gym", "gym", "Spend available energy on the combat stat you want to develop."));
+    suggestions.push(suggestion("Check your equipment", "inventory", "Loadout bonuses complement permanent gym statistics."));
+  } else if (/chat|player|friend|message|forum|family|rank/.test(query)) {
+    answer = "Blackwood City is online. World chat, player rankings, families, private mail, forums, and contacts all use real authenticated accounts.";
+    suggestions.push(suggestion("Open world chat", "chat", "Talk to currently registered players."));
+    suggestions.push(suggestion("View rankings", "rankings", "Compare real player progression and wealth."));
+    suggestions.push(suggestion("Find a family", "family", "Join or manage an online criminal family."));
+  } else {
+    answer = `You are level ${player.level || 1} with ${player.energy || 0} energy, ${player.nerve || 0} nerve, and $${Number(player.cash || forex.balance || 0).toLocaleString()} on hand. Here are the strongest available next moves.`;
+    if (!career) suggestions.push(suggestion("Start a profession", "work", "Pass an interview to unlock shifts, work stats, and career progression."));
+    if (Number(player.nerve || 0) >= 2) suggestions.push(suggestion("Build crime skill", "crimes", "You have enough nerve for an available crime."));
+    if (Number(player.energy || 0) >= 5) suggestions.push(suggestion("Train a combat stat", "gym", "You have energy available for permanent stat gains."));
+    if (suggestions.length < 3 && Number(trader.closed_trades || 0) === 0) suggestions.push(suggestion("Learn Forex", "economy", "A careful first trade begins the path toward a banking offer."));
+  }
+
+  return { answer, suggestions: suggestions.slice(0, 3) };
+}
 
 Deno.serve(async (request) => {
-  if (request.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  if (request.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
     const authorization = request.headers.get("Authorization");
     if (!authorization) throw new Error("Sign in required");
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error("Supabase function environment is incomplete");
-    }
+    if (!supabaseUrl || !supabaseAnonKey) throw new Error("Supabase environment is incomplete");
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authorization } },
     });
-    const { data, error } = await supabase.rpc("bw_adviser_context");
+    const { data: context, error } = await supabase.rpc("bw_adviser_context");
     if (error) throw error;
 
-    const context = (data || {}) as AdviserContext;
-    const availablePages = Array.isArray(context.available_pages)
-      ? context.available_pages
-      : ["home"];
     const body = await request.json().catch(() => ({}));
-    const question = String(body.question || "What should I do next?").slice(
-      0,
-      800,
-    );
-
-    const openAiKey = Deno.env.get("OPENAI_API_KEY");
-    if (!openAiKey) {
-      throw new Error("The adviser is awaiting its OPENAI_API_KEY secret");
-    }
-
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${openAiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: Deno.env.get("OPENAI_MODEL") || "gpt-5.6",
-        store: false,
-        input: [
-          { role: "developer", content: GAME_GUIDE },
-          {
-            role: "user",
-            content: `ACCOUNT CONTEXT\n${JSON.stringify(context)}\n\nPLAYER QUESTION\n${question}`,
-          },
-        ],
-        text: {
-          format: {
-            type: "json_schema",
-            name: "blackwood_advice",
-            strict: true,
-            schema: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                answer: { type: "string" },
-                suggestions: {
-                  type: "array",
-                  maxItems: 3,
-                  items: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                      label: { type: "string" },
-                      page: { type: "string", enum: availablePages },
-                      reason: { type: "string" },
-                    },
-                    required: ["label", "page", "reason"],
-                  },
-                },
-              },
-              required: ["answer", "suggestions"],
-            },
-          },
-        },
-      }),
-    });
-
-    const result = await response.json();
-    if (!response.ok) {
-      const message = result?.error?.message ||
-        `OpenAI request failed (${response.status})`;
-      throw new Error(message);
-    }
-
-    const outputText = result.output_text || result.output
-      ?.flatMap((item: { content?: Array<{ type?: string; text?: string }> }) =>
-        item.content || []
-      )
-      .find((item: { type?: string }) => item.type === "output_text")?.text;
-    if (!outputText) throw new Error("The adviser returned an empty response");
-
-    return new Response(outputText, {
+    const question = String(body.question || "What should I do next?").slice(0, 800);
+    return new Response(JSON.stringify(advise(question, context || {})), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    // A 200 response lets the current APK show the useful backend error text.
     return new Response(JSON.stringify({ error: message }), {
-      status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
