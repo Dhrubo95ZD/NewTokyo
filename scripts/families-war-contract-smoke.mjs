@@ -14,6 +14,7 @@ for (const rpc of ["bw_family_snapshot", "bw_family_apply", "bw_family_vault_tra
   assert.ok(sql.includes(`function public.${rpc}`) && ui.includes(`"${rpc}"`), `family contract missing ${rpc}`);
 assert.ok(sql.includes("after insert on public.bw_attack_logs"), "combat does not feed family chain and war scoring");
 assert.ok(sql.includes("revoke execute on function public.join_runner_crew"), "legacy instant family joining remains exposed");
+assert.ok(!sql.includes("),'[]'::jsonb) from"), "JSON aggregate fallback is incorrectly placed before FROM");
 assert.ok(sql.includes("different authenticated family member") || ui.includes("different authenticated family member"), "real-member operation rule is not communicated");
 assert.ok(!ui.includes("Math.random"), "family outcomes must not be rolled on the client");
 assert.ok(game.includes("FamilyCommandCenter"), "Families 2.0 is not integrated into the online hub");

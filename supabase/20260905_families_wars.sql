@@ -123,7 +123,18 @@ begin
   update public.bw_family_wars set status='completed',completed_at=now() where status='active' and ends_at<=now();
   select jsonb_build_object(
     'authority',true,'role',my_role,
-    'directory',coalesce((select jsonb_agg(jsonb_build_object('id',c.id,'name',c.name,'tag',c.tag,'level',c.level,'respect',c.respect,'rating',c.rating,'division',case when c.rating>=1800 then 'Diamond' when c.rating>=1500 then 'Platinum' when c.rating>=1300 then 'Gold' when c.rating>=1150 then 'Silver' when c.rating>=1000 then 'Bronze' else 'Iron' end,'members',(select count(*) from public.runner_crew_members m where m.crew_id=c.id),'territories',(select count(*) from public.bw_family_territories ft where ft.crew_id=c.id)) order by c.rating desc,c.respect desc),'[]'::jsonb) from public.runner_crews c where c.visibility='public'),
+    'directory',coalesce(
+      (select jsonb_agg(
+        jsonb_build_object(
+          'id',c.id,'name',c.name,'tag',c.tag,'level',c.level,
+          'respect',c.respect,'rating',c.rating,
+          'division',case when c.rating>=1800 then 'Diamond' when c.rating>=1500 then 'Platinum' when c.rating>=1300 then 'Gold' when c.rating>=1150 then 'Silver' when c.rating>=1000 then 'Bronze' else 'Iron' end,
+          'members',(select count(*) from public.runner_crew_members m where m.crew_id=c.id),
+          'territories',(select count(*) from public.bw_family_territories ft where ft.crew_id=c.id)
+        ) order by c.rating desc,c.respect desc
+      ) from public.runner_crews c where c.visibility='public'),
+      '[]'::jsonb
+    ),
     'applications',coalesce((select jsonb_agg(jsonb_build_object('id',a.id,'crewId',a.crew_id,'crewName',c.name,'userId',a.user_id,'name',p.display_name,'message',a.message,'status',a.status,'createdAt',a.created_at) order by a.created_at desc) from public.bw_family_applications a join public.runner_crews c on c.id=a.crew_id left join public.profiles p on p.id=a.user_id where (cid is null and a.user_id=uid) or (cid=a.crew_id and my_role in('leader','officer') and a.status='pending')),'[]'::jsonb),
     'family',case when cid is null then null else (select jsonb_build_object('id',c.id,'name',c.name,'tag',c.tag,'level',c.level,'xp',c.xp,'respect',c.respect,'rating',c.rating,'division',case when c.rating>=1800 then 'Diamond' when c.rating>=1500 then 'Platinum' when c.rating>=1300 then 'Gold' when c.rating>=1150 then 'Silver' when c.rating>=1000 then 'Bronze' else 'Iron' end,'vault',c.vault,'announcement',c.announcement,'chainCount',c.chain_count,'chainExpiresAt',c.chain_expires_at,'queued',c.war_queue,'warsWon',c.wars_won,'warsLost',c.wars_lost,'lastIncomeAt',c.last_income_at) from public.runner_crews c where c.id=cid) end,
     'members',coalesce((select jsonb_agg(jsonb_build_object('userId',m.user_id,'name',coalesce(p.display_name,'Associate'),'role',m.role,'contribution',m.contribution,'warHits',m.war_hits,'operations',m.operations_joined,'joinedAt',m.joined_at,'lastSeenAt',p.last_seen_at) order by case m.role when 'leader' then 0 when 'officer' then 1 else 2 end,m.contribution desc) from public.runner_crew_members m left join public.profiles p on p.id=m.user_id where m.crew_id=cid),'[]'::jsonb),
