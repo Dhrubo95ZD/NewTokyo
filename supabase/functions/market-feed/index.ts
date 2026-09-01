@@ -40,6 +40,48 @@ Deno.serve(async request => {
     const timeframe = String(body.timeframe || "1min");
     if (!intervals[timeframe]) return json({ error: "Unsupported timeframe" }, 400);
 
+    if (body.mode === "quotes") {
+      const requested = Array.isArray(body.symbols) ? body.symbols : [symbol];
+      const symbols = [...new Set(requested.map(value => String(value).toUpperCase()))].slice(0, 8);
+      if (!symbols.length) return json({ error: "Choose at least one open market" }, 400);
+      const { data: markets, error: marketsError } = await admin.from("bw_fx_pairs")
+        .select("symbol,provider_symbol,spread").in("symbol", symbols);
+      if (marketsError) throw marketsError;
+      const { data: cachedQuotes, error: cacheError } = await admin.from("bw_fx_quotes")
+        .select("symbol,updated_at").in("symbol", symbols);
+      if (cacheError) throw cacheError;
+      const cache = new Map((cachedQuotes || []).map(value => [value.symbol, value.updated_at]));
+      const staleMarkets = (markets || []).filter(market => {
+        const updatedAt = cache.get(market.symbol);
+        return !updatedAt || Date.now() - new Date(updatedAt).getTime() >= 12_000;
+      });
+      if (!staleMarkets.length) return json({ source: "twelve_data", refreshed: 0, symbols, cached: true });
+
+      const updates: Record<string, unknown>[] = [];
+      let providerError = "";
+      let rateLimited = false;
+      for (const market of staleMarkets) {
+        const query = new URLSearchParams({ symbol: market.provider_symbol || market.symbol, apikey: providerKey });
+        const response = await fetch(`https://api.twelvedata.com/price?${query}`);
+        const provider = await response.json();
+        const mid = Number(provider.price);
+        if (!response.ok || provider.status === "error" || !Number.isFinite(mid)) {
+          providerError = provider.message || `Market provider returned ${response.status}`;
+          rateLimited ||= response.status === 429;
+          continue;
+        }
+        const spread = Number(market.spread || 0);
+        updates.push({
+          symbol: market.symbol, mid, bid: mid - spread / 2, ask: mid + spread / 2,
+          source: "twelve_data", market_time: new Date().toISOString(), updated_at: new Date().toISOString(),
+        });
+      }
+      if (!updates.length) return json({ error: providerError || "No live quotes returned" }, rateLimited ? 429 : 502);
+      const { error: quoteError } = await admin.from("bw_fx_quotes").upsert(updates, { onConflict: "symbol" });
+      if (quoteError) throw quoteError;
+      return json({ source: "twelve_data", refreshed: updates.length, symbols: updates.map(value => value.symbol), partialError: providerError || null });
+    }
+
     const { data: market, error: marketError } = await admin.from("bw_fx_pairs")
       .select("symbol,provider_symbol,spread,digits").eq("symbol", symbol).single();
     if (marketError || !market) return json({ error: "Unknown market" }, 404);
