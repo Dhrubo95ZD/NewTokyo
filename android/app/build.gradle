@@ -23,7 +23,8 @@ android {
                 storeFile file(keystorePath)
                 storePassword System.getenv("MORETTI_KEYSTORE_PASSWORD")
                 keyAlias System.getenv("MORETTI_KEY_ALIAS")
-                keyPassword System.getenv("MORETTI_KEY_PASSWORD")
+                // The generated upload key intentionally uses one password for both the store and key.
+                keyPassword System.getenv("MORETTI_KEYSTORE_PASSWORD")
             }
         }
     }
