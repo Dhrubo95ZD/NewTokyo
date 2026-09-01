@@ -15,6 +15,7 @@ jobs:
       MORETTI_KEY_ALIAS: ${{ secrets.MORETTI_KEY_ALIAS }}
       MORETTI_KEY_PASSWORD: ${{ secrets.MORETTI_KEY_PASSWORD }}
       HAS_SIGNING: ${{ secrets.MORETTI_KEYSTORE_BASE64 != '' }}
+      # Release AAB signing remains conditional so forks can still build the debug APK safely.
 
     steps:
       - name: Check out project
