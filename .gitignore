@@ -5,4 +5,5 @@ android/.gradle/
 android/app/build/
 *.jks
 *.keystore
+*.p12
 *-base64.txt
