@@ -29,6 +29,9 @@ function advise(question: string, context: JsonMap) {
   const inventory = Array.isArray(loadout.inventory) ? loadout.inventory : [];
   const familyState = context.family || {};
   const family = familyState.family;
+  const market = context.market || {};
+  const hustles = context.hustles || {};
+  const hustleProfile = hustles.profile || {};
   const suggestions: Suggestion[] = [];
   let answer = "I reviewed your current Blackwood City record.";
 
@@ -62,6 +65,14 @@ function advise(question: string, context: JsonMap) {
     answer = "Rossi's Casino offers server-settled blackjack, three-reel slots, and single-zero European roulette. Treat it as entertainment—the house has an advantage.";
     suggestions.push(suggestion("Visit Rossi's Casino", "arcade", "Choose blackjack, slots, or roulette and set a controlled stake."));
     suggestions.push(suggestion("Protect your cash", "bank", "Money deposited at Federal Trust is protected from wagers and muggings."));
+  } else if (/market|bazaar|sell|listing|price book|auction/.test(query)) {
+    answer = `The Blackwood Exchange currently has ${(market.listings || []).length} real-player listing${(market.listings || []).length === 1 ? "" : "s"}. Items are held in server escrow until purchased or cancelled, and completed sales build a 30-day price book.`;
+    suggestions.push(suggestion("Browse player listings", "market", "Compare real sellers, remaining quantity and recorded prices."));
+    suggestions.push(suggestion("Sell spare inventory", "market", "Unequipped items can be listed while the city secures them in escrow."));
+  } else if (/hustle|grind|no energy|out of energy|keep playing|street work/.test(query)) {
+    answer = `Street Work costs no energy. Your mastery is ${hustleProfile.mastery || 0}, heat is ${hustleProfile.heat || 0}/100, and current reward efficiency is ${Math.round(Number(hustleProfile.rewardMultiplier || 1) * 100)}%. Every run still awards cash, XP and mastery; heat and repetition only reduce efficiency to a 25% floor.`;
+    suggestions.push(suggestion("Run street work", "hustles", "Choose a no-energy contact for cash, mastery and a chance of item loot."));
+    suggestions.push(suggestion("Cool your heat", "market", "Trade items or use another system while heat falls by one point per minute."));
   } else if (/equip|weapon|armor|inventory|item|loadout/.test(query)) {
     const emptySlots = Math.max(0, 8 - equipment.length);
     answer = `You have ${inventory.length} inventory types and ${emptySlots} empty equipment slot${emptySlots === 1 ? "" : "s"}. Equipped bonuses are included in server-authoritative combat.`;
@@ -101,6 +112,7 @@ function advise(question: string, context: JsonMap) {
     if (!career) suggestions.push(suggestion("Start a profession", "work", "Pass an interview to unlock shifts, work stats, and career progression."));
     if (Number(player.nerve || 0) >= 2) suggestions.push(suggestion("Build crime skill", "crimes", "You have enough nerve for an available crime."));
     if (Number(player.energy || 0) >= 5) suggestions.push(suggestion("Train a combat stat", "gym", "You have energy available for permanent stat gains."));
+    if (Number(player.nerve || 0) < 2 || Number(player.energy || 0) < 5) suggestions.push(suggestion("Keep grinding", "hustles", "Street Work costs no energy and always advances mastery."));
     if (suggestions.length < 3 && Number(trader.closed_trades || 0) === 0) suggestions.push(suggestion("Learn Forex", "economy", "A careful first trade begins the path toward a banking offer."));
   }
 

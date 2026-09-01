@@ -2,12 +2,16 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "./supabase.js";
 import { InventoryEquipment, ItemShop } from "./InventoryEquipment.jsx";
 import JobCenter from "../jobs/JobCenter.jsx";
+import MarketHub from "../market/MarketHub.jsx";
+import HustleHub from "../hustles/HustleHub.jsx";
 import "./city-core.css";
+import "../market/market-grind.css";
 
 const money = value => `$${Number(value || 0).toLocaleString()}`;
 const when = value => value ? new Date(value).toLocaleString([], { dateStyle: "short", timeStyle: "short" }) : "—";
 const CORE_TABS = {
   crimes: ["CRIMINAL RECORD", "Crimes", "Every result is rolled and recorded by the city server."],
+  hustles: ["OPEN ALL NIGHT", "Street Work", "No energy required. Grind cash, mastery and loot with transparent soft limits."],
   combat: ["THE STREETS", "Attack", "Choose a real player. Wins, losses and hospital time persist online."],
   gym: ["NORTHSIDE ATHLETIC CLUB", "Gym", "Build battle stats with server-controlled energy."],
   work: ["EMPLOYMENT OFFICE", "Jobs", "Take a position, earn job points and work timed shifts."],
@@ -21,6 +25,7 @@ const CORE_TABS = {
   awards: ["CITY HALL", "Awards", "Permanent distinctions earned through actual play."],
   property: ["ESTATE AGENTS", "Properties", "Purchase residences and increase maximum happiness."],
   shop: ["SOUTHSIDE ARMS", "City Shops", "Purchase server-owned weapons, armor, medicine and supplies."],
+  market: ["PLAYER COMMERCE", "Blackwood Exchange", "Buy and sell real player inventory through secured city escrow."],
   inventory: ["PERSONAL EFFECTS", "Inventory", "Server-owned equipment, medicine and boosters."],
 };
 
@@ -78,6 +83,8 @@ export default function CityCoreHub({ initialTab, user, onState }) {
 
     {initialTab === "inventory" && <InventoryEquipment inventory={loadout.inventory || data.inventory} loadout={loadout} level={player.level} busy={busy} onAction={(rpc, params, success) => act(rpc, params, success, async value => { if (rpc === "bw_equip_item" || rpc === "bw_unequip_slot") setLoadout(value || { equipment: [], inventory: [], bonuses: {} }); else { const result = await supabase.rpc("bw_get_loadout"); if (!result.error) setLoadout(result.data); } })} />}
     {initialTab === "shop" && <ItemShop items={data.items} cash={player.cash} level={player.level} busy={busy} onBuy={item => act("bw_buy_item", { p_item_id: item.id, p_quantity: 1 }, `${item.name} purchased.`)} />}
+    {initialTab === "market" && <MarketHub onState={onState} />}
+    {initialTab === "hustles" && <HustleHub onState={onState} />}
   </section></>;
 }
 

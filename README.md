@@ -63,6 +63,7 @@ Apply the migrations once to the existing Supabase project, in this order:
 10. `supabase/20260907_broker_margin_hotfix.sql`
 11. `supabase/20260908_world_chat_hotfix.sql`
 12. `supabase/20260909_live_floating_pnl.sql`
+13. `supabase/20260910_blackwood_market_grind.sql`
 
 The city-core migration installs the connected world, RLS policies, real families and authoritative ranking adapter. Later migrations add the catalog, tutorial, casino, Forex economy, careers and Families 2.0. The reset script is separate because it must run only once.
 

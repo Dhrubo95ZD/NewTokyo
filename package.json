@@ -13,7 +13,8 @@
     "test:city": "node scripts/city-core-contract-smoke.mjs",
     "test:family": "node scripts/families-war-contract-smoke.mjs",
     "test:broker": "node scripts/live-brokerage-contract-smoke.mjs",
-    "test": "npm run test:economy && npm run test:casino && npm run test:account && npm run test:community && npm run test:city && npm run test:family && npm run test:broker",
+    "test:market": "node scripts/market-grind-contract-smoke.mjs",
+    "test": "npm run test:economy && npm run test:casino && npm run test:account && npm run test:community && npm run test:city && npm run test:family && npm run test:broker && npm run test:market",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"

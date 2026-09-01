@@ -3,6 +3,7 @@ const paths = {
   combat: "m5 19 14-14M7 5l12 12M4 4l4 1-3 3zm16 16-4-1 3-3z", gym: "M3 9h3v6H3zm15 0h3v6h-3zM7 7h3v10H7zm7 0h3v10h-3zM10 11h4v2h-4z",
   work: "M8 6V4h8v2h5v14H3V6zm2 0h4V5h-4zm-5 6h14V8H5zm6-2h2v2h-2z", missions: "m5 12 4 4L19 6l-2-2-8 8-2-2z",
   city: "M4 20V8l8-4 8 4v12h-5v-6H9v6zm5-10h2V8H9zm4 0h2V8h-2z", shop: "M5 8h14l-1 12H6zm3 0a4 4 0 0 1 8 0h-2a2 2 0 0 0-4 0z",
+  market: "M4 6h16M6 6l-3 6h6zm12 0-3 6h6zM12 3v17m-4 0h8", hustles: "M4 15c2-6 5-9 9-9h4l-2-2m2 2-2 2M20 9c-2 6-5 9-9 9H7l2 2m-2-2 2-2",
   bank: "M3 9 12 4l9 5v2H3zm2 4h2v5h2v-5h2v5h2v-5h2v5h2v-5h2v7H5z", hospital: "M9 4h6v5h5v6h-5v5H9v-5H4V9h5z",
   jail: "M5 3h14v18H5zm3 2H7v14h1zm5 0h-2v14h2zm4 0h-1v14h1z", property: "M3 11 12 3l9 8-2 2-1-1v9H6v-9l-1 1zm6 2v6h6v-6z",
   family: "M12 3 4 7v5c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V7zm0 4 2 4 4 .5-3 3 .8 4.5-3.8-2-3.8 2 .8-4.5-3-3 4-.5z",
