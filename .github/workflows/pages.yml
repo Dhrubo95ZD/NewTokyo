@@ -1,0 +1,36 @@
+name: Publish privacy and account deletion pages
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["release-site/**", ".github/workflows/pages.yml"]
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add public Supabase configuration
+        env:
+          PUBLIC_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          PUBLIC_ANON: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          printf 'globalThis.MORETTI_PUBLIC_CONFIG={supabaseUrl:%s,supabaseAnonKey:%s};\n' "$(printf %s "$PUBLIC_URL" | jq -Rs .)" "$(printf %s "$PUBLIC_ANON" | jq -Rs .)" > release-site/config.js
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: release-site
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

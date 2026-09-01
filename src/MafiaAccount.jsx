@@ -71,11 +71,20 @@ export default function MafiaAccount() {
   const signIn = async () => { setLoading(true); const native = Capacitor.isNativePlatform(); const { data, error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: native ? nativeRedirect : window.location.origin, skipBrowserRedirect: native } }); if (error) { setStatus(error.message); setLoading(false); return; } if (native && data?.url) await Browser.open({ url: data.url }); };
   const createCharacter = async profile => { setLoading(true); const role = roles.find(item => item.id === profile.role); const seed = { ...INITIAL, name: profile.codename, title: role.name, ...Object.fromEntries(Object.entries(role.bonus).map(([key, value]) => [key, INITIAL[key] + value])) }; const next = { schemaVersion: 5, core: { ...seed, money: seed.cash }, character: profile, meta: { createdAt: Date.now(), updatedAt: Date.now() } }; const { data: authority, error } = await supabase.rpc("bw_create_character", { p_name: profile.codename, p_role: profile.role, p_avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture || null }); if (error) { setStatus(`City backend upgrade required: ${error.message}`); setLoading(false); return; } setSave(next); setCharacter(profile); setPlayer(mergeAuthoritative(seed, authority)); setLoading(false); };
   const persistPlayer = useCallback(nextPlayer => { if (!user) return; clearTimeout(saveTimer.current); saveTimer.current = setTimeout(async () => { const next = { schemaVersion: 5, core: { ...nextPlayer, money: nextPlayer.cash, onlineUserId: user.id }, character, meta: { updatedAt: Date.now() } }; await supabase.from("player_saves").upsert({ user_id: user.id, save_data: next }); await supabase.rpc("sync_my_leaderboard"); await supabase.from("profiles").update({ last_seen_at: new Date().toISOString() }).eq("id", user.id); }, 650); }, [user?.id, character]);
+  const deleteAccount = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.functions.invoke("delete-account", { body: { confirmation: "DELETE" } });
+    if (error || !data?.deleted) { setLoading(false); return { error: data?.error || error?.message || "Account deletion failed" }; }
+    localStorage.removeItem("blackwood-city-save-v1");
+    await supabase.auth.signOut({ scope: "local" });
+    setLoading(false);
+    return { ok: true };
+  };
   if (!onlineConfigured) return <main className="account-gate"><section><span>M</span><small>BLACKWOOD CITY</small><h1>Connection required</h1><p>This Android build needs its existing Supabase configuration.</p></section></main>;
   if (booting || loading && user && !save) return <main className="account-gate"><section><span className="pulse">M</span><small>MORETTI FAMILY</small><h1>{status}</h1></section></main>;
   if (!user) return <main className="account-gate"><section><span>M</span><small>MORETTI · BLACKWOOD CITY</small><h1>Your name opens doors.</h1><p>Sign in to load your character, wallet, and family record from Supabase.</p><button onClick={signIn} disabled={loading}><b>G</b>{loading ? "Opening Google…" : "Continue with Google"}</button><em>One Google account · One cloud save</em></section></main>;
   if (!character && status.startsWith("City backend upgrade required")) return <main className="account-gate"><section><span>!</span><small>BLACKWOOD CITY CORE</small><h1>Database migration required</h1><p>{status}</p><button onClick={() => supabase.auth.signOut()}>Sign out</button></section></main>;
   if (!character) return <CharacterCreation user={user} busy={loading} onComplete={createCharacter} />;
   if (!player) return <main className="account-gate"><section><span className="pulse">M</span><h1>Loading your character…</h1></section></main>;
-  return <MafiaGame initialPlayer={player} character={character} user={user} onPlayerChange={persistPlayer} onSignOut={() => supabase.auth.signOut()} />;
+  return <MafiaGame initialPlayer={player} character={character} user={user} onPlayerChange={persistPlayer} onSignOut={() => supabase.auth.signOut()} onDeleteAccount={deleteAccount} />;
 }

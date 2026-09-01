@@ -1,0 +1,10 @@
+import { readFile, access } from "node:fs/promises";
+const root=new URL("../",import.meta.url);
+const read=path=>readFile(new URL(path,root),"utf8");
+const [account,game,community,safety,report,migration,edge,workflow,pages,gradle,privacy,deletion,listing]=await Promise.all([
+  read("src/MafiaAccount.jsx"),read("src/MafiaGame.jsx"),read("src/online/CommunityHub.jsx"),read("src/safety/SafetyHub.jsx"),read("src/safety/ReportButton.jsx"),read("supabase/20260914_play_release_safety.sql"),read("supabase/functions/delete-account/index.ts"),read(".github/workflows/main.yml"),read(".github/workflows/pages.yml"),read("android/app/build.gradle"),read("release-site/privacy.html"),read("release-site/delete-account.html"),read("play/listing/en-US/full-description.txt")
+]);
+const must=(value,needle,label)=>{if(!value.includes(needle))throw new Error(`${label}: missing ${needle}`)};
+must(account,'functions.invoke("delete-account"',"authenticated deletion UI");must(game,'Help & Safety',"safety navigation");must(community,'contentType="world_chat"',"chat reports");must(safety,'Permanently delete my account',"deletion confirmation");must(report,'bw_submit_report',"report API");must(migration,'bw_moderation_queue',"moderation queue");must(migration,'bw_mutes',"player mutes");must(edge,'auth.admin.deleteUser',"admin deletion");must(edge,'auth.getUser()',"JWT user verification");must(workflow,'bundleRelease',"Play bundle");must(workflow,'MORETTI_KEYSTORE_BASE64',"release signing");must(pages,'deploy-pages',"public policy deployment");must(gradle,'versionCode 14',"release version");must(privacy,'Privacy Policy',"privacy policy");must(deletion,'config.js',"web deletion configuration");must(listing,'Ledger Credits have no cash value',"store disclosure");
+await Promise.all([access(new URL("play/data-safety.md",root)),access(new URL("play/graphics/app-icon-512.png",root)),access(new URL("play/graphics/feature-graphic-1024x500.png",root))]);
+console.log("Google Play safety, policy, signing and deletion release contracts passed");

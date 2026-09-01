@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android APK and Play AAB
 
 on:
   workflow_dispatch:
@@ -11,6 +11,10 @@ jobs:
     env:
       VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
       VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      MORETTI_KEYSTORE_PASSWORD: ${{ secrets.MORETTI_KEYSTORE_PASSWORD }}
+      MORETTI_KEY_ALIAS: ${{ secrets.MORETTI_KEY_ALIAS }}
+      MORETTI_KEY_PASSWORD: ${{ secrets.MORETTI_KEY_PASSWORD }}
+      HAS_SIGNING: ${{ secrets.MORETTI_KEYSTORE_BASE64 != '' }}
 
     steps:
       - name: Check out project
@@ -41,9 +45,27 @@ jobs:
       - name: Build debug APK
         working-directory: android
         run: ./gradlew assembleDebug
+      - name: Restore Play upload keystore
+        if: env.HAS_SIGNING == 'true'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.MORETTI_KEYSTORE_BASE64 }}
+        run: echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/moretti-upload.jks"
+      - name: Build signed Play bundle
+        if: env.HAS_SIGNING == 'true'
+        working-directory: android
+        env:
+          MORETTI_KEYSTORE_PATH: ${{ runner.temp }}/moretti-upload.jks
+        run: ./gradlew bundleRelease
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: moretti-blackwood-city-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+      - name: Upload signed Play bundle
+        if: env.HAS_SIGNING == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: moretti-blackwood-city-play-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error

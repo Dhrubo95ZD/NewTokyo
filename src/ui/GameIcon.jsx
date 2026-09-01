@@ -14,6 +14,7 @@ const paths = {
   awards: "m12 3 2.7 5.5 6 .9-4.4 4.3 1 6.1-5.3-2.9-5.3 2.9 1-6.1L3.3 9.4l6-.9z", inventory: "M4 7h16v14H4zm3-4h10l2 4H5zm2 8h6v2H9z",
   catalogue: "M5 3h13a2 2 0 0 1 2 2v16H7a3 3 0 0 1-3-3V4m3 14h13M8 7h8M8 11h6",
   arcade: "M5 7h14l3 12h-5l-2-3H9l-2 3H2zm4 3H7v2H5v2h2v2h2v-2h2v-2H9zm7 2h2v2h-2z", economy: "M3 18 8 12l4 3 7-9 2 2-9 11-4-3-3 4z",
-  adviser: "M12 2a8 8 0 0 1 5 14.2V21H7v-4.8A8 8 0 0 1 12 2m-3 8h2V8H9zm4 0h2V8h-2zm-4 4h6v-2H9z"
+  adviser: "M12 2a8 8 0 0 1 5 14.2V21H7v-4.8A8 8 0 0 1 12 2m-3 8h2V8H9zm4 0h2V8h-2zm-4 4h6v-2H9z",
+  safety: "M12 3 4 7v5c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V7zm-3 9 2 2 4-5"
 };
 export default function GameIcon({ name, size = 20 }) { return <svg aria-hidden="true" viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d={paths[name] || paths.city}/></svg>; }
