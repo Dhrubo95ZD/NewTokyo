@@ -12,15 +12,15 @@ A persistent online crime RPG built with React, Vite, Capacitor and Supabase for
 - Six professions with three-question interviews, position ladders, work stats, timed shifts and specials
 - Missions, claimable rewards, awards and authoritative Hall of Fame data
 - Shared Exchange wallet, protected bank balance, shops and server inventory
-- Eight server-owned equipment slots with combat bonuses and a 200-piece mafia equipment catalog
+- Eight server-owned equipment slots with combat bonuses, a visual searchable Item Catalogue and transparent acquisition odds
 - Twelve drop-only rare, epic and legendary relics with lucky first-win drops plus a guaranteed no-energy Intel grind
 - Seven-step guided tutorial persisted to each player account
 - Purchasable properties with happiness and vault progression
 - World chat, private mail, forums, player directory and real families
 - Family headquarters with applications, officer permissions, private/war chat, activity records, shared vault and armory
 - Real-member organized crimes, attack chains, ranked family wars and twelve income-producing territories
-- Rossi's Casino: server-settled blackjack, slots and single-zero European roulette
-- Prime FX brokerage accounts with 1:500/1:1000 leverage, lot-based orders, SL/TP, margin controls, live candlestick charts, Forex, XAU/USD and XAG/USD
+- Rossi's Casino: server-settled blackjack, slots and single-zero European roulette using play-earned Ledger Credits
+- Prime FX Ledger Credit accounts with 1:500/1:1000 leverage, lot-based orders, SL/TP, margin controls, live candlestick charts, Forex, XAU/USD and XAG/USD
 - Free account-aware Consigliere with direct links to recommended activities
 - Living City visual system with an animated skyline, illustrated district map, rarity effects, page transitions and a five-action safe-area mobile dock
 
@@ -67,8 +67,14 @@ Apply the migrations once to the existing Supabase project, in this order:
 12. `supabase/20260909_live_floating_pnl.sql`
 13. `supabase/20260910_blackwood_market_grind.sql`
 14. `supabase/20260911_combat_contracts_relics.sql`
+15. `supabase/20260912_item_catalogue_release_cleanup.sql`
+16. `supabase/20260913_ledger_credits.sql`
 
 The city-core migration installs the connected world, RLS policies, real families and authoritative ranking adapter. Later migrations add the catalog, tutorial, casino, Forex economy, careers and Families 2.0. The reset script is separate because it must run only once.
+
+Ledger Credits (`LC`) are isolated from dollar cash. They start with a one-time play balance, are earned by city actions, and are used by casino and Forex. There is deliberately no LC purchase, dollar-conversion or cash-out function.
+
+See [`docs/GOOGLE_PLAY_RELEASE_CHECKLIST.md`](docs/GOOGLE_PLAY_RELEASE_CHECKLIST.md) before moving from tester APKs to a Play Store production release.
 
 Google authentication must be enabled in Supabase. Web and Android OAuth callbacks are both supported. Never put a service-role key in the app or in a `VITE_` environment variable.
 

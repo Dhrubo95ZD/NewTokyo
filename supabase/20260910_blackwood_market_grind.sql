@@ -297,9 +297,9 @@ begin
     ),
     'activities', jsonb_build_array(
       jsonb_build_object('id','dock_courier','name','Dockside Courier','district','Harbor','description','Move sealed parcels between warehouses. Low heat, steady pay.','cashMin',40,'cashMax',80,'heatGain',2,'lootChance',3),
-      jsonb_build_object('id','backroom_cards','name','Backroom Card Runner','district','Little Italy','description','Carry markers and settle private-table tabs. Higher heat, better pay.','cashMin',65,'cashMax',145,'heatGain',5,'lootChance',3),
+      jsonb_build_object('id','backroom_cards','name','Backroom Ledger Courier','district','Little Italy','description','Carry sealed ledgers and settle private invoices. Higher heat, better pay.','cashMin',65,'cashMax',145,'heatGain',5,'lootChance',3),
       jsonb_build_object('id','garage_parts','name','Garage Parts Sort','district','Southside','description','Strip useful parts and identify valuable equipment. Best loot chance.','cashMin',45,'cashMax',105,'heatGain',3,'lootChance',8),
-      jsonb_build_object('id','information','name','Street Information','district','Downtown','description','Trade rumors between bartenders, drivers and doormen. Slowest heat build.','cashMin',30,'cashMax',70,'heatGain',1,'lootChance',2)
+      jsonb_build_object('id','information','name','Street Information','district','Downtown','description','Trade rumors between shopkeepers, drivers and doormen. Slowest heat build.','cashMin',30,'cashMax',70,'heatGain',1,'lootChance',2)
     ),
     'recent', coalesce((
       select jsonb_agg(result.payload order by result.created_at desc)

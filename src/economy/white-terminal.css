@@ -221,3 +221,4 @@
 .chart-empty b {
   color: #302821;
 }
+.economy-page .virtual-currency-notice,.broker-onboarding .virtual-currency-notice{display:flex;align-items:center;gap:14px;margin-top:14px;padding:11px 14px;border:1px solid #c5a37f;background:#fff9ed;color:#30241c;font:12px/1.35 Arial,sans-serif}.economy-page .virtual-currency-notice b,.broker-onboarding .virtual-currency-notice b{color:#8b542f;letter-spacing:.12em;white-space:nowrap}.economy-page .virtual-currency-notice span,.broker-onboarding .virtual-currency-notice span{color:#66594f}

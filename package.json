@@ -16,7 +16,8 @@
     "test:market": "node scripts/market-grind-contract-smoke.mjs",
     "test:combat": "node scripts/combat-relic-contract-smoke.mjs",
     "test:visual": "node scripts/living-city-ui-smoke.mjs",
-    "test": "npm run test:economy && npm run test:casino && npm run test:account && npm run test:community && npm run test:city && npm run test:family && npm run test:broker && npm run test:market && npm run test:combat && npm run test:visual",
+    "test:catalogue": "node scripts/item-catalogue-release-smoke.mjs",
+    "test": "npm run test:economy && npm run test:casino && npm run test:account && npm run test:community && npm run test:city && npm run test:family && npm run test:broker && npm run test:market && npm run test:combat && npm run test:visual && npm run test:catalogue",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"

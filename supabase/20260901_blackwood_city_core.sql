@@ -34,11 +34,11 @@ insert into public.bw_crimes(id,name,category,nerve_cost,skill_required,base_cha
 ('cash-trash','Search the train depot','Theft',2,1,94,45,140,4,45,'Search unattended platforms and lockers for loose cash.',1),
 ('shoplift','Lift from a corner store','Theft',3,2,88,120,360,7,75,'Pocket small goods while the clerk is distracted.',2),
 ('pickpocket','Work the theatre crowd','Theft',4,4,81,260,700,11,100,'Choose a mark in the evening crowd and take their wallet.',3),
-('bootleg','Move bootleg bourbon','Counterfeiting',5,6,76,500,1200,16,140,'Move unlicensed bottles through a friendly speakeasy.',4),
+('bootleg','Move untaxed luxury tea','Smuggling',5,6,76,500,1200,16,140,'Move sealed tea crates through a friendly warehouse.',4),
 ('numbers','Run a numbers slip','Fraud',6,8,71,850,1900,22,180,'Collect street bets without drawing the vice squad.',5),
 ('burglary','Burgle a townhouse','Theft',7,11,65,1400,3300,30,240,'Enter quietly, find the safe, and leave no witnesses.',6),
 ('graffiti','Mark rival territory','Vandalism',8,14,61,1900,4100,38,300,'Send a message on a wall the whole neighborhood can see.',7),
-('skimming','Skim nightclub cards','Fraud',9,17,57,2700,6200,48,360,'Install a skimmer during the club rush and retrieve it unseen.',8),
+('skimming','Clone event-hall passes','Fraud',9,17,57,2700,6200,48,360,'Copy access passes during a crowded exhibition and leave unseen.',8),
 ('autotheft','Steal a luxury sedan','Auto Theft',10,20,53,4200,9000,62,450,'Lift a high-value car and deliver it to the chop shop.',9),
 ('arson','Burn a rival warehouse','Arson',12,25,47,7500,15000,80,600,'Destroy a rival shipment without being caught in the blaze.',10),
 ('hijack','Hijack a cargo truck','Organized Crime',14,31,42,12000,26000,105,780,'Take a guarded truck before it reaches the waterfront.',11),
@@ -52,7 +52,7 @@ create table if not exists public.bw_jobs (
 insert into public.bw_jobs values
 ('dockhand','Dock Hand','Blackwood & Sons Shipping',1,900,8,3,'Unload legitimate freight and learn which crates never enter the ledger.',1),
 ('bookkeeper','Bookkeeper','Blackwood & Sons Shipping',3,1850,10,5,'Balance manifests and smooth over discrepancies.',2),
-('bouncer','Club Bouncer','The Gilded Room',6,3200,12,7,'Keep trouble outside and important people unobserved.',3),
+('bouncer','Venue Steward','The Gilded Hall',6,3200,12,7,'Keep the exhibition hall orderly and its guests protected.',3),
 ('detective','Private Detective','Bell & Ward Agency',10,5200,14,9,'Find people who would prefer to remain missing.',4),
 ('attorney','Defense Attorney','Moretti, Vale & Cross',15,8500,16,12,'Keep clients out of jail and inconvenient evidence out of court.',5)
 on conflict(id) do update set name=excluded.name,company=excluded.company,level_required=excluded.level_required,pay=excluded.pay,energy_cost=excluded.energy_cost,points=excluded.points,description=excluded.description,sort_order=excluded.sort_order;
@@ -67,8 +67,8 @@ insert into public.bw_items values
 ('service-revolver','Service Revolver','weapon',9500,28,'A dependable sidearm with a questionable history.',false),
 ('tailored-vest','Tailored Protective Vest','armor',3800,12,'Protection sewn beneath a respectable suit.',false),
 ('first-aid','First Aid Kit','medical',650,120,'Restores 120 health when used.',true),
-('morphine','Morphine Ampoule','medical',2400,300,'Restores 300 health when used.',true),
-('bourbon','Bottle of Bourbon','booster',420,35,'Restores 35 happiness.',true),
+('morphine','Emergency Med Injector','medical',2400,300,'A regulated emergency aid that restores 300 health.',true),
+('bourbon','Blackwood Malt Tonic','booster',420,35,'An alcohol-free malt tonic that restores 35 happiness.',true),
 ('cannoli','Box of Cannoli','booster',280,25,'Restores 25 happiness.',true)
 on conflict(id) do update set name=excluded.name,kind=excluded.kind,price=excluded.price,power=excluded.power,description=excluded.description,usable=excluded.usable;
 

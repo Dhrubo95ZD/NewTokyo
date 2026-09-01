@@ -12,6 +12,7 @@ const paths = {
   social: "M12 21s-8-4.8-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6.2-8 11-8 11", mail: "M3 5h18v14H3zm2 2 7 6 7-6",
   forums: "M4 4h16v11H9l-5 4zm4 4h8v2H8zm0 4h6v2H8z", rankings: "M5 4h14v3c0 4-2 6-5 7v2h3v2H7v-2h3v-2c-3-1-5-3-5-7zm-3 2h3v2H2zm17 0h3v6h-3z",
   awards: "m12 3 2.7 5.5 6 .9-4.4 4.3 1 6.1-5.3-2.9-5.3 2.9 1-6.1L3.3 9.4l6-.9z", inventory: "M4 7h16v14H4zm3-4h10l2 4H5zm2 8h6v2H9z",
+  catalogue: "M5 3h13a2 2 0 0 1 2 2v16H7a3 3 0 0 1-3-3V4m3 14h13M8 7h8M8 11h6",
   arcade: "M5 7h14l3 12h-5l-2-3H9l-2 3H2zm4 3H7v2H5v2h2v2h2v-2h2v-2H9zm7 2h2v2h-2z", economy: "M3 18 8 12l4 3 7-9 2 2-9 11-4-3-3 4z",
   adviser: "M12 2a8 8 0 0 1 5 14.2V21H7v-4.8A8 8 0 0 1 12 2m-3 8h2V8H9zm4 0h2V8h-2zm-4 4h6v-2H9z"
 };
