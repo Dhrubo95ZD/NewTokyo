@@ -4,6 +4,7 @@ import { InventoryEquipment, ItemShop } from "./InventoryEquipment.jsx";
 import JobCenter from "../jobs/JobCenter.jsx";
 import MarketHub from "../market/MarketHub.jsx";
 import HustleHub from "../hustles/HustleHub.jsx";
+import CombatHub from "../combat/CombatHub.jsx";
 import "./city-core.css";
 import "../market/market-grind.css";
 
@@ -35,7 +36,7 @@ function Meter({ value, max }) { return <figure className="core-meter"><i style=
 export default function CityCoreHub({ initialTab, user, onState }) {
   const [data, setData] = useState(null), [loadout, setLoadout] = useState({ equipment: [], bonuses: {} }), [directory, setDirectory] = useState([]), [mail, setMail] = useState([]), [forums, setForums] = useState({ threads: [], posts: [] });
   const [busy, setBusy] = useState(false), [error, setError] = useState(""), [notice, setNotice] = useState(""), [selectedThread, setSelectedThread] = useState(null);
-  const [amount, setAmount] = useState(1000), [attackMode, setAttackMode] = useState("leave"), [recipient, setRecipient] = useState(""), [subject, setSubject] = useState(""), [message, setMessage] = useState("");
+  const [amount, setAmount] = useState(1000), [recipient, setRecipient] = useState(""), [subject, setSubject] = useState(""), [message, setMessage] = useState("");
   const [threadTitle, setThreadTitle] = useState(""), [threadBody, setThreadBody] = useState(""), [threadCategory, setThreadCategory] = useState("general"), [reply, setReply] = useState("");
   const heading = CORE_TABS[initialTab] || CORE_TABS.crimes;
   const player = data?.player;
@@ -47,7 +48,7 @@ export default function CityCoreHub({ initialTab, user, onState }) {
   const loadForums = useCallback(async thread => { const { data: value, error: loadError } = await supabase.rpc("bw_get_forums", { p_thread: thread || null }); if (loadError) setError(loadError.message); else setForums(value || { threads: [], posts: [] }); }, []);
 
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { if (["combat", "hospital", "jail", "social", "mail"].includes(initialTab)) loadDirectory(); if (initialTab === "mail") loadMail(); if (initialTab === "forums") loadForums(selectedThread); }, [initialTab, selectedThread, loadDirectory, loadMail, loadForums]);
+  useEffect(() => { if (["hospital", "jail", "social", "mail"].includes(initialTab)) loadDirectory(); if (initialTab === "mail") loadMail(); if (initialTab === "forums") loadForums(selectedThread); }, [initialTab, selectedThread, loadDirectory, loadMail, loadForums]);
 
   const act = async (rpc, params = {}, success = "City record updated.", loader) => { if (busy) return; setBusy(true); setError(""); setNotice(""); const { data: value, error: actionError } = await supabase.rpc(rpc, params); if (actionError) setError(actionError.message); else { acceptState(value); setNotice(success); if (loader) await loader(value); } setBusy(false); };
   const opponents = useMemo(() => directory.filter(item => item.id !== user.id), [directory, user.id]);
@@ -59,7 +60,7 @@ export default function CityCoreHub({ initialTab, user, onState }) {
   return <><PageHeading heading={heading} status={player.status} />{error && <div className="core-alert bad">{error}<button onClick={() => setError("")}>×</button></div>}{notice && <div className="core-alert good">{notice}<button onClick={() => setNotice("")}>×</button></div>}<section className="core-shell">
     {initialTab === "crimes" && <div className="core-crimes"><header><span><small>AVAILABLE NERVE</small><b>{player.nerve}/{player.max_nerve}</b></span><div><small>CRIME SKILL</small><b>{player.crime_skill}</b></div></header>{data.crimes.map(crime => { const locked = player.crime_skill < crime.skill_required; const chance = Math.min(96, Math.max(8, crime.base_chance + (player.crime_skill - crime.skill_required) * .7)); return <article className={locked ? "locked" : ""} key={crime.id}><i>{String(crime.sort_order).padStart(2, "0")}</i><div><small>{crime.category}</small><b>{crime.name}</b><p>{crime.description}</p></div><span><small>SUCCESS</small><b>{Math.round(chance)}%</b><Meter value={chance} max={100} /></span><em><small>TAKE</small><b>{money(crime.reward_min)}–{money(crime.reward_max)}</b><small>{crime.nerve_cost} nerve</small></em><button disabled={busy || locked || player.nerve < crime.nerve_cost || player.status !== "okay"} onClick={() => act("bw_do_crime", { p_crime_id: crime.id }, `Attempted ${crime.name}.`)}>{locked ? `Skill ${crime.skill_required}` : "Do crime"}</button></article>; })}</div>}
 
-    {initialTab === "combat" && <div className="core-combat"><header className="core-tools"><div><small>VICTORY RECORD</small><b>{player.fights_won} wins · {player.fights_lost} losses</b></div><select value={attackMode} onChange={event => setAttackMode(event.target.value)}><option value="leave">Leave defeated</option><option value="mug">Mug for cash</option><option value="hospitalize">Hospitalize</option></select><button onClick={loadDirectory}>Refresh players</button></header>{opponents.length === 0 ? <Empty title="No opponents available" text="Another authenticated player must create a character before combat is possible." /> : <div className="opponent-list">{opponents.map(target => <article key={target.id}><Avatar name={target.name} /><div><b>{target.name}</b><small>Level {target.level} · {target.respect} respect</small></div><Status player={target} /><button disabled={busy || player.energy < 25 || player.status !== "okay" || target.status !== "okay"} onClick={() => act("bw_attack", { p_target: target.id, p_outcome: attackMode }, `Attack against ${target.name} resolved.`, loadDirectory)}>Attack · 25E</button></article>)}</div>}</div>}
+    {initialTab === "combat" && <CombatHub onState={onState} />}
 
     {initialTab === "gym" && <div className="core-gym"><header><span><small>AVAILABLE ENERGY</small><b>{player.energy}/{player.max_energy}</b></span><p>Each repetition costs 5 energy. Gains scale with current happiness.</p></header><div>{[["strength","Strength","Damage dealt"],["defense","Defense","Damage resisted"],["speed","Speed","Hit probability"],["dexterity","Dexterity","Evasion probability"]].map(([id,name,desc]) => <article key={id}><small>{id.slice(0,3).toUpperCase()}</small><b>{name}</b><strong>{Number(player[id]).toFixed(2)}</strong><p>{desc}</p><button disabled={busy || player.energy < 5 || player.status !== "okay"} onClick={() => act("bw_train", { p_stat: id, p_reps: 1 }, `${name} training recorded.`)}>Train ×1</button></article>)}</div></div>}
 

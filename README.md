@@ -6,13 +6,14 @@ A persistent online crime RPG built with React, Vite, Capacitor and Supabase for
 
 - Google login, character creation and authoritative cloud state
 - Twelve-tier crime ladder with skill progression, server rolls and persistent jail consequences
-- Real-player combat with leave, mug and hospitalize outcomes plus 24-hour new-player protection
+- Server-authoritative real-player combat with daily contracts, escrowed bounties, attack protection, anti-farming rewards and persistent fight logs
 - Persistent hospital/jail registers, attack records, friends, enemies, targets and blocks
 - Four-stat gym with server-controlled energy and happiness-scaled gains
 - Six professions with three-question interviews, position ladders, work stats, timed shifts and specials
 - Missions, claimable rewards, awards and authoritative Hall of Fame data
 - Shared Exchange wallet, protected bank balance, shops and server inventory
 - Eight server-owned equipment slots with combat bonuses and a 200-piece mafia equipment catalog
+- Twelve drop-only rare, epic and legendary relics with lucky first-win drops plus a guaranteed no-energy Intel grind
 - Seven-step guided tutorial persisted to each player account
 - Purchasable properties with happiness and vault progression
 - World chat, private mail, forums, player directory and real families
@@ -64,6 +65,7 @@ Apply the migrations once to the existing Supabase project, in this order:
 11. `supabase/20260908_world_chat_hotfix.sql`
 12. `supabase/20260909_live_floating_pnl.sql`
 13. `supabase/20260910_blackwood_market_grind.sql`
+14. `supabase/20260911_combat_contracts_relics.sql`
 
 The city-core migration installs the connected world, RLS policies, real families and authoritative ranking adapter. Later migrations add the catalog, tutorial, casino, Forex economy, careers and Families 2.0. The reset script is separate because it must run only once.
 
