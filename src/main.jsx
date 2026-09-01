@@ -4,6 +4,7 @@ import MafiaAccount from "./MafiaAccount.jsx";
 import "./mafia.css";
 import "./bright-theme.css";
 import "./mobile-trading-fixes.css";
+import "./living-city.css";
 
 class CrashScreen extends React.Component {
   constructor(props) {
