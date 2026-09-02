@@ -25,7 +25,7 @@ export const INITIAL = {
   ],
 };
 
-const NAV = [["home", "Overview"], ["crimes", "Crimes"], ["hustles", "Street Work"], ["combat", "Attack"], ["gym", "Gym"], ["work", "Jobs"], ["missions", "Missions"], ["economy", "Economy"], ["arcade", "Casino"], ["city", "City"], ["catalogue", "Item Catalogue"], ["shop", "Shops"], ["market", "Player Market"], ["bank", "Bank"], ["hospital", "Hospital"], ["jail", "Jail"], ["property", "Properties"], ["family", "Family"], ["chat", "World Chat"], ["players", "Players"], ["social", "Contacts"], ["mail", "Messages"], ["forums", "Forums"], ["rankings", "Rankings"], ["awards", "Awards"], ["inventory", "Inventory"], ["safety", "Help & Safety"]];
+const NAV = [["home", "Overview"], ["missions", "Campaign"], ["crimes", "Crimes"], ["hustles", "Street Work"], ["combat", "Attack"], ["gym", "Gym"], ["work", "Jobs"], ["economy", "Economy"], ["arcade", "Casino"], ["city", "City"], ["catalogue", "Item Catalogue"], ["shop", "Shops"], ["market", "Player Market"], ["bank", "Bank"], ["hospital", "Hospital"], ["jail", "Jail"], ["property", "Properties"], ["family", "Family"], ["chat", "World Chat"], ["players", "Players"], ["social", "Contacts"], ["mail", "Messages"], ["forums", "Forums"], ["rankings", "Rankings"], ["awards", "Awards"], ["inventory", "Inventory"], ["safety", "Help & Safety"]];
 const PLACES = [
   ["economy", "Federal Trust FX", "TRADING FLOOR", "Live markets and banking careers.", "economy", "Financial Ward", 65, 18],
   ["arcade", "Rossi's Casino", "GAMES & WAGERS", "Blackjack, slots and European roulette.", "arcade", "Velvet Row", 79, 43],

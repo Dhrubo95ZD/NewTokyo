@@ -6,6 +6,7 @@ import MarketHub from "../market/MarketHub.jsx";
 import HustleHub from "../hustles/HustleHub.jsx";
 import CombatHub from "../combat/CombatHub.jsx";
 import ItemCatalogue from "../catalogue/ItemCatalogue.jsx";
+import ProgressionHub from "../progression/ProgressionHub.jsx";
 import ReportButton from "../safety/ReportButton.jsx";
 import "./city-core.css";
 import "../market/market-grind.css";
@@ -18,7 +19,7 @@ const CORE_TABS = {
   combat: ["THE STREETS", "Attack", "Choose a real player. Wins, losses and hospital time persist online."],
   gym: ["NORTHSIDE ATHLETIC CLUB", "Gym", "Build battle stats with server-controlled energy."],
   work: ["EMPLOYMENT OFFICE", "Jobs", "Take a position, earn job points and work timed shifts."],
-  missions: ["CONTRACT DESK", "Missions", "Long-term objectives with claimable rewards."],
+  missions: ["THE MORETTI LEDGER", "Campaign & Progression", "Story chapters, faction assignments and permanent city standing."],
   bank: ["FEDERAL TRUST", "Bank", "Move money between your wallet and protected account."],
   hospital: ["ST. MERCY", "Hospital", "Players recovering from fights and critical failures."],
   jail: ["BLACKWOOD COUNTY", "Jail", "Players currently serving crime sentences."],
@@ -69,7 +70,7 @@ export default function CityCoreHub({ initialTab, user, onState }) {
 
     {initialTab === "work" && <JobCenter onState={onState} />}
 
-    {initialTab === "missions" && <div className="mission-list">{data.missions.map(mission => <article key={mission.id}><i>{mission.claimedAt ? "✓" : "◆"}</i><div><small>CONTRACT</small><b>{mission.name}</b><p>{mission.description}</p><Meter value={mission.progress} max={mission.target} /><em>{mission.progress}/{mission.target}</em></div><span><b>{money(mission.cash_reward)}</b><small>{mission.xp_reward} XP · {mission.merit_reward} merit</small><button disabled={busy || mission.claimedAt || mission.progress < mission.target} onClick={() => act("bw_claim_mission", { p_mission_id: mission.id }, `${mission.name} claimed.`)}>{mission.claimedAt ? "Claimed" : "Claim"}</button></span></article>)}</div>}
+    {initialTab === "missions" && <ProgressionHub onState={onState} />}
 
     {initialTab === "bank" && <div className="core-bank"><div className="bank-balances"><article><small>ON HAND</small><b>{money(player.cash)}</b><p>Available for crimes, purchases and mugging.</p></article><article><small>PROTECTED ACCOUNT</small><b>{money(player.bank)}</b><p>Safe from player attacks.</p></article></div><div className="bank-transfer"><label>Transfer amount<input type="number" min="1" value={amount} onChange={event => setAmount(Math.max(1, Number(event.target.value)))} /></label><button disabled={busy || amount > player.cash} onClick={() => act("bw_bank_transfer", { p_direction: "deposit", p_amount: amount }, "Deposit completed.")}>Deposit</button><button disabled={busy || amount > player.bank} onClick={() => act("bw_bank_transfer", { p_direction: "withdraw", p_amount: amount }, "Withdrawal completed.")}>Withdraw</button></div></div>}
 
