@@ -25,10 +25,11 @@ export const INITIAL = {
   ],
 };
 
-const NAV = [["home", "Overview"], ["missions", "Campaign"], ["crimes", "Crimes"], ["hustles", "Street Work"], ["combat", "Attack"], ["gym", "Gym"], ["work", "Jobs"], ["economy", "Economy"], ["arcade", "Casino"], ["city", "City"], ["catalogue", "Item Catalogue"], ["shop", "Shops"], ["market", "Player Market"], ["bank", "Bank"], ["hospital", "Hospital"], ["jail", "Jail"], ["property", "Properties"], ["family", "Family"], ["chat", "World Chat"], ["players", "Players"], ["social", "Contacts"], ["mail", "Messages"], ["forums", "Forums"], ["rankings", "Rankings"], ["awards", "Awards"], ["inventory", "Inventory"], ["safety", "Help & Safety"]];
+const NAV = [["home", "Overview"], ["missions", "Campaign"], ["operations", "District Operations"], ["crimes", "Crimes"], ["hustles", "Street Work"], ["combat", "Attack"], ["gym", "Gym"], ["work", "Jobs"], ["economy", "Economy"], ["arcade", "Arcade"], ["city", "City"], ["catalogue", "Item Catalogue"], ["shop", "Shops"], ["market", "Player Market"], ["bank", "Bank"], ["hospital", "Hospital"], ["jail", "Jail"], ["property", "Properties"], ["family", "Family"], ["chat", "World Chat"], ["players", "Players"], ["social", "Contacts"], ["mail", "Messages"], ["forums", "Forums"], ["rankings", "Rankings"], ["awards", "Awards"], ["inventory", "Inventory"], ["safety", "Help & Safety"]];
 const PLACES = [
   ["economy", "Federal Trust FX", "TRADING FLOOR", "Live markets and banking careers.", "economy", "Financial Ward", 65, 18],
-  ["arcade", "Rossi's Casino", "GAMES & WAGERS", "Blackjack, slots and European roulette.", "arcade", "Velvet Row", 79, 43],
+  ["arcade", "Rossi's Arcade", "RECREATION HALL", "Three server-settled play-credit games.", "arcade", "Velvet Row", 79, 43],
+  ["operations", "Field Office", "DISTRICT OPERATIONS", "Multi-stage PvE, mastery and rare finds.", "operations", "Old Quarter", 86, 67],
   ["hustles", "Street Work", "OPEN ALL NIGHT", "No-energy work, mastery and hidden caches.", "hustles", "The Narrows", 44, 53],
   ["market", "Blackwood Exchange", "PLAYER MARKET", "Equipment listed by real players.", "market", "Old Market", 56, 72],
   ["catalogue", "The Collection", "ITEM ARCHIVE", "Every item, stat and verified drop chance.", "catalogue", "Museum Row", 68, 67],
@@ -74,7 +75,7 @@ export default function MafiaGame({ initialPlayer = null, character = null, user
   const flash = (text, tone = "good") => { setNotice({ text, tone }); setTimeout(() => setNotice(null), 3200); };
   const syncWallet = useCallback(cash => setP(x => ({ ...x, cash })), []);
   const syncCore = useCallback(core => core && setP(x => ({ ...x, level: core.level, xp: core.xp, cash: core.cash, bank: core.bank, energy: core.energy, maxEnergy: core.max_energy, nerve: core.nerve, maxNerve: core.max_nerve, health: core.health, maxHealth: core.max_health, happy: core.happy, maxHappy: core.max_happy, strength: Number(core.strength), defense: Number(core.defense), speed: Number(core.speed), dexterity: Number(core.dexterity), crimeSkill: core.crime_skill, respect: core.respect, merits: core.merits, jobPoints: core.job_points, tutorialStep: core.tutorial_step ?? x.tutorialStep, tutorialDone: core.tutorial_done ?? x.tutorialDone })), []);
-  const serverPages = ["crimes", "hustles", "combat", "gym", "work", "missions", "catalogue", "shop", "market", "bank", "hospital", "jail", "property", "social", "mail", "forums", "awards", "inventory"];
+  const serverPages = ["crimes", "hustles", "operations", "combat", "gym", "work", "missions", "catalogue", "shop", "market", "bank", "hospital", "jail", "property", "social", "mail", "forums", "awards", "inventory"];
   const content = serverPages.includes(page) ? <CityCoreHub initialTab={page} user={user} onState={syncCore} /> : { home: <Overview p={p} go={setPage} />, city: <City go={setPage} />, family: <CommunityHub user={user} initialTab="families" />, chat: <CommunityHub user={user} initialTab="chat" />, players: <CommunityHub user={user} initialTab="players" />, rankings: <CommunityHub user={user} initialTab="rankings" />, economy: <EconomyHub onWalletChange={syncWallet}/>, arcade: <CasinoHub onWalletChange={syncWallet}/>, safety: <SafetyHub onDeleteAccount={onDeleteAccount}/> }[page];
   const initials = (character?.codename || p.name).split(/\s+/).map(x => x[0]).join("").slice(0, 2).toUpperCase();
   const navigate=next=>{setPage(next);setMenu(false);setAccountOpen(false);window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})};

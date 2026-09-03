@@ -7,6 +7,7 @@ import HustleHub from "../hustles/HustleHub.jsx";
 import CombatHub from "../combat/CombatHub.jsx";
 import ItemCatalogue from "../catalogue/ItemCatalogue.jsx";
 import ProgressionHub from "../progression/ProgressionHub.jsx";
+import DistrictOperations from "../operations/DistrictOperations.jsx";
 import ReportButton from "../safety/ReportButton.jsx";
 import "./city-core.css";
 import "../market/market-grind.css";
@@ -20,6 +21,7 @@ const CORE_TABS = {
   gym: ["NORTHSIDE ATHLETIC CLUB", "Gym", "Build battle stats with server-controlled energy."],
   work: ["EMPLOYMENT OFFICE", "Jobs", "Take a position, earn job points and work timed shifts."],
   missions: ["THE MORETTI LEDGER", "Campaign & Progression", "Story chapters, faction assignments and permanent city standing."],
+  operations: ["BLACKWOOD FIELD OFFICE", "District Operations", "No-energy, multi-stage PvE work with district heat, mastery and rare finds."],
   bank: ["FEDERAL TRUST", "Bank", "Move money between your wallet and protected account."],
   hospital: ["ST. MERCY", "Hospital", "Players recovering from fights and critical failures."],
   jail: ["BLACKWOOD COUNTY", "Jail", "Players currently serving crime sentences."],
@@ -71,6 +73,7 @@ export default function CityCoreHub({ initialTab, user, onState }) {
     {initialTab === "work" && <JobCenter onState={onState} />}
 
     {initialTab === "missions" && <ProgressionHub onState={onState} />}
+    {initialTab === "operations" && <DistrictOperations onState={onState} />}
 
     {initialTab === "bank" && <div className="core-bank"><div className="bank-balances"><article><small>ON HAND</small><b>{money(player.cash)}</b><p>Available for crimes, purchases and mugging.</p></article><article><small>PROTECTED ACCOUNT</small><b>{money(player.bank)}</b><p>Safe from player attacks.</p></article></div><div className="bank-transfer"><label>Transfer amount<input type="number" min="1" value={amount} onChange={event => setAmount(Math.max(1, Number(event.target.value)))} /></label><button disabled={busy || amount > player.cash} onClick={() => act("bw_bank_transfer", { p_direction: "deposit", p_amount: amount }, "Deposit completed.")}>Deposit</button><button disabled={busy || amount > player.bank} onClick={() => act("bw_bank_transfer", { p_direction: "withdraw", p_amount: amount }, "Withdrawal completed.")}>Withdraw</button></div></div>}
 

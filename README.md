@@ -21,7 +21,7 @@ A persistent online crime RPG built with React, Vite, Capacitor and Supabase for
 - World chat, private mail, forums, player directory and real families
 - Family headquarters with applications, officer permissions, private/war chat, activity records, shared vault and armory
 - Real-member organized crimes, attack chains, ranked family wars and twelve income-producing territories
-- Rossi's Casino: server-settled blackjack, slots and single-zero European roulette using play-earned Ledger Credits
+- Rossi's Arcade: three server-settled recreation games using play-earned Ledger Credits
 - Prime FX Ledger Credit accounts with 1:500/1:1000 leverage, lot-based orders, SL/TP, margin controls, live candlestick charts, Forex, XAU/USD and XAG/USD
 - Free account-aware Consigliere with direct links to recommended activities
 - Living City visual system with an animated skyline, illustrated district map, rarity effects, page transitions and a five-action safe-area mobile dock
@@ -73,10 +73,12 @@ Apply the migrations once to the existing Supabase project, in this order:
 16. `supabase/20260913_ledger_credits.sql`
 17. `supabase/20260914_play_release_safety.sql`
 18. `supabase/20260915_core_rpg_progression.sql`
+19. `supabase/20260916_district_operations_arcade_catalogue.sql`
+18. `supabase/20260915_core_rpg_progression.sql`
 
-The city-core migration installs the connected world, RLS policies, real families and authoritative ranking adapter. Later migrations add the catalog, tutorial, casino, Forex economy, careers and Families 2.0. The reset script is separate because it must run only once.
+The city-core migration installs the connected world, RLS policies, real families and authoritative ranking adapter. Later migrations add the catalogue, tutorial, Arcade, Forex economy, careers and Families 2.0. The reset script is separate because it must run only once.
 
-Ledger Credits (`LC`) are isolated from dollar cash. They start with a one-time play balance, are earned by city actions, and are used by casino and Forex. There is deliberately no LC purchase, dollar-conversion or cash-out function.
+Ledger Credits (`LC`) are isolated from dollar cash. They start with a one-time play balance, are earned by city actions, and are used by the Arcade and Forex. There is deliberately no LC purchase, dollar-conversion or cash-out function.
 
 See [`docs/GOOGLE_PLAY_RELEASE_CHECKLIST.md`](docs/GOOGLE_PLAY_RELEASE_CHECKLIST.md) before moving from tester APKs to a Play Store production release.
 

@@ -19,7 +19,8 @@
     "test:catalogue": "node scripts/item-catalogue-release-smoke.mjs",
     "test:release": "node scripts/play-release-smoke.mjs",
     "test:progression": "node scripts/core-rpg-progression-smoke.mjs",
-    "test": "npm run test:economy && npm run test:casino && npm run test:account && npm run test:community && npm run test:city && npm run test:family && npm run test:broker && npm run test:market && npm run test:combat && npm run test:visual && npm run test:catalogue && npm run test:release && npm run test:progression",
+    "test:operations": "node scripts/district-operations-arcade-catalogue-smoke.mjs",
+    "test": "npm run test:economy && npm run test:casino && npm run test:account && npm run test:community && npm run test:city && npm run test:family && npm run test:broker && npm run test:market && npm run test:combat && npm run test:visual && npm run test:catalogue && npm run test:release && npm run test:progression && npm run test:operations",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"

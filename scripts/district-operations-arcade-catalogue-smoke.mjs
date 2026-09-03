@@ -1,0 +1,13 @@
+import fs from "node:fs";import assert from "node:assert/strict";
+const sql=fs.readFileSync("supabase/20260916_district_operations_arcade_catalogue.sql","utf8"),ui=fs.readFileSync("src/operations/DistrictOperations.jsx","utf8"),css=fs.readFileSync("src/operations/district-operations.css","utf8"),game=fs.readFileSync("src/MafiaGame.jsx","utf8"),arcade=fs.readFileSync("src/casino/CasinoHub.jsx","utf8"),catalogue=fs.readFileSync("src/catalogue/ItemCatalogue.jsx","utf8"),art=fs.readFileSync("src/catalogue/ItemArtwork.jsx","utf8"),catalogueCss=fs.readFileSync("src/catalogue/item-catalogue.css","utf8");
+for(const marker of ["bw_operation_districts","bw_district_operations","bw_active_district_operations","bw_district_progress","bw_operations_snapshot","bw_begin_district_operation","bw_advance_district_operation","greatest(.40","heatDecayPerHour","rare_chance","request_id"])assert.ok(sql.includes(marker),`missing operation contract: ${marker}`);
+assert.equal((sql.match(/^\('(?:harbor|old-quarter|northside|railway|southside|financial|narrows|heights)'/gm)||[]).length,8,"expected eight districts");
+assert.equal((sql.match(/^\('(?:harbor|quarter|north|rail|south|finance|narrows|heights)-/gm)||[]).length,16,"expected sixteen operations");
+assert.ok(!/service_role|SUPABASE_SERVICE_ROLE/i.test(sql),"migration must not contain elevated keys");
+for(const marker of ["District Operations","NPC CAPTAIN","No energy required","Family-supported","bw_begin_district_operation","bw_advance_district_operation"])assert.ok(ui.includes(marker),`missing operations UI: ${marker}`);
+assert.ok(css.includes("@media(max-width:620px)"));assert.ok(css.includes("prefers-reduced-motion"));
+assert.match(game,/\["operations", "District Operations"\]/);assert.match(game,/\["arcade", "Arcade"\]/);assert.match(arcade,/The Arcade/);assert.doesNotMatch(game,/Rossi's Casino|"Casino"/);
+for(const marker of ["rarity-legend","DISCLOSED ITEM CHANCE","ItemArtwork","rarity-pips"])assert.ok(catalogue.includes(marker)||catalogueCss.includes(marker),`missing catalogue visual contract: ${marker}`);
+assert.match(art,/item-crest/);assert.match(art,/item-serial/);assert.match(art,/legendary:5/);
+assert.equal((sql.match(/\$\$/g)||[]).length%2,0,"migration has unmatched dollar quotes");
+console.log("district operations, Arcade terminology and catalogue rarity contracts passed");
