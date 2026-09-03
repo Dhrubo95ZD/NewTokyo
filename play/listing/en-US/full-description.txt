@@ -1,20 +1,26 @@
-Blackwood City never stops moving.
+Blackwood City remembers every decision.
 
-Create your character, take legitimate and underworld jobs, train your skills, build a family, trade with real players, and climb live city rankings in a persistent online role-playing game.
+Create your character and build a permanent record in a connected online crime role-playing game. Complete story missions, develop a career, train your abilities, collect equipment, join a player family and earn your place in the city.
 
 BUILD YOUR NAME
-Choose a specialty, complete a guided introduction, develop battle and crime skills, interview for careers, own property, collect equipment, and pursue long-term missions.
+Follow a guided introduction, improve combat and crime skills, interview for professional careers, purchase property and complete long-term campaign chapters. Your progress is stored online and carries across sessions.
 
-PLAY YOUR WAY
-Energy supports high-impact actions, while Street Work, item mastery, family activity, the player market, and other progression loops let dedicated players keep earning and improving.
+RUN DISTRICT OPERATIONS
+Take on multi-stage operations across eight Blackwood districts. Gather intelligence, prepare your route, confront computer-controlled crews and complete the extraction. Operations do not use energy. District heat and reward efficiency provide fair guardrails while permanent mastery ensures that every attempt advances your account.
 
-COLLECT RARE GEAR
-Discover a catalogue of 200 items with illustrated equipment slots, clear stats, sources, rarity tiers, and published drop chances. Chase rare and legendary rewards through repeatable gameplay.
+COLLECT AND EQUIP
+Discover more than 200 documented items with distinct artwork, equipment slots, visible rarity tiers and published acquisition chances. Build a loadout around attack, defence, speed and dexterity, then pursue rare relics through missions, combat and repeatable city activity.
 
-A REAL ONLINE CITY
-World chat, private messages, forums, rankings, player markets and families are backed by authenticated player accounts—never fake profiles. Report and mute controls help keep the community safe.
+JOIN A REAL ONLINE CITY
+Form or join a family with authenticated players, participate in family-supported operations, trade through the secured player market and compare permanent records in city rankings. World chat, private messages and forums include reporting, muting and blocking controls. Moretti does not populate social features with fake player profiles.
 
-VIRTUAL MARKETS AND CASINO
-Study provider-backed market charts and practice virtual Forex and metals trading, or visit blackjack, roulette and slots. These systems use virtual Ledger Credits only. Ledger Credits have no cash value, cannot be bought for real money, transferred outside the game, redeemed, or cashed out. Market data may be delayed and is not financial advice.
+BUILD A CAREER
+Interview for professions, complete shifts, gain workplace attributes and earn promotions. Skilled virtual market traders can qualify for an invitation to Federal Trust's finance career.
 
-Moretti: Blackwood City is intended for adults aged 18 and over. It contains simulated casino and crime-themed gameplay but no real-money gambling.
+STUDY VIRTUAL MARKETS
+Open an in-game brokerage account, choose leverage and lot size, study provider-backed Forex and metals charts and manage virtual positions. Trading uses play-earned Ledger Credits with no cash value. Market data may be delayed and is not financial advice or real trade execution.
+
+VISIT THE ARCADE
+Rossi's Arcade contains three optional chance-based games settled by the city server. Arcade activity uses play-earned Ledger Credits only. Ledger Credits have no cash value and cannot be bought with real money, exchanged for dollar cash, transferred outside the game, redeemed or cashed out.
+
+Moretti: Blackwood City requires an internet connection and an authenticated account. It contains fictional crime themes, text-based combat, weapons, player interaction and optional simulated chance games. No real-money gambling or cash prizes are offered.
