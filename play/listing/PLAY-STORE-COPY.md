@@ -16,21 +16,24 @@ Build your name through missions, careers, trading and a persistent online city.
 
 ## Screenshot order and alt text
 
-Upload the five PNG files in this order. Each file is 1080 × 1920, 9:16 portrait and contains no face or identifiable human figure.
+Upload the six PNG files in this order. Each file is 1080 × 1920, 9:16 portrait. The opening artwork uses featureless figures seen only from behind; no screenshot contains a visible face or identifying human feature.
 
-1. `01-living-city.png`
+1. `01-store-hero.jpg`
+   - Purpose: Opens with the Blackwood City setting and a strong, readable campaign hook.
+   - Alt text: `Three anonymous silhouettes overlook bronze-lit Blackwood City beneath the words The City Remembers.`
+2. `01-living-city.png`
    - Purpose: Establishes the persistent city, progression and visual identity.
    - Alt text: `Blackwood City overview showing permanent standing, operations, family orders and campaign progress.`
-2. `02-district-operations.png`
+3. `02-district-operations.png`
    - Purpose: Shows the new core repeatable PvE system.
    - Alt text: `District Operations screen showing city heat, a four-stage dossier and a clearly labelled NPC captain.`
-3. `03-item-catalogue.png`
+4. `03-item-catalogue.png`
    - Purpose: Shows collecting, stats, rarity and disclosed acquisition chances.
    - Alt text: `Item Catalogue showing illustrated equipment, five rarity tiers, combat stats and published drop chances.`
-4. `04-online-city.png`
+5. `04-online-city.png`
    - Purpose: Shows real-player features without inventing player names or messages.
    - Alt text: `Online city screen showing authenticated chat, family-supported operations, rankings and safety controls.`
-5. `05-virtual-markets.png`
+6. `05-virtual-markets.png`
    - Purpose: Shows the provider-backed virtual trading system and disclosures.
    - Alt text: `Federal Trust market screen showing a gold chart, virtual account metrics, leverage and risk controls.`
 
