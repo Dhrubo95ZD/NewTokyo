@@ -255,7 +255,7 @@ begin
   return jsonb_build_object('event',jsonb_build_object('cash',cash,'xp',xp,'merits',v_merits,'tier',p_tier),'takeover',public.bw_takeover_snapshot(),'state',public.bw_get_state());
 end $$;
 
-revoke all on function public.bw_takeover_snapshot(),public.bw_takeover_pledge(text),public.bw_takeover_claim(integer),public.bw_takeover_district_for_faction(text) from public,anon;
+revoke all on function public.bw_takeover_snapshot(),public.bw_takeover_pledge(text),public.bw_takeover_claim(integer),public.bw_takeover_district_for_faction(text),public.bw_takeover_record_operation(),public.bw_takeover_record_faction_assignment() from public,anon,authenticated;
 grant execute on function public.bw_takeover_snapshot(),public.bw_takeover_pledge(text),public.bw_takeover_claim(integer) to authenticated;
 
 
