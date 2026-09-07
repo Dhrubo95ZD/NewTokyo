@@ -35,10 +35,26 @@ function advise(question: string, context: JsonMap) {
   const combat = context.combat || {};
   const relic = combat.relic || {};
   const daily = context.daily || {};
+  const takeover = context.takeover || {};
   const suggestions: Suggestion[] = [];
   let answer = "I reviewed your current Blackwood City record.";
 
-  if (/daily|bonus|streak|objective|today|claim/.test(query)) {
+  if (/takeover|city control|pledge|faction season|blackwood season/.test(query)) {
+    const season = takeover.season || {};
+    const pledge = takeover.pledge;
+    const personal = takeover.personal || {};
+    const leader = Array.isArray(takeover.factions) ? takeover.factions[0] : null;
+    if (takeover.status === "active") {
+      answer = pledge
+        ? `You are backing ${pledge.name}. You have ${personal.points || 0} Takeover points, rank #${personal.rank || 1}, and ${season.daysLeft || 0} days remain before ${season.finaleName || "the finale"}.`
+        : `Blackwood Takeover is live with ${season.daysLeft || 0} days left. ${leader ? leader.name + " currently leads the ledger." : "No faction has scored yet"} Choose an allegiance before your next operation.`;
+      suggestions.push(suggestion(pledge ? "Run a district operation" : "Choose a faction", pledge ? "operations" : "takeover", pledge ? "Verified operation clears now feed your pledged faction and district control." : "Pledge before you play so your verified actions count toward the city ledger."));
+      if (pledge) suggestions.push(suggestion("Review Takeover rewards", "takeover", "Claim personal tiers as your verified points accumulate."));
+    } else {
+      answer = "The next Blackwood Takeover season is not open yet. Your existing progression remains available from Dispatch.";
+      suggestions.push(suggestion("Open Dispatch", "dispatch", "Review lifetime milestones while the city contest is between seasons."));
+    }
+  } else if (/daily|bonus|streak|objective|today|claim/.test(query)) {
     const objectives = Array.isArray(daily.objectives) ? daily.objectives : [];
     const readyObjectives = objectives.filter((item: JsonMap) => !item.claimedAt && Number(item.progress || 0) >= Number(item.target || 0));
     const openObjectives = objectives.filter((item: JsonMap) => !item.claimedAt).length;
