@@ -59,15 +59,16 @@ export function CharacterCard({ card, compact = false }) {
   const level = Number(card.level || 1);
   const respect = Number(card.respect || 0);
   const collection = Number(card.collectionCount || featured.length || 0);
+  const standing = respect >= 750 ? "City authority" : respect >= 300 ? "Recognised associate" : "New associate";
   return <article className={"character-card-preview " + (compact ? "compact" : "") + " layout-" + (card.layoutId || "ledger") + " background-" + (card.backgroundKey || "ivory")} style={{ "--character-frame": frame.accent || "#a9792a" }}>
-    <div className="character-card-kicker"><span><i aria-hidden="true" />BLACKWOOD NETWORK</span><span>PUBLIC PROFILE</span></div>
+    <div className="character-card-kicker"><span><i aria-hidden="true" />BLACKWOOD CITY</span><span>PLAYER CARD</span></div>
     <div className="character-card-identity">
       <div className="character-card-portrait"><b>{portraitMark(card.portraitKey, displayName)}</b><span>LV {level}</span></div>
-      <div className="character-card-name"><small>{frame.name}</small><h3>{displayName}</h3><p>{card.title || "Associate"}</p><div className="character-card-stats"><span><small>LEVEL</small><b>{level}</b></span><span><small>RESPECT</small><b>{respect.toLocaleString()}</b></span><span><small>COLLECTION</small><b>{collection}</b></span></div></div>
+      <div className="character-card-name"><small>{frame.name} · {standing}</small><h3>{displayName}</h3><p>{card.title || "Associate"}</p><div className="character-card-stats"><span><small>LEVEL</small><b>{level}</b></span><span><small>RESPECT</small><b>{respect.toLocaleString()}</b></span><span><small>COLLECTION</small><b>{collection}</b></span></div></div>
       <RarityBadge rarity={frame.rarity || "common"} />
     </div>
-    {!compact && <div className="character-card-display"><header><div><small>FEATURED RECORDS</small><b>Selected from your collection</b></div><span>{featured.length}/3 shown</span></header>{featured.length ? <div className="character-card-featured">{featured.map(item => <div className="character-card-item" key={item.id || item.item_id}><ItemArt item={item} /><span><small>{item.rarity || "common"}</small><b>{item.name}</b></span></div>)}</div> : <div className="character-card-empty">No featured items yet. Add up to three owned finds.</div>}</div>}
-    <footer><span><i style={{ background: frame.accent || "#a9792a" }} />{frame.name}</span><em>Updated from the city record</em></footer>
+    {!compact && <div className="character-card-display"><header><div><small>SHOWCASE ITEMS</small><b>Three public records from your collection</b></div><span>{featured.length}/3 shown</span></header>{featured.length ? <div className="character-card-featured">{featured.map(item => <div className="character-card-item" key={item.id || item.item_id}><ItemArt item={item} /><span><small>{item.rarity || "common"}</small><b>{item.name}</b></span></div>)}</div> : <div className="character-card-empty">No showcase items selected. Add up to three owned finds.</div>}</div>}
+    <footer><span><i style={{ background: frame.accent || "#a9792a" }} />{frame.name}</span><em>Public fields only · saved server-side</em></footer>
   </article>;
 }
 
