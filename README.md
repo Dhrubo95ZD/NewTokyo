@@ -84,7 +84,7 @@ Apply the migrations once to the existing Supabase project, in this order:
 
 The city-core migration installs the connected world, RLS policies, real families and authoritative ranking adapter. Later migrations add the catalogue, tutorial, Arcade, Forex economy, careers and Families 2.0. The reset script is separate because it must run only once.
 
-Arcade Dollars are isolated from ordinary city cash. They start with a play balance, remain non-purchasable, and are used by the Arcade and Forex. Verified net Arcade wins may be redeemed one-way into ordinary in-game cash at the server-defined rate; there is no ordinary-cash or real-money to Arcade Dollar conversion, and no real-money withdrawal.
+Arcade Dollars are isolated from ordinary city cash. The Arcade keeps its play-earned ledger balance non-purchasable and displays it as `$`; verified net Arcade wins may be redeemed one-way into ordinary in-game cash at the server-defined rate. The existing Market Desk remains play-only and is not connected to monetisation; there is no ordinary-cash or real-money to Arcade Dollar conversion, and no real-money withdrawal.
 
 See [`docs/GOOGLE_PLAY_RELEASE_CHECKLIST.md`](docs/GOOGLE_PLAY_RELEASE_CHECKLIST.md) before moving from tester APKs to a Play Store production release.
 
