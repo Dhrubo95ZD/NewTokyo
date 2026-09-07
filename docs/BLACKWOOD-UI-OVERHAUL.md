@@ -22,7 +22,7 @@ The local production web build passes. Existing bundle-size warning remains. Loc
 
 ## Release boundaries
 
-The current branch is an incremental game build. It keeps the existing database contracts, economy, package name and signing setup while extending the UI consistently across the core journeys. The Android candidate is version 0.16.0 (version code 16) so it can be installed alongside the current test build.
+The current branch is an incremental game build. It keeps the existing database contracts, economy, package name and signing setup while extending the UI consistently across the core journeys. The Android candidate is version 0.17.0 (version code 17) so it can be installed alongside the current test build.
 
 ## Follow-up after visual approval
 
