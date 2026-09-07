@@ -43,4 +43,4 @@ Upload the six PNG files in this order. Each file is 1080 × 1920, 9:16 portrait
 
 ## Important declaration
 
-The public listing uses the name “Arcade,” but the submitted game still contains blackjack, a number wheel and a slot-style game. In the private Google Play content-rating questionnaire, declare simulated gambling or chance games honestly. Also declare fictional crime, weapons, text-based violence, user-generated content and online player interaction. Do not select real-money gambling or cash prizes because Ledger Credits cannot be purchased, redeemed or cashed out.
+The public listing uses the name “Arcade,” but the submitted game still contains blackjack, a number wheel and a slot-style game. In the private Google Play content-rating questionnaire, declare simulated gambling or chance games honestly. Also declare fictional crime, weapons, text-based violence, user-generated content and online player interaction. Do not select real-money gambling or cash prizes because Arcade Dollars cannot be purchased with city cash or real money, and cannot be withdrawn as real money; verified net wins only convert into ordinary in-game city cash.
