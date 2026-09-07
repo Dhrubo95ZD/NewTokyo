@@ -252,7 +252,7 @@ begin
   perform public.bw_gain_xp(uid,xp);
   perform public.mirror_wallet_to_save(uid,(select balance from public.player_wallets where user_id=uid));
   insert into public.bw_action_logs(user_id,kind,summary,data) values(uid,'takeover','Claimed '||(select label from (values (1,'Street signal'),(2,'District mark'),(3,'Blackwood key')) labels(tier,label) where tier=p_tier),jsonb_build_object('season',season.id,'tier',p_tier,'cash',cash,'xp',xp,'merits',v_merits));
-  return jsonb_build_object('event',jsonb_build_object('cash',cash,'xp',xp,'merits',merits,'tier',p_tier),'takeover',public.bw_takeover_snapshot(),'state',public.bw_get_state());
+  return jsonb_build_object('event',jsonb_build_object('cash',cash,'xp',xp,'merits',v_merits,'tier',p_tier),'takeover',public.bw_takeover_snapshot(),'state',public.bw_get_state());
 end $$;
 
 revoke all on function public.bw_takeover_snapshot(),public.bw_takeover_pledge(text),public.bw_takeover_claim(integer),public.bw_takeover_district_for_faction(text) from public,anon;
