@@ -33,7 +33,7 @@ supabase.rpc = async (name,params) => {
   }
   return {data:[]};
 };
-supabase.functions.fetch = async () => {
+supabase.functionsFetch = async () => {
   await delay();
   if (window.__ui.adviserError) return new Response(JSON.stringify({error:'Adviser unavailable'}), {status:500, headers:{'content-type':'application/json'}});
   return new Response(JSON.stringify({answer:'Street Work uses no energy. Your campaign is another useful next step.',suggestions:[{page:'hustles',label:'Open Street Work',reason:'No energy required'}]}), {status:200, headers:{'content-type':'application/json'}});
