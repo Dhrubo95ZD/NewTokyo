@@ -257,3 +257,24 @@ end $$;
 
 revoke all on function public.bw_takeover_snapshot(),public.bw_takeover_pledge(text),public.bw_takeover_claim(integer),public.bw_takeover_district_for_faction(text) from public,anon;
 grant execute on function public.bw_takeover_snapshot(),public.bw_takeover_pledge(text),public.bw_takeover_claim(integer) to authenticated;
+
+
+-- Keep the adviser aware of the same server-backed city contest shown in the UI.
+create or replace function public.bw_adviser_context() returns jsonb
+language plpgsql security definer set search_path=public,pg_temp as $$
+begin
+  return jsonb_build_object(
+    'city',public.bw_get_state(),
+    'career',public.bw_job_snapshot(),
+    'forex',public.bw_fx_snapshot('EUR/USD'),
+    'loadout',public.bw_get_loadout(),
+    'progression',public.bw_progression_snapshot(),
+    'operations',public.bw_operations_snapshot(),
+    'daily',public.bw_daily_life_snapshot(),
+    'takeover',public.bw_takeover_snapshot(),
+    'available_pages',array['home','daily','dispatch','takeover','crimes','hustles','operations','combat','gym','work','missions','factions','city','shop','market','bank','hospital','jail','property','family','chat','players','social','mail','forums','rankings','awards','inventory','catalogue','economy','arcade']
+  );
+end $$;
+
+revoke all on function public.bw_adviser_context() from public,anon;
+grant execute on function public.bw_adviser_context() to authenticated;
