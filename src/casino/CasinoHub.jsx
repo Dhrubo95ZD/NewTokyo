@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../online/supabase.js";
 import "./casino.css";
 
-const arcadeMoney = value => `${Number(value || 0).toLocaleString()}`;
+const arcadeMoney = value => "$" + Number(value || 0).toLocaleString();
 const wait = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 const slotGlyph = symbol => symbol === "●" ? "🍒" : symbol;
 const Card = ({ card }) => <i className={/[HD]/.test(card) ? "red" : ""}>{card?.replace("H","♥").replace("D","♦").replace("C","♣").replace("S","♠")}</i>;
