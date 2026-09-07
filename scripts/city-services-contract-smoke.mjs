@@ -17,6 +17,8 @@ for (const marker of ["Civic Contracts", "Community Fund", "bw_civic_services_sn
 }
 assert.ok(game.includes("CivicServicesHub") && game.includes("CITY_DIRECTORY"), "city directory is not connected");
 assert.ok(nav.includes("['civic','Civic Contracts']"), "civic route is missing");
+assert.equal((game.match(/\["civic",/g) || []).length, 1, "civic services must have one canonical directory door");
+assert.ok(!game.includes("Charity House"), "legacy duplicate Charity House door remains");
 assert.ok(casino.includes("bw_redeem_arcade_winnings") && casino.includes("ARCADE DOLLARS"), "Arcade Dollar boundary is missing");
 assert.ok(migration.includes("source in ('operation','faction','civic')"), "Takeover civic contribution source is missing");
 assert.ok(migration.includes("There is intentionally no city-cash -> Arcade Dollar RPC") || migration.includes("no city-cash"), "cash-to-arcade boundary is missing");
