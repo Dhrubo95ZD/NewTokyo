@@ -174,6 +174,7 @@
 
 /* Blackwood Streets game skin: warm materials, framed districts, and a compact HUD. */
 :root{--bw-bg:#110d0b;--bw-panel:#1b1512;--bw-raised:#2a1e18;--bw-line:#5a4636;--bw-text:#f4eadb;--bw-muted:#c3b3a1;--bw-brass:#c99552;--bw-green:#8fbd8e;--bw-red:#d9796f;--bw-blue:#9ebdda}
+html,body,#root{background:#110d0b}
 .after-dark{--paper:var(--bw-panel);--card:var(--bw-raised);--line:var(--bw-line);--gold:var(--bw-brass);--gold2:#e2bd78;--muted:var(--bw-muted);--ink:var(--bw-text);--brass:var(--bw-brass);background:radial-gradient(circle at 76% 8%,#57372418 0,transparent 32rem),linear-gradient(180deg,#130e0b 0%,var(--bw-bg) 46%,#0d0908 100%);color:var(--bw-text)}
 .after-dark .topbar{background:linear-gradient(180deg,#1c130f 0%,#160f0cf5 100%);border-bottom-color:#6e5034;box-shadow:0 8px 28px #0008}
 .after-dark .brand>i{background:linear-gradient(145deg,#3a2417,#1d130e);border-color:#a16f3d;color:var(--bw-brass);box-shadow:inset 0 0 0 2px #c9955220,0 4px 12px #0005}
