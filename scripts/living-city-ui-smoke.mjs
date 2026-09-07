@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const [game,styles,main]=await Promise.all([
+const [game,styles,main,readability]=await Promise.all([
   readFile(new URL("../src/MafiaGame.jsx",import.meta.url),"utf8"),
   readFile(new URL("../src/living-city.css",import.meta.url),"utf8"),
   readFile(new URL("../src/main.jsx",import.meta.url),"utf8"),
+  readFile(new URL("../src/ui/readability-fixes.css",import.meta.url),"utf8"),
 ]);
 
 for(const marker of ["MOBILE_NAV","mobile-dock","page-motion","blackwood-skyline","district-map","AnimatedNumber","<Dialog"])
@@ -14,5 +15,8 @@ for(const marker of ["env(safe-area-inset-top","env(safe-area-inset-bottom","pre
 assert.ok(styles.includes(".district-map-art{display:grid")&&styles.includes("grid-template-columns:1fr 1fr"),"narrow city map must avoid pin overlap");
 assert.ok(styles.includes("animation:none!important"),"reduced-motion fallback missing");
 assert.ok(main.includes('import "./living-city.css"'),"Living City design layer is not loaded last");
+assert.ok(main.includes('import "./ui/readability-fixes.css"'),"readability fixes are not loaded after the theme");
+for(const marker of ["wallet-strip","ledger-balance","casino-table button:not(:disabled)","property-grid article button:disabled","opacity: .34"])
+  assert.ok(readability.includes(marker),`missing UI readability guardrail: ${marker}`);
 assert.ok(!game.includes("Math.random"),"visual shell must not invent game state");
 console.log("Living City navigation, motion, safe-area and narrow-phone contracts passed");
