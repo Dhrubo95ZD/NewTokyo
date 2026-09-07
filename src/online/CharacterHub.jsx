@@ -55,12 +55,19 @@ export function CharacterCard({ card, compact = false }) {
   if (!card) return null;
   const frame = card.frame || { id: card.frameId || "starter", name: "Blackwood seal", rarity: "common", accent: "#a9792a" };
   const displayName = card.displayName || card.name || "Associate";
-  return <article className={`character-card-preview ${compact ? "compact" : ""} layout-${card.layoutId || "ledger"} background-${card.backgroundKey || "ivory"}`} style={{ "--character-frame": frame.accent || "#a9792a" }}>
-    <div className="character-card-top"><span className="character-card-seal" aria-label={`${frame.name} frame`}><b>{portraitMark(card.portraitKey, displayName)}</b></span><div><small>BLACKWOOD CITY · PUBLIC DOSSIER</small><h3>{displayName}</h3><p>{card.title || "Associate"} · Level {card.level || 1}</p></div><RarityBadge rarity={frame.rarity || "common"} /></div>
-    <div className="character-card-rule" />
-    <div className="character-card-meta"><span><small>RESPECT</small><b>{Number(card.respect || 0).toLocaleString()}</b></span><span><small>FRAME</small><b>{frame.name}</b></span><span><small>STYLE</small><b>{LAYOUTS.find(([id]) => id === card.layoutId)?.[1] || "Ledger"}</b></span></div>
-    {!compact && <div className="character-card-featured">{(card.featuredItems || []).length ? card.featuredItems.map(item => <div className="character-card-item" key={item.id || item.item_id}><ItemArt item={item} /><span><small>{item.rarity || "common"}</small><b>{item.name}</b></span></div>) : <p>Choose up to three owned items to put on display.</p>}</div>}
-    <footer><span>{frame.name}</span><em>Public card · updated from your saved collection</em></footer>
+  const featured = Array.isArray(card.featuredItems) ? card.featuredItems.slice(0, 3) : [];
+  const level = Number(card.level || 1);
+  const respect = Number(card.respect || 0);
+  const collection = Number(card.collectionCount || featured.length || 0);
+  return <article className={"character-card-preview " + (compact ? "compact" : "") + " layout-" + (card.layoutId || "ledger") + " background-" + (card.backgroundKey || "ivory")} style={{ "--character-frame": frame.accent || "#a9792a" }}>
+    <div className="character-card-kicker"><span><i aria-hidden="true" />BLACKWOOD NETWORK</span><span>PUBLIC PROFILE</span></div>
+    <div className="character-card-identity">
+      <div className="character-card-portrait"><b>{portraitMark(card.portraitKey, displayName)}</b><span>LV {level}</span></div>
+      <div className="character-card-name"><small>{frame.name}</small><h3>{displayName}</h3><p>{card.title || "Associate"}</p><div className="character-card-stats"><span><small>LEVEL</small><b>{level}</b></span><span><small>RESPECT</small><b>{respect.toLocaleString()}</b></span><span><small>COLLECTION</small><b>{collection}</b></span></div></div>
+      <RarityBadge rarity={frame.rarity || "common"} />
+    </div>
+    {!compact && <div className="character-card-display"><header><div><small>FEATURED RECORDS</small><b>Selected from your collection</b></div><span>{featured.length}/3 shown</span></header>{featured.length ? <div className="character-card-featured">{featured.map(item => <div className="character-card-item" key={item.id || item.item_id}><ItemArt item={item} /><span><small>{item.rarity || "common"}</small><b>{item.name}</b></span></div>)}</div> : <div className="character-card-empty">No featured items yet. Add up to three owned finds.</div>}</div>}
+    <footer><span><i style={{ background: frame.accent || "#a9792a" }} />{frame.name}</span><em>Updated from the city record</em></footer>
   </article>;
 }
 
