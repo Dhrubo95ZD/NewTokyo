@@ -82,6 +82,8 @@ Apply the migrations once to the existing Supabase project, in this order:
 22. `supabase/20260919_blackwood_takeover.sql`
 23. `supabase/20260920_city_services.sql`
 24. `supabase/20260921_progression_guardrails_arcade_games.sql`
+25. `supabase/20260922_progression_concurrency_hardening.sql`
+26. `supabase/20260923_retire_arcade_skill_rooms.sql`
 
 The city-core migration installs the connected world, RLS policies, real families and authoritative ranking adapter. Later migrations add the catalogue, tutorial, Arcade, Forex economy, careers and Families 2.0. The reset script is separate because it must run only once.
 
