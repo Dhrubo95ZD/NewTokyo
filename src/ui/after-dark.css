@@ -308,3 +308,106 @@ html,body,#root{background:#f5f2ec;color:#20201d}
   .after-dark .character-card-item:last-child{grid-column:1/-1}
   .after-dark .character-card-preview footer{padding-left:15px;padding-right:15px}
 }
+
+
+/* Blackwood Takeover: a live city ledger built from verified play. */
+.after-dark .takeover-page{display:grid;gap:16px;max-width:1180px;margin:0 auto;color:#2e2924;font-family:var(--bw-body)}
+.after-dark .takeover-hero{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:24px;align-items:stretch;padding:28px 30px;border:1px solid #d8cdbd;border-radius:15px;background:linear-gradient(120deg,#fffdf8,#f1e6d6);box-shadow:0 8px 24px #5e4d3810}
+.after-dark .takeover-hero small,.after-dark .takeover-section>header small,.after-dark .takeover-brief small{display:block;color:#a9792a;font-size:10px;font-weight:800;letter-spacing:1.4px}
+.after-dark .takeover-hero h1{margin:7px 0 7px;color:#292722;font:700 clamp(31px,4.5vw,53px)/1.02 var(--bw-heading)}
+.after-dark .takeover-hero p{max-width:680px;margin:0;color:#746e64;font-size:14px;line-height:1.6}
+.after-dark .takeover-hero-actions{display:flex;gap:9px;margin-top:20px;flex-wrap:wrap}
+.after-dark .takeover-countdown{display:grid;place-content:center;justify-items:center;padding:16px;border:1px solid #ccb47f;border-radius:12px;background:#fbf1df;text-align:center;color:#8a631f}
+.after-dark .takeover-countdown small{color:#8a631f;font-size:9px;letter-spacing:1.2px}
+.after-dark .takeover-countdown b{display:block;margin:4px 0 0;font:700 52px/.9 var(--bw-heading)}
+.after-dark .takeover-countdown span{font-size:12px;font-weight:800}
+.after-dark .takeover-countdown em{margin-top:14px;padding-top:11px;border-top:1px solid #d7c49d;color:#806f54;font-size:10px;font-style:normal}
+.after-dark .takeover-alert{display:flex;align-items:center;gap:10px;padding:12px 15px;border:1px solid;border-radius:9px;font-size:13px}
+.after-dark .takeover-alert button{margin-left:auto;min-width:34px;min-height:34px;border:0;background:transparent;color:inherit;font-size:19px}
+.after-dark .takeover-alert.good{border-color:#a7c5aa;background:#edf6ee;color:#4f8060}
+.after-dark .takeover-alert.bad{border-color:#d6a29a;background:#fff0ed;color:#a14e43}
+.after-dark .takeover-brief{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:22px;align-items:center;padding:21px 23px;border:1px solid #ded5c8;border-radius:13px;background:#fffdfa;box-shadow:0 5px 15px #5e4d380a}
+.after-dark .takeover-brief h2{margin:5px 0 4px;color:#2f2b26;font:700 24px var(--bw-heading)}
+.after-dark .takeover-brief p{max-width:690px;margin:0;color:#746e64;font-size:13px;line-height:1.5}
+.after-dark .takeover-brief dl{display:flex;gap:18px;margin:0}
+.after-dark .takeover-brief dl div{min-width:86px;padding-left:15px;border-left:1px solid #e2d9ce}
+.after-dark .takeover-brief dt{color:#887d70;font-size:9px;font-weight:800;letter-spacing:.7px}
+.after-dark .takeover-brief dd{margin:4px 0 0;color:#2f2b26;font:700 23px var(--bw-heading);font-variant-numeric:tabular-nums}
+.after-dark .takeover-section{border:1px solid #ded5c8;border-radius:13px;background:#fffdfa;box-shadow:0 5px 15px #5e4d380a;overflow:hidden}
+.after-dark .takeover-section>header{display:flex;align-items:end;justify-content:space-between;gap:16px;padding:19px 22px;border-bottom:1px solid #e4ddd3;background:#fcf8f1}
+.after-dark .takeover-section>header h2{margin:5px 0 0;color:#2f2b26;font:700 22px var(--bw-heading)}
+.after-dark .takeover-section>header>span{color:#887d70;font-size:11px;text-align:right}
+.after-dark .takeover-faction-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:14px}
+.after-dark .takeover-faction{display:flex;flex-direction:column;min-width:0;padding:15px;border:1px solid #e0d7ca;border-top:3px solid var(--faction-accent,#a9792a);border-radius:10px;background:#fffefa}
+.after-dark .takeover-faction.selected{border-color:var(--faction-accent,#a9792a);background:#fff8eb;box-shadow:0 0 0 2px #a9792a1c}
+.after-dark .takeover-faction>header{display:flex;align-items:center;gap:9px}
+.after-dark .takeover-faction>header>i{display:grid;place-items:center;width:34px;height:34px;border-radius:9px;background:color-mix(in srgb,var(--faction-accent,#a9792a) 14%,white);color:var(--faction-accent,#a9792a)}
+.after-dark .takeover-faction>header>div{min-width:0;flex:1}
+.after-dark .takeover-faction>header small,.after-dark .takeover-district small{display:block;color:#8e816f;font-size:9px;letter-spacing:.7px;text-transform:uppercase}
+.after-dark .takeover-faction h3{margin:3px 0 0;color:#2f2b26;font:700 17px var(--bw-heading);line-height:1.08}
+.after-dark .takeover-faction p{min-height:58px;margin:13px 0;color:#746e64;font-size:11px;line-height:1.5}
+.after-dark .takeover-badge{padding:4px 6px;border-radius:99px;background:#e8f3ea;color:#4f8060;font-size:8px;letter-spacing:.7px;white-space:nowrap}
+.after-dark .takeover-faction-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:auto}
+.after-dark .takeover-faction-stats span{display:grid;gap:3px}
+.after-dark .takeover-faction-stats small{color:#918576;font-size:8px;line-height:1.15}
+.after-dark .takeover-faction-stats b{color:#2f2b26;font-size:12px;font-variant-numeric:tabular-nums}
+.after-dark .takeover-meter{height:6px;margin:12px 0 13px;border-radius:9px;background:#e8e0d5;overflow:hidden}
+.after-dark .takeover-meter i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--faction-accent,#a9792a),#d8b66e);transition:width 220ms ease}
+.after-dark .takeover-faction .takeover-meter i{background:var(--faction-accent,#a9792a)}
+.after-dark .takeover-pledge{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:40px;padding:9px 10px;border:1px solid #d5c09a;border-radius:7px;background:#fff8eb;color:#8b641f;font-size:10px;font-weight:800}
+.after-dark .takeover-pledge span{font-size:16px}
+.after-dark .takeover-pledged-note{display:block;margin-top:auto;padding:10px;border-radius:7px;background:#eef6ef;color:#4f8060;font-size:10px;line-height:1.4}
+.after-dark .takeover-district-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:14px}
+.after-dark .takeover-district{padding:15px;border:1px solid #e1d9cd;border-left:3px solid var(--district-accent,#a9792a);border-radius:9px;background:#fffefa}
+.after-dark .takeover-district h3{margin:4px 0 12px;color:#302b25;font:700 18px var(--bw-heading)}
+.after-dark .takeover-district>strong{display:block;min-height:17px;color:#6f665b;font-size:11px}
+.after-dark .takeover-district .takeover-meter{margin:9px 0 5px}
+.after-dark .takeover-district .takeover-meter i{background:var(--district-accent,#a9792a)}
+.after-dark .takeover-district>span{color:#918576;font-size:10px}
+.after-dark .takeover-bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.after-dark .takeover-route-list{display:grid;gap:8px;padding:14px}
+.after-dark .takeover-route-list button{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid #e1d9cd;border-radius:8px;background:#fffefa;color:#2f2b26;text-align:left}
+.after-dark .takeover-route-list button:hover{border-color:#c9a667;background:#fff8eb}
+.after-dark .takeover-route-list button>i{display:grid;place-items:center;width:34px;height:34px;border-radius:8px;background:#f3eadc;color:#a9792a}
+.after-dark .takeover-route-list button>span{min-width:0;flex:1}
+.after-dark .takeover-route-list b,.after-dark .takeover-route-list small{display:block}
+.after-dark .takeover-route-list b{font-size:12px}
+.after-dark .takeover-route-list small{margin-top:3px;color:#82776b;font-size:10px;line-height:1.3}
+.after-dark .takeover-route-list em{color:#a9792a;font-size:10px;font-style:normal;font-weight:800;white-space:nowrap}
+.after-dark .takeover-rewards{display:grid;gap:8px;padding:14px}
+.after-dark .takeover-reward{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;padding:12px;border:1px solid #e1d9cd;border-radius:8px;background:#fbf8f2}
+.after-dark .takeover-reward.ready{border-color:#c9a667;background:#fff8eb}
+.after-dark .takeover-reward.claimed{border-color:#bfd5c0;background:#f1f7f1}
+.after-dark .takeover-reward small{color:#9a722c;font-size:8px;font-weight:800;letter-spacing:1px}
+.after-dark .takeover-reward h3{margin:3px 0;color:#302b25;font:700 16px var(--bw-heading)}
+.after-dark .takeover-reward p{margin:0;color:#807568;font-size:10px}
+.after-dark .takeover-reward>strong{align-self:center;color:#a9792a;font:700 17px var(--bw-heading);white-space:nowrap}
+.after-dark .takeover-reward button{grid-column:1/-1;min-height:37px;padding:8px;border:1px solid #d3c4ae;border-radius:7px;background:#fffefa;color:#80632a;font-size:10px;font-weight:800}
+.after-dark .takeover-reward button:disabled{opacity:.58}
+.after-dark .takeover-footnote{padding:2px 3px;color:#8a7f73;font-size:10px;line-height:1.5;text-align:center}
+.after-dark .takeover-empty{display:grid;place-items:center;gap:8px;min-height:340px;padding:32px;border:1px solid #ded5c8;border-radius:13px;background:#fffdfa;text-align:center}
+.after-dark .takeover-empty h1,.after-dark .takeover-empty h2{margin:3px 0;color:#302b25;font:700 30px var(--bw-heading)}
+.after-dark .takeover-empty p{max-width:460px;margin:0;color:#766d63;font-size:13px;line-height:1.6}
+.after-dark .takeover-empty small{color:#a9792a;font-size:10px;font-weight:800;letter-spacing:1.3px}
+@media(max-width:980px){
+  .after-dark .takeover-faction-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .after-dark .takeover-district-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:700px){
+  .after-dark .takeover-hero{grid-template-columns:1fr;padding:21px 18px}
+  .after-dark .takeover-countdown{grid-template-columns:auto auto auto;justify-content:start;gap:8px;padding:12px 14px;text-align:left}
+  .after-dark .takeover-countdown b{font-size:30px}
+  .after-dark .takeover-countdown em{grid-column:1/-1;margin-top:3px;padding-top:8px}
+  .after-dark .takeover-brief{grid-template-columns:1fr;padding:18px}
+  .after-dark .takeover-brief dl{gap:9px}
+  .after-dark .takeover-brief dl div{min-width:0;padding-left:9px}
+  .after-dark .takeover-brief dd{font-size:19px}
+  .after-dark .takeover-section>header{align-items:flex-start;display:grid;padding:17px 18px}
+  .after-dark .takeover-section>header>span{text-align:left}
+  .after-dark .takeover-faction-grid,.after-dark .takeover-district-grid{grid-template-columns:1fr;padding:10px}
+  .after-dark .takeover-faction p{min-height:0}
+  .after-dark .takeover-bottom-grid{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  .after-dark .takeover-page *{animation:none!important;transition:none!important}
+}
