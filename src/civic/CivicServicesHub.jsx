@@ -58,7 +58,7 @@ export default function CivicServicesHub({ onState, onNavigate }) {
   return <section className="civic-page">
     <header className="civic-hero">
       <div>
-        <small>CITY SERVICES · NO INTEREST · NO LEVERAGE</small>
+        <small>CITY SERVICES · CIVIC CONTRACTS · NO INTEREST · NO LEVERAGE</small>
         <h1>Blackwood Civic Desk</h1>
         <p>Do useful work for the districts, build standing, and leave each neighbourhood stronger than you found it.</p>
         <div className="civic-hero-actions"><button className="civic-primary" onClick={() => onNavigate?.("city")}>Back to directory</button><span>Contracts are server-recorded and feed district control when a Takeover season is active.</span></div>
