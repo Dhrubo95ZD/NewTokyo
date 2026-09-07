@@ -5,7 +5,7 @@ import { GROUPS, validPage, pageGroup } from '../src/ui/navigation.js';
 assert.equal(GROUPS.length,5);
 const destinations=GROUPS.flatMap(group=>group.pages.map(([id])=>id));
 assert.equal(new Set(destinations).size,destinations.length);
-for(const id of ['crimes','hustles','operations','missions','factions','inventory','catalogue','gym','work','bank','family','chat','safety','arcade'])assert.ok(validPage(id));
+for(const id of ['crimes','hustles','operations','missions','factions','inventory','catalogue','gym','work','bank','family','chat','safety','arcade','daily'])assert.ok(validPage(id));
 assert.equal(validPage('nonexistent'),false);
 assert.equal(pageGroup('inventory').id,'character');
 const server=await createServer({server:{middlewareMode:true},optimizeDeps:{noDiscovery:true,include:[]}});
@@ -17,6 +17,7 @@ try {
   assert.equal(nextMove({player:{status:'jail'}},{active},{missions:[mission]}).page,'jail');
   assert.equal(nextMove({player:{status:'okay'}},{active},{missions:[mission]}).page,'operations');
   assert.equal(nextMove({player:{status:'okay'}},{},{missions:[mission]}).action,'Review & claim reward');
+  assert.equal(nextMove({player:{status:'okay'}},{},{missions:[mission]},{claimedToday:false,streak:{current:2}}).page,'daily');
   assert.equal(nextMove(null,null,null).page,'hustles');
   const crime={skill_required:10,nerve_cost:5};
   assert.equal(crimeAvailability(crime,{status:'okay',crime_skill:10,nerve:5}),'');

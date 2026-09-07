@@ -9,6 +9,7 @@ import GameIcon from "./ui/GameIcon.jsx";
 import SafetyHub from "./safety/SafetyHub.jsx";
 import SeasonHub from "./season/SeasonHub.jsx";
 import HomeBoard from "./ui/HomeBoard.jsx";
+import DailyLifeHub from "./ui/DailyLifeHub.jsx";
 import Dialog from "./ui/Dialog.jsx";
 import { GROUPS, pageGroup, pageLabel, validPage } from "./ui/navigation.js";
 import { App } from "@capacitor/app";
@@ -109,6 +110,7 @@ export default function MafiaGame({ initialPlayer = null, character = null, user
   const serverPages = ["crimes", "hustles", "operations", "combat", "gym", "work", "missions", "factions", "catalogue", "shop", "market", "bank", "hospital", "jail", "property", "social", "mail", "forums", "awards", "inventory"];
   const content = serverPages.includes(page) ? <CityCoreHub initialTab={page === "factions" ? "missions" : page} progressionTab={page === "factions" ? "factions" : "story"} user={user} onState={syncCore} /> : {
     home: <HomeBoard p={p} go={navigate} onState={syncCore} skyline={<Skyline/>}/>,
+    daily: <DailyLifeHub onState={syncCore} onNavigate={navigate}/>,
     dispatch: <SeasonHub onNavigate={navigate}/>, city:<City go={navigate}/>,
     family:<CommunityHub user={user} initialTab="families"/>, chat:<CommunityHub user={user} initialTab="chat"/>,
     players:<CommunityHub user={user} initialTab="players"/>, rankings:<CommunityHub user={user} initialTab="rankings"/>,

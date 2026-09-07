@@ -1,5 +1,5 @@
 export const GROUPS = [
-  { id: 'home', label: 'Home', icon: 'home', pages: [['home','Overview'],['dispatch','Progress board']] },
+  { id: 'home', label: 'Home', icon: 'home', pages: [['home','Overview'],['daily','Daily Life'],['dispatch','Progress board']] },
   { id: 'play', label: 'Play', icon: 'crimes', pages: [['crimes','Crimes'],['hustles','Street Work'],['operations','District Operations'],['missions','Campaign'],['factions','Factions'],['combat','Combat']] },
   { id: 'character', label: 'Character', icon: 'inventory', pages: [['inventory','Equipment & inventory'],['catalogue','Item Catalogue'],['gym','Training'],['work','Jobs'],['awards','Awards'],['rankings','Rankings']] },
   { id: 'city', label: 'City', icon: 'city', pages: [['city','City directory'],['shop','Shops'],['market','Player Market'],['bank','Bank'],['economy','Exchange & careers'],['property','Properties'],['arcade','Arcade'],['hospital','Hospital'],['jail','Jail']] },
