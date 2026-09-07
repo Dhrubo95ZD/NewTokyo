@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "./supabase.js";
 import { InventoryEquipment, ItemShop } from "./InventoryEquipment.jsx";
+import CharacterHub from "./CharacterHub.jsx";
 import JobCenter from "../jobs/JobCenter.jsx";
 import MarketHub from "../market/MarketHub.jsx";
 import HustleHub from "../hustles/HustleHub.jsx";
@@ -113,7 +114,7 @@ export default function CityCoreHub({ initialTab, progressionTab = "story", user
 
     {initialTab === "property" && <div className="property-grid">{data.properties.map(property => <article className={property.active ? "active" : ""} key={property.id}><i>⌂</i><small>{property.active ? "CURRENT HOME" : property.owned ? "OWNED" : "FOR SALE"}</small><b>{property.name}</b><p>{property.description}</p><dl><div><dt>Price</dt><dd>{money(property.price)}</dd></div><div><dt>Happiness</dt><dd>{property.max_happy}</dd></div><div><dt>Vault</dt><dd>{money(property.vault_capacity)}</dd></div></dl><button disabled={busy || property.active || (!property.owned && player.cash < property.price)} onClick={() => act("bw_buy_property", { p_property_id: property.id }, property.owned ? `Moved into ${property.name}.` : `Purchased ${property.name}.`)}>{property.active ? "Living here" : property.owned ? "Move in" : "Purchase"}</button></article>)}</div>}
 
-    {initialTab === "inventory" && <InventoryEquipment inventory={loadout.inventory || data.inventory} loadout={loadout} level={player.level} busy={busy} onAction={(rpc, params, success) => act(rpc, params, success, async value => { if (rpc === "bw_equip_item" || rpc === "bw_unequip_slot") setLoadout(value || { equipment: [], inventory: [], bonuses: {} }); else { const result = await supabase.rpc("bw_get_loadout"); if (!result.error) setLoadout(result.data); } })} />}
+    {initialTab === "inventory" && <CharacterHub inventory={loadout.inventory || data.inventory} loadout={loadout} player={player} level={player.level} busy={busy} onAction={(rpc, params, success) => act(rpc, params, success, async value => { if (rpc === "bw_equip_item" || rpc === "bw_unequip_slot") setLoadout(value || { equipment: [], inventory: [], bonuses: {} }); else { const result = await supabase.rpc("bw_get_loadout"); if (!result.error) setLoadout(result.data); } })} />}
     {initialTab === "catalogue" && <ItemCatalogue />}
     {initialTab === "shop" && <ItemShop items={data.items} cash={player.cash} level={player.level} busy={busy} onBuy={item => act("bw_buy_item", { p_item_id: item.id, p_quantity: 1 }, `${item.name} purchased.`)} />}
     {initialTab === "market" && <MarketHub onState={onState} />}

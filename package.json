@@ -22,7 +22,8 @@
     "test:operations": "node scripts/district-operations-arcade-catalogue-smoke.mjs",
     "test:dispatch": "node scripts/season-dispatch-ui-smoke.mjs",
     "test:daily": "node scripts/daily-life-contract-smoke.mjs",
-    "test": "npm run test:economy && npm run test:casino && npm run test:account && npm run test:community && npm run test:city && npm run test:family && npm run test:broker && npm run test:market && npm run test:combat && npm run test:visual && npm run test:catalogue && npm run test:release && npm run test:progression && npm run test:operations && npm run test:dispatch && npm run test:daily",
+    "test:collection": "node scripts/character-collection-contract-smoke.mjs",
+    "test": "npm run test:economy && npm run test:casino && npm run test:account && npm run test:community && npm run test:city && npm run test:family && npm run test:broker && npm run test:market && npm run test:combat && npm run test:visual && npm run test:catalogue && npm run test:release && npm run test:progression && npm run test:operations && npm run test:dispatch && npm run test:daily && npm run test:collection",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"
