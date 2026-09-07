@@ -97,7 +97,7 @@
 /* Disabled property actions should look intentionally unavailable, not broken. */
 .after-dark .property-grid article button:disabled {
   opacity: 1 !important;
-  color: #766e64 !important;
+  color: #5f554b !important;
   background: #e9e3da !important;
   border-color: #cfc4b5 !important;
   box-shadow: none !important;
