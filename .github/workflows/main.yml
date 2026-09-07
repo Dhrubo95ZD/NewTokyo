@@ -1,6 +1,8 @@
 name: Build Android APK and Play AAB
 
 on:
+  pull_request:
+    branches: [main]
   workflow_dispatch:
   push:
     branches: [main, "ui/blackwood-after-dark"]
