@@ -115,7 +115,7 @@ declare
   s public.bw_player_states;
   w public.player_wallets;
   today date := current_date;
-  week_start date := date_trunc('week', now() at time zone 'utc')::date;
+  v_week_start date := date_trunc('week', now() at time zone 'utc')::date;
   streak public.bw_daily_streaks;
   current_day integer;
   claimed_today boolean;
@@ -147,7 +147,7 @@ begin
       jsonb_build_object('day',7,'cash',3000,'xp',90,'energy',50,'nerve',6,'merits',2,'claimed',claimed_today and current_day=7)
     ),
     'objectives',coalesce((select jsonb_agg(jsonb_build_object('id',t.id,'title',t.title,'description',t.description,'metric',t.metric,'target',t.target,'progress',least(t.target,public.bw_daily_metric(uid,t.metric,today::timestamptz)),'cash',t.cash_reward,'xp',t.xp_reward,'merits',t.merit_reward,'claimedAt',c.claimed_at) order by t.sort_order) from public.bw_daily_objective_templates t left join public.bw_daily_objective_claims c on c.user_id=uid and c.objective_date=today and c.objective_id=t.id where t.id=any(objective_ids)),'[]'::jsonb),
-    'weekly',jsonb_build_object('weekStart',week_start,'target',10,'progress',least(10,public.bw_daily_metric(uid,'weekly_actions',week_start::timestamptz)),'cash',3000,'xp',80,'merits',1,'claimedAt',(select wc.claimed_at from public.bw_weekly_objective_claims wc where wc.user_id=uid and wc.week_start=week_start)),
+    'weekly',jsonb_build_object('weekStart',v_week_start,'target',10,'progress',least(10,public.bw_daily_metric(uid,'weekly_actions',v_week_start::timestamptz)),'cash',3000,'xp',80,'merits',1,'claimedAt',(select wc.claimed_at from public.bw_weekly_objective_claims wc where wc.user_id=uid and wc.week_start=v_week_start)),
     'resetNote','Rewards and daily objectives reset at midnight UTC.'
   );
 end $$;
@@ -216,17 +216,17 @@ end $$;
 create or replace function public.bw_claim_weekly_objective()
 returns jsonb
 language plpgsql security definer set search_path=public,pg_temp as $$
-declare uid uuid:=public.bw_uid(); week_start date:=date_trunc('week',now() at time zone 'utc')::date; progress integer;
+declare uid uuid:=public.bw_uid(); v_week_start date:=date_trunc('week',now() at time zone 'utc')::date; progress integer;
 begin
-  if exists(select 1 from public.bw_weekly_objective_claims wc where wc.user_id=uid and wc.week_start=week_start) then raise exception 'weekly objective already claimed'; end if;
-  progress:=public.bw_daily_metric(uid,'weekly_actions',week_start::timestamptz);
+  if exists(select 1 from public.bw_weekly_objective_claims wc where wc.user_id=uid and wc.week_start=v_week_start) then raise exception 'weekly objective already claimed'; end if;
+  progress:=public.bw_daily_metric(uid,'weekly_actions',v_week_start::timestamptz);
   if progress<10 then raise exception 'weekly objective is not complete'; end if;
-  insert into public.bw_weekly_objective_claims(user_id,week_start) values(uid,week_start);
+  insert into public.bw_weekly_objective_claims(user_id,week_start) values(uid,v_week_start);
   update public.player_wallets set balance=balance+3000,version=version+1,updated_at=now() where user_id=uid;
   update public.bw_player_states set merits=merits+1,updated_at=now() where user_id=uid;
   perform public.bw_gain_xp(uid,80);
   perform public.mirror_wallet_to_save(uid,(select balance from public.player_wallets where user_id=uid));
-  insert into public.bw_action_logs(user_id,kind,summary,data) values(uid,'daily','Claimed weekly objective',jsonb_build_object('weekStart',week_start,'cash',3000,'xp',80,'merits',1));
+  insert into public.bw_action_logs(user_id,kind,summary,data) values(uid,'daily','Claimed weekly objective',jsonb_build_object('weekStart',v_week_start,'cash',3000,'xp',80,'merits',1));
   return jsonb_build_object('event',jsonb_build_object('cash',3000,'xp',80),'daily',public.bw_daily_life_snapshot(),'state',public.bw_get_state());
 end $$;
 
