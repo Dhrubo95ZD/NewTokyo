@@ -33,5 +33,9 @@ supabase.rpc = async (name,params) => {
   }
   return {data:[]};
 };
-supabase.functions.invoke = async () => { await delay(); return window.__ui.adviserError ? {error:{message:'Adviser unavailable'}} : {data:{answer:'Street Work uses no energy. Your campaign is another useful next step.',suggestions:[{page:'hustles',label:'Open Street Work',reason:'No energy required'}]}}; };
+supabase.functions.fetch = async () => {
+  await delay();
+  if (window.__ui.adviserError) return new Response(JSON.stringify({error:'Adviser unavailable'}), {status:500, headers:{'content-type':'application/json'}});
+  return new Response(JSON.stringify({answer:'Street Work uses no energy. Your campaign is another useful next step.',suggestions:[{page:'hustles',label:'Open Street Work',reason:'No energy required'}]}), {status:200, headers:{'content-type':'application/json'}});
+};
 createRoot(document.getElementById('root')).render(<MafiaGame user={{id:'ui-test',email:'tester@example.invalid'}} initialPlayer={{...INITIAL,name:'The Night Courier',level:8,cash:24500,bank:18000,nerve:18,tutorialDone:true}}/>);
