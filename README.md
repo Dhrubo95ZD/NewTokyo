@@ -25,6 +25,7 @@ A persistent online crime RPG built with React, Vite, Capacitor and Supabase for
 - Prime FX Ledger Credit accounts with 1:500/1:1000 leverage, lot-based orders, SL/TP, margin controls, live candlestick charts, Forex, XAU/USD and XAG/USD
 - Free account-aware Consigliere with direct links to recommended activities
 - Living City visual system with an animated skyline, illustrated district map, rarity effects, page transitions and a five-action safe-area mobile dock
+- Blackwood Dispatch season board with server-backed next actions, district goals, faction targets and a mobile-first route guide
 
 ## Live market setup
 
