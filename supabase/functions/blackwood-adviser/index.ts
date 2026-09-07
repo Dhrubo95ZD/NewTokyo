@@ -34,10 +34,42 @@ function advise(question: string, context: JsonMap) {
   const hustleProfile = hustles.profile || {};
   const combat = context.combat || {};
   const relic = combat.relic || {};
+  const daily = context.daily || {};
+  const takeover = context.takeover || {};
   const suggestions: Suggestion[] = [];
   let answer = "I reviewed your current Blackwood City record.";
 
-  if (/job|work|career|profession|interview|bank offer/.test(query)) {
+  if (/takeover|city control|pledge|faction season|blackwood season/.test(query)) {
+    const season = takeover.season || {};
+    const pledge = takeover.pledge;
+    const personal = takeover.personal || {};
+    const leader = Array.isArray(takeover.factions) ? takeover.factions[0] : null;
+    if (takeover.status === "active") {
+      answer = pledge
+        ? `You are backing ${pledge.name}. You have ${personal.points || 0} Takeover points, rank #${personal.rank || 1}, and ${season.daysLeft || 0} days remain before ${season.finaleName || "the finale"}.`
+        : `Blackwood Takeover is live with ${season.daysLeft || 0} days left. ${leader ? leader.name + " currently leads the ledger." : "No faction has scored yet"} Choose an allegiance before your next operation.`;
+      suggestions.push(suggestion(pledge ? "Run a district operation" : "Choose a faction", pledge ? "operations" : "takeover", pledge ? "Verified operation clears now feed your pledged faction and district control." : "Pledge before you play so your verified actions count toward the city ledger."));
+      if (pledge) suggestions.push(suggestion("Review Takeover rewards", "takeover", "Claim personal tiers as your verified points accumulate."));
+    } else {
+      answer = "The next Blackwood Takeover season is not open yet. Your existing progression remains available from Dispatch.";
+      suggestions.push(suggestion("Open Dispatch", "dispatch", "Review lifetime milestones while the city contest is between seasons."));
+    }
+  } else if (/daily|bonus|streak|objective|today|claim/.test(query)) {
+    const objectives = Array.isArray(daily.objectives) ? daily.objectives : [];
+    const readyObjectives = objectives.filter((item: JsonMap) => !item.claimedAt && Number(item.progress || 0) >= Number(item.target || 0));
+    const openObjectives = objectives.filter((item: JsonMap) => !item.claimedAt).length;
+    if (daily.claimedToday === false) {
+      answer = `Your daily bonus is waiting. You are on a ${daily.streak?.current || 0}-day streak, with ${readyObjectives.length} daily objective${readyObjectives.length === 1 ? "" : "s"} ready to claim and ${openObjectives} still open.`;
+      suggestions.push(suggestion("Open Daily Life", "daily", "Claim today’s server-recorded bonus, then review the objectives for this session."));
+    } else if (readyObjectives.length) {
+      answer = `Today’s bonus is already logged. ${readyObjectives.length} daily objective${readyObjectives.length === 1 ? " is" : "s are"} ready to claim, and your ${daily.streak?.current || 0}-day streak is intact.`;
+      suggestions.push(suggestion("Claim objective rewards", "daily", "Collect the completed objectives without leaving the Daily Life board."));
+    } else {
+      answer = `Today’s bonus is already logged and your ${daily.streak?.current || 0}-day streak is intact. ${openObjectives} daily objective${openObjectives === 1 ? " remains" : "s remain"} for this session.`;
+      suggestions.push(suggestion("Review Daily Life", "daily", "See current progress, the weekly ledger, and your mission journal."));
+    }
+    suggestions.push(suggestion("Choose your next move", "home", "Home now prioritises your daily reward, active operation, and campaign progress."));
+  } else if (/job|work|career|profession|interview|bank offer/.test(query)) {
     if (!career) {
       answer = trader.bank_offer_unlocked
         ? "Federal Trust has noticed your trading record. You can interview for banking now, or choose another profession."

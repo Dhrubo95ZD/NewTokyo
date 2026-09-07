@@ -9,9 +9,10 @@ const id = () => crypto.randomUUID();
 const pct = (value,max) => Math.min(100,Number(value || 0)/Math.max(1,Number(max || 1))*100);
 function Meter({value,max}) { return <figure className="progress-meter"><i style={{width:`${pct(value,max)}%`}}/></figure>; }
 
-export default function ProgressionHub({onState}) {
+export default function ProgressionHub({onState, initialTab = "story"}) {
   const [data,setData]=useState(null),[tab,setTab]=useState("story"),[busy,setBusy]=useState(false),[error,setError]=useState(""),[result,setResult]=useState(null),[cooldown,setCooldown]=useState(0);
   const load=useCallback(async()=>{const{data:value,error:problem}=await supabase.rpc("bw_progression_snapshot");if(problem)setError(problem.message);else{setData(value);setError("");onState?.(value?.player)}},[onState]);
+  useEffect(() => { setTab(initialTab); }, [initialTab]);
   useEffect(()=>{load()},[load]);
   useEffect(()=>{if(!cooldown)return;const timer=setInterval(()=>setCooldown(value=>Math.max(0,value-1)),1000);return()=>clearInterval(timer)},[cooldown]);
   const act=async(rpc,params={})=>{if(busy)return;setBusy(true);setError("");const{data:value,error:problem}=await supabase.rpc(rpc,params);if(problem)setError(problem.message);else{const next=value?.progression||value;setData(next);setResult(value?.event||null);onState?.(next?.player)}setBusy(false)};

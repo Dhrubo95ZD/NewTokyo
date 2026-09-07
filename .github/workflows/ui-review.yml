@@ -1,0 +1,32 @@
+name: Blackwood UI review
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: node scripts/after-dark-contract.mjs
+      - run: npm run build
+      - name: Install isolated browser test dependency
+        run: npm install --no-save --package-lock=false playwright@1.51.1
+      - run: npx playwright install --with-deps chromium
+      - name: Test phone and desktop interactions
+        run: node scripts/after-dark-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: blackwood-ui-screenshots
+          path: test-artifacts/after-dark
+          if-no-files-found: warn

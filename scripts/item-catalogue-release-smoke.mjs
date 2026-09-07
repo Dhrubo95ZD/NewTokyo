@@ -5,11 +5,11 @@ const read=path=>readFile(new URL(`../${path}`,import.meta.url),"utf8");
 const [catalogue,style,cleanup,ledger,game,casino,economy,android,workflow]=await Promise.all([
   read("src/catalogue/ItemCatalogue.jsx"),read("src/catalogue/item-catalogue.css"),
   read("supabase/20260912_item_catalogue_release_cleanup.sql"),read("supabase/20260913_ledger_credits.sql"),
-  read("src/MafiaGame.jsx"),read("src/casino/CasinoHub.jsx"),read("src/economy/EconomyHub.jsx"),
+  read("src/ui/navigation.js"),read("src/casino/CasinoHub.jsx"),read("src/economy/EconomyHub.jsx"),
   read("android/variables.gradle"),read(".github/workflows/main.yml")
 ]);
 
-assert.match(game,/\["catalogue", "Item Catalogue"\]/);
+assert.ok(game.includes("['catalogue','Item Catalogue']"));
 assert.match(catalogue,/bw_item_catalogue/);
 assert.match(catalogue,/How to obtain/);
 assert.match(catalogue,/exactChance/);
