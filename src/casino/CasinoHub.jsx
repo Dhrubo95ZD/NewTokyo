@@ -10,9 +10,11 @@ const Card = ({ card }) => <i className={/[HD]/.test(card) ? "red" : ""}>{card?.
 
 export default function CasinoHub({ onLedgerChange = null, onCashChange = null }) {
   const [tab,setTab]=useState("blackjack"),[bet,setBet]=useState(100),[redeemAmount,setRedeemAmount]=useState(100),[state,setState]=useState(null),[busy,setBusy]=useState(false),[error,setError]=useState(""),[motion,setMotion]=useState(null);
-  const accept=value=>{setState(value);if(value?.balance!=null)onLedgerChange?.(value.balance);if(value?.cashBalance!=null)onCashChange?.(value.cashBalance)};
-  const call=async(rpc,params={})=>{if(busy)return null;setBusy(true);setError("");const{data,error:problem}=await supabase.rpc(rpc,params);if(problem)setError(problem.message);else accept(data);setBusy(false);return problem?null:data};
-  const animatedCall=async(kind,rpc,params,duration)=>{if(busy)return null;setBusy(true);setError("");setMotion({kind,key:Date.now()});const started=Date.now();const{data,error:problem}=await supabase.rpc(rpc,params);await wait(Math.max(0,duration-(Date.now()-started)));if(problem)setError(problem.message);else accept(data);setMotion(null);setBusy(false);return problem?null:data};
+  const accept=value=>{if(!value||typeof value!=="object")return;setState(previous=>({...previous,...value}));if(value?.balance!=null)onLedgerChange?.(value.balance);if(value?.cashBalance!=null)onCashChange?.(value.cashBalance)};
+  const refreshSnapshot=async()=>{const{data,error:problem}=await supabase.rpc("bw_casino_snapshot");if(!problem)accept(data);return data};
+  const settle=async(rpc,data)=>{accept(data);if(rpc!=="bw_casino_snapshot")await refreshSnapshot();};
+  const call=async(rpc,params={})=>{if(busy)return null;setBusy(true);setError("");const{data,error:problem}=await supabase.rpc(rpc,params);if(problem)setError(problem.message);else await settle(rpc,data);setBusy(false);return problem?null:data};
+  const animatedCall=async(kind,rpc,params,duration)=>{if(busy)return null;setBusy(true);setError("");setMotion({kind,key:Date.now()});const started=Date.now();const{data,error:problem}=await supabase.rpc(rpc,params);await wait(Math.max(0,duration-(Date.now()-started)));if(problem)setError(problem.message);else await settle(rpc,data);setMotion(null);setBusy(false);return problem?null:data};
   useEffect(()=>{call("bw_casino_snapshot")},[]);
   const play=()=>tab==="slots"
     ? animatedCall("slots","bw_slots_spin",{p_bet:bet,p_request_id:crypto.randomUUID()},1700)
