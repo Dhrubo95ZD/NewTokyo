@@ -16,7 +16,7 @@ values (
   'blackwood-takeover-01',
   'Blackwood Takeover',
   'Choose a side, move the districts and decide who owns the city when the lights come on.',
-  '2026-09-08T00:00:00Z',
+  '2026-09-07T00:00:00Z',
   '2026-09-29T00:00:00Z',
   'The Blackout',
   true
@@ -232,7 +232,7 @@ declare
   target integer;
   cash integer;
   xp integer;
-  merits integer;
+  v_merits integer;
   points integer;
 begin
   select * into season from public.bw_takeover_seasons where active and starts_at<=now() and ends_at>now() order by starts_at desc limit 1;
@@ -242,16 +242,16 @@ begin
     case p_tier when 1 then 2500 when 2 then 6500 else 15000 end,
     case p_tier when 1 then 40 when 2 then 100 else 240 end,
     case p_tier when 1 then 0 when 2 then 1 else 2 end
-  into target,cash,xp,merits;
+  into target,cash,xp,v_merits;
   select coalesce(sum(points),0) into points from public.bw_takeover_contributions where user_id=uid and season_id=season.id;
   if points<target then raise exception 'takeover reward is not ready'; end if;
   if exists(select 1 from public.bw_takeover_claims where user_id=uid and season_id=season.id and tier=p_tier) then raise exception 'takeover reward already claimed'; end if;
   insert into public.bw_takeover_claims(user_id,season_id,tier) values(uid,season.id,p_tier);
   update public.player_wallets set balance=balance+cash,version=version+1,updated_at=now() where user_id=uid;
-  update public.bw_player_states set merits=merits+merits,updated_at=now() where user_id=uid;
+  update public.bw_player_states set merits=merits+v_merits,updated_at=now() where user_id=uid;
   perform public.bw_gain_xp(uid,xp);
   perform public.mirror_wallet_to_save(uid,(select balance from public.player_wallets where user_id=uid));
-  insert into public.bw_action_logs(user_id,kind,summary,data) values(uid,'takeover','Claimed '||(select label from (values (1,'Street signal'),(2,'District mark'),(3,'Blackwood key')) labels(tier,label) where tier=p_tier),jsonb_build_object('season',season.id,'tier',p_tier,'cash',cash,'xp',xp,'merits',merits));
+  insert into public.bw_action_logs(user_id,kind,summary,data) values(uid,'takeover','Claimed '||(select label from (values (1,'Street signal'),(2,'District mark'),(3,'Blackwood key')) labels(tier,label) where tier=p_tier),jsonb_build_object('season',season.id,'tier',p_tier,'cash',cash,'xp',xp,'merits',v_merits));
   return jsonb_build_object('event',jsonb_build_object('cash',cash,'xp',xp,'merits',merits,'tier',p_tier),'takeover',public.bw_takeover_snapshot(),'state',public.bw_get_state());
 end $$;
 
