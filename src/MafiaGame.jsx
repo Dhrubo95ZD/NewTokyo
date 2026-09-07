@@ -45,7 +45,7 @@ const CITY_DIRECTORY = [
   { area: "FINANCIAL", items: [
     ["bank", "Federal Trust", "PROTECTED ACCOUNT", "Move city cash into a protected account; no interest is paid.", "bank"],
     ["economy", "Market Desk", "TRANSPARENT MARKETS", "Review the existing market desk without adding a second city wallet.", "economy"],
-    ["arcade", "Rossi's Arcade", "ARCADE DOLLARS", "Five server-settled rooms use a separate play-earned wallet.", "arcade"],
+    ["arcade", "Rossi's Arcade", "ARCADE DOLLARS", "Three classic rooms use a separate play-earned wallet.", "arcade"],
   ]},
   { area: "NORTHSIDE", items: [
     ["shop", "Security & Tools", "EQUIPMENT", "Buy lawful tools, armour, medicine and supplies.", "shop"],
