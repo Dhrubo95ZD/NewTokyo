@@ -1,4 +1,4 @@
-# Blackwood After Dark — first review candidate
+# Blackwood After Dark — core UI rebuild
 
 ## Implemented
 
@@ -9,6 +9,8 @@
 - Crimes: explicit costs, estimated chance/risk, readable locked reasons, Ready now filter, synchronous double-tap guard and actual server success/failure results.
 - Location directory cards and faction deep links. Dispatch now explicitly uses lifetime milestones, not fictitious seasons; its progress matches its targets.
 - Browser-back navigation and per-page scroll restoration. Page-owned forms/filters currently reset when changing screens; broader persisted workspace state is not part of this first candidate.
+- Core journey pass across progression, operations, combat, catalogue, equipment, jobs, street work and market. These surfaces now share the same charcoal/slate/brass hierarchy while keeping rarity, risk, heat and outcome colours meaningful.
+- Home now surfaces server-backed priority records for active operations, claimable rewards and restrictions instead of making players search the navigation.
 
 ## Validation
 
@@ -20,12 +22,12 @@ The local production web build passes. Existing bundle-size warning remains. Loc
 
 ## Release boundaries
 
-This is the Home + Adviser + Crimes benchmark and shared shell, not a claim that every legacy screen is redesigned. No database migration, economy change, package name change, signing change, or Play upload is included. Version code 14 is deliberately untouched; do not upload this candidate to Play under that already-used code.
+The current branch is an incremental game build. It keeps the existing database contracts, economy, package name and signing setup while extending the UI consistently across the core journeys. The Android candidate is version 0.15.0 (version code 15) so it can be installed alongside the current test build.
 
 ## Follow-up after visual approval
 
 1. Consolidate legacy stylesheet layers and bundle the chosen fonts (the existing external font import still has local serif/sans fallbacks).
-2. Apply purpose-built layouts to equipment/catalogue, jobs, combat, operations and progression; profile real Android interactions.
-3. Persist useful tab/filter/form context and add unsaved-form protection.
-4. Check keyboard resize on physical Android, tutorial obstruction, screen-reader flows, contrast and large-text settings.
-5. Build APK/AAB from the validated candidate with an unused version code when preparing a Play update.
+2. Persist useful tab/filter/form context and add unsaved-form protection.
+3. Check keyboard resize on physical Android, tutorial obstruction, screen-reader flows, contrast and large-text settings.
+4. Continue polishing supporting community, account and safety screens against the same component tokens.
+5. Build and install each candidate on Android, then use the AAB for the next Play testing update when ready.
