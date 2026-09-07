@@ -36,16 +36,15 @@ export const INITIAL = {
 
 const CITY_DIRECTORY = [
   { area: "WEST SIDE", items: [
-    ["civic", "Civic Contracts", "CITY SERVICES", "Public works, deliveries and district standing.", "missions"],
+    ["civic", "Civic Contracts", "CITY SERVICES", "Public works, the Community Fund and district standing.", "missions"],
     ["hustles", "Civic Work", "NO ENERGY REQUIRED", "Open shifts that keep the city moving.", "hustles"],
     ["hospital", "St. Mercy Hospital", "HEALTH", "Recover safely and review admissions.", "hospital"],
     ["jail", "Blackwood County", "SAFETY", "Review sentences and current status.", "jail"],
   ]},
   { area: "FINANCIAL", items: [
     ["bank", "Federal Trust", "PROTECTED ACCOUNT", "Move city cash into a protected account; no interest is paid.", "bank"],
-    ["economy", "Market Desk", "TRANSPARENT MARKETS", "Review prices and market careers without adding another wallet.", "economy"],
+    ["economy", "Market Desk", "TRANSPARENT MARKETS", "Review the existing market desk without adding a second city wallet.", "economy"],
     ["arcade", "Rossi's Arcade", "ARCADE DOLLARS", "Blackjack, slots and roulette use a separate play-earned wallet.", "arcade"],
-    ["civic", "Charity House", "COMMUNITY FUND", "Donate city cash to visible neighbourhood projects.", "family"],
   ]},
   { area: "NORTHSIDE", items: [
     ["shop", "Security & Tools", "EQUIPMENT", "Buy lawful tools, armour, medicine and supplies.", "shop"],
