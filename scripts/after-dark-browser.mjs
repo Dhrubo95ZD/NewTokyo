@@ -1,0 +1,65 @@
+import assert from 'node:assert/strict';
+import { mkdir } from 'node:fs/promises';
+import { createServer } from 'vite';
+const { chromium } = await import(process.env.UI_PLAYWRIGHT_PATH || 'playwright');
+const output = 'test-artifacts/after-dark';
+await mkdir(output,{recursive:true});
+const server = await createServer({server:{host:'127.0.0.1',port:4178,strictPort:true},optimizeDeps:{entries:['tests/ui/index.html']}});
+await server.listen();
+let browser;
+try {
+  browser = await chromium.launch({headless:true});
+  for(const viewport of [{width:320,height:740},{width:390,height:844},{width:1440,height:1000}]) {
+    const context=await browser.newContext({viewport,reducedMotion:'reduce'});
+    const page=await context.newPage(), errors=[];
+    page.on('pageerror',error=>errors.push(error.message));
+    // Fixture must never access real player services or external fonts.
+    await context.route(/https:\/\//,route=>route.abort());
+    await page.goto('http://127.0.0.1:4178/tests/ui/index.html');
+    await page.getByRole('button',{name:'Continue campaign',exact:true}).waitFor();
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Home must not overflow');
+    const trigger=page.getByRole('button',{name:'Ask Adviser',exact:false});
+    const bounds=await trigger.boundingBox();
+    assert.ok(bounds.y>=0&&bounds.y+bounds.height<150,'adviser must be visible without scrolling');
+    await page.screenshot({path:`${output}/home-${viewport.width}.png`,fullPage:true});
+    await trigger.click();
+    const dialog=page.getByRole('dialog',{name:'Ask Adviser',exact:true});
+    await dialog.getByRole('button',{name:'What should I do next?',exact:true}).click();
+    await dialog.getByText('Street Work uses no energy.',{exact:false}).waitFor();
+    await page.screenshot({path:`${output}/adviser-${viewport.width}.png`});
+    await page.keyboard.press('Escape');
+    assert.equal(await dialog.count(),0);
+    await trigger.click();
+    assert.equal(await dialog.getByText('Street Work uses no energy.',{exact:false}).count(),1,'conversation survives close/reopen');
+    await page.evaluate(()=>{window.__ui.adviserError=true});
+    await dialog.getByLabel('Your question').fill('Help me train');
+    await dialog.getByRole('button',{name:'Send question'}).click();
+    await dialog.getByRole('alert').waitFor();
+    assert.equal(await dialog.getByLabel('Your question').inputValue(),'Help me train','retry keeps question');
+    await page.keyboard.press('Escape');
+    const navigation=viewport.width<=760?page.getByRole('navigation',{name:'Primary navigation'}):page.getByRole('navigation',{name:'Game sections'});
+    await navigation.getByRole('button',{name:'Play',exact:false}).click();
+    await page.getByRole('dialog',{name:'Play',exact:true}).getByRole('button',{name:'Crimes',exact:false}).click();
+    const first=page.locator('.bw-crime-card').first();
+    await first.getByRole('button',{name:'Attempt crime'}).waitFor();
+    await page.screenshot({path:`${output}/crimes-${viewport.width}.png`,fullPage:true});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Crimes must not overflow');
+    await first.getByRole('button',{name:'Attempt crime'}).evaluate(button=>{button.click();button.click()});
+    await first.getByRole('status').waitFor();
+    assert.match(await first.getByRole('status').innerText(),/Success/);
+    assert.equal(await page.evaluate(()=>window.__ui.calls.filter(call=>call.name==='bw_do_crime').length),1,'double tap submits once');
+    await first.getByRole('button',{name:'Attempt crime'}).click();
+    await page.waitForFunction(()=>document.querySelector('.bw-crime-result.failure'));
+    await page.screenshot({path:`${output}/crime-result-${viewport.width}.png`,fullPage:true});
+    await page.getByRole('button',{name:'Ready now',exact:true}).click();
+    assert.equal(await page.locator('.bw-crime-card').count(),2,'locked crime excluded');
+    await page.getByRole('button',{name:'Go back',exact:true}).click();
+    await page.getByRole('button',{name:'Continue campaign',exact:true}).waitFor();
+    await page.evaluate(()=>{window.__ui.offline=true});
+    await page.getByRole('button',{name:'Refresh Home records'}).click();
+    await page.getByText('Some records could not be refreshed.',{exact:false}).waitFor();
+    assert.deepEqual(errors,[],'no browser exceptions');
+    await context.close();
+  }
+  console.log('After Dark browser checks passed: 320/390/1440px, adviser, navigation, retry, server results, duplicate prevention, offline and overflow.');
+} finally { await browser?.close(); await server.close(); }

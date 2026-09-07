@@ -7,7 +7,7 @@ const [game,styles,main]=await Promise.all([
   readFile(new URL("../src/main.jsx",import.meta.url),"utf8"),
 ]);
 
-for(const marker of ["MOBILE_NAV","mobile-dock","page-motion","blackwood-skyline","district-map","AnimatedNumber","nav-scrim"])
+for(const marker of ["MOBILE_NAV","mobile-dock","page-motion","blackwood-skyline","district-map","AnimatedNumber","<Dialog"])
   assert.ok(game.includes(marker),`missing Living City shell feature: ${marker}`);
 for(const marker of ["env(safe-area-inset-top","env(safe-area-inset-bottom","prefers-reduced-motion","@keyframes pageArrive","@keyframes legendarySheen","@media(max-width:360px)","grid-template-columns:repeat(5,1fr)"])
   assert.ok(styles.includes(marker),`missing responsive/motion contract: ${marker}`);

@@ -7,3 +7,4 @@ android/app/build/
 *.keystore
 *.p12
 *-base64.txt
+test-artifacts/

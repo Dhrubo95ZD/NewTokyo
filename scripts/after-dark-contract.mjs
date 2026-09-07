@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { createServer } from 'vite';
+import { GROUPS, validPage, pageGroup } from '../src/ui/navigation.js';
+assert.equal(GROUPS.length,5);
+const destinations=GROUPS.flatMap(group=>group.pages.map(([id])=>id));
+assert.equal(new Set(destinations).size,destinations.length);
+for(const id of ['crimes','hustles','operations','missions','factions','inventory','catalogue','gym','work','bank','family','chat','safety','arcade'])assert.ok(validPage(id));
+assert.equal(validPage('nonexistent'),false);
+assert.equal(pageGroup('inventory').id,'character');
+const server=await createServer({server:{middlewareMode:true},optimizeDeps:{noDiscovery:true,include:[]}});
+try {
+  const {nextMove}=await server.ssrLoadModule('/src/ui/HomeBoard.jsx');
+  const {crimeAvailability}=await server.ssrLoadModule('/src/ui/CrimeBoard.jsx');
+  const mission={unlocked:true,claimedAt:null,title:'Mission',objective:'Complete jobs',progress:2,target:2};
+  const active={operationName:'Operation',districtName:'Harbor',stageTitle:'Arrival'};
+  assert.equal(nextMove({player:{status:'jail'}},{active},{missions:[mission]}).page,'jail');
+  assert.equal(nextMove({player:{status:'okay'}},{active},{missions:[mission]}).page,'operations');
+  assert.equal(nextMove({player:{status:'okay'}},{},{missions:[mission]}).action,'Review & claim reward');
+  assert.equal(nextMove(null,null,null).page,'hustles');
+  const crime={skill_required:10,nerve_cost:5};
+  assert.equal(crimeAvailability(crime,{status:'okay',crime_skill:10,nerve:5}),'');
+  assert.match(crimeAvailability(crime,{status:'okay',crime_skill:9,nerve:5}),/skill 10/);
+  assert.match(crimeAvailability(crime,{status:'okay',crime_skill:10,nerve:4}),/5 nerve/);
+  assert.match(crimeAvailability(crime,{status:'jail',crime_skill:10,nerve:5}),/jailed/);
+} finally {await server.close()}
+const css=fs.readFileSync('src/ui/after-dark.css','utf8');
+for(const value of ['prefers-reduced-motion','100dvh','safe-area-inset-bottom','focus-visible','bw-primary','bw-adviser-trigger'])assert.ok(css.includes(value));
+const home=fs.readFileSync('src/ui/HomeBoard.jsx','utf8');
+assert.ok(!home.includes('8 minutes ago')&&!home.includes('Don Salvatore'));
+console.log('After Dark decision, navigation, locking, accessibility and motion contracts passed.');
