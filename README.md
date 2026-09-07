@@ -21,7 +21,7 @@ A persistent online crime RPG built with React, Vite, Capacitor and Supabase for
 - World chat, private mail, forums, player directory and real families
 - Family headquarters with applications, officer permissions, private/war chat, activity records, shared vault and armory
 - Real-member organized crimes, attack chains, ranked family wars and twelve income-producing territories
-- Rossi's Arcade: blackjack, slots and roulette using separate play-earned Arcade Dollars; no city-cash or real-money purchase path, with one-way redemption of verified net wins into ordinary in-game cash
+- Rossi's Arcade: blackjack, slots, roulette, Signal Lock and Courier Grid using separate play-earned Arcade Dollars; no city-cash or real-money purchase path, with one-way redemption of verified net wins into ordinary in-game cash
 - Prime FX Ledger Credit accounts with 1:500/1:1000 leverage, lot-based orders, SL/TP, margin controls, live candlestick charts, Forex, XAU/USD and XAG/USD
 - Free account-aware Consigliere with direct links to recommended activities
 - Living City visual system with an animated skyline, illustrated district map, rarity effects, page transitions and a five-action safe-area mobile dock
@@ -81,10 +81,11 @@ Apply the migrations once to the existing Supabase project, in this order:
 21. `supabase/20260918_character_collection.sql`
 22. `supabase/20260919_blackwood_takeover.sql`
 23. `supabase/20260920_city_services.sql`
+24. `supabase/20260921_progression_guardrails_arcade_games.sql`
 
 The city-core migration installs the connected world, RLS policies, real families and authoritative ranking adapter. Later migrations add the catalogue, tutorial, Arcade, Forex economy, careers and Families 2.0. The reset script is separate because it must run only once.
 
-Arcade Dollars are isolated from ordinary city cash. The Arcade keeps its play-earned ledger balance non-purchasable and displays it as `$`; verified net Arcade wins may be redeemed one-way into ordinary in-game cash at the server-defined rate. The existing Market Desk remains play-only and is not connected to monetisation; there is no ordinary-cash or real-money to Arcade Dollar conversion, and no real-money withdrawal.
+Arcade Dollars are isolated from ordinary city cash. The Arcade keeps its play-earned ledger balance non-purchasable and displays it as `$`; verified net Arcade wins may be redeemed one-way into ordinary in-game cash at 100 Arcade Dollars = $50 city cash. Signal Lock and Courier Grid use server-issued, server-checked challenges and an eight-attempt daily budget. The existing Market Desk remains play-only and is not connected to monetisation; there is no ordinary-cash or real-money to Arcade Dollar conversion, and no real-money withdrawal.
 
 See [`docs/GOOGLE_PLAY_RELEASE_CHECKLIST.md`](docs/GOOGLE_PLAY_RELEASE_CHECKLIST.md) before moving from tester APKs to a Play Store production release.
 
