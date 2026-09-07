@@ -94,9 +94,13 @@ begin
     );
   end if;
 
-  wallet := public.bw_ensure_ledger(uid);
+  perform public.bw_ensure_ledger(uid);
+  select * into wallet from public.bw_ledger_wallets where user_id = uid for update;
   if wallet.arcade_winnings < p_credits then
     raise exception 'not enough redeemable Arcade Dollars';
+  end if;
+  if wallet.balance < p_credits then
+    raise exception 'play more Arcade rounds before redeeming these winnings';
   end if;
   cash_awarded := p_credits / 100;
 
