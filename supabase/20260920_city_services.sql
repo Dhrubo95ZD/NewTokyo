@@ -242,7 +242,7 @@ create table if not exists public.bw_civic_contracts (
 insert into public.bw_civic_contracts
   (id, district_id, category, title, summary, icon, reward_cash, reward_xp, reward_respect, sort_order)
 values
-  ('clinic-supplies','northside','Health','Clinic supply run','Deliver sealed medical supplies to St. Mercy before the next ward change.','+','$650',20,3,1),
+  ('clinic-supplies','northside','Health','Clinic supply run','Deliver sealed medical supplies to St. Mercy before the next ward change.','+',650,20,3,1),
   ('archive-restoration','old-quarter','Records','Restore an archive room','Move public records out of a damaged room and preserve the city history.','▤',550,22,4,2),
   ('harbor-manifest','harbor','Logistics','Verify the harbor manifest','Reconcile a public shipment record with the dock ledger.','◇',700,24,4,3),
   ('railway-repair','railway','Repair','Coordinate a repair crew','Keep a service route open for families and workers in the Railway Quarter.','⚙',800,28,5,4),
