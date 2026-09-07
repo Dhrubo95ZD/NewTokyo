@@ -75,7 +75,7 @@ export default function CivicServicesHub({ onState, onNavigate }) {
     </section>}
 
     <section className="civic-section">
-      <header><div><small>PUBLIC WORKS</small><h2>Choose a civic contract</h2><p>One active contract at a time. Rewards are transparent and paid as ordinary city cash.</p></div><b>{contracts.length} available</b></header>
+      <header><div><small>PUBLIC WORKS</small><h2>Civic Contracts</h2><p>One active contract at a time. Rewards are transparent and paid as ordinary city cash.</p></div><b>{contracts.length} available</b></header>
       <div className="civic-contract-grid">{contracts.map(contract => <article className={active?.contractId === contract.id ? "active" : ""} key={contract.id}>
         <div className="civic-contract-mark">{contract.icon || "◆"}</div>
         <div className="civic-contract-copy"><small>{districtLabel(contract.district)} · {contract.category}</small><h3>{contract.title}</h3><p>{contract.summary}</p></div>
