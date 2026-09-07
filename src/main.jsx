@@ -6,6 +6,7 @@ import "./bright-theme.css";
 import "./mobile-trading-fixes.css";
 import "./living-city.css";
 import "./ui/after-dark.css";
+import "./ui/readability-fixes.css";
 import { supabase } from "./online/supabase.js";
 
 const reportClientError = (error, context = {}) => {
