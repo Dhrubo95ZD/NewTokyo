@@ -16,6 +16,7 @@ import Dialog from "./ui/Dialog.jsx";
 import { GROUPS, pageGroup, pageLabel, validPage } from "./ui/navigation.js";
 import { App } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
+import { supabase } from "./online/supabase.js";
 
 const SAVE_KEY = "blackwood-city-save-v1";
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
@@ -111,11 +112,21 @@ function City({ go }) {
 
 export default function MafiaGame({ initialPlayer = null, character = null, user = null, onPlayerChange = null, onSignOut = null, onDeleteAccount = null }) {
   const [p, setP] = useState(() => ({...INITIAL, ...(initialPlayer || loadGame())}));
+  const [ledgerCredits, setLedgerCredits] = useState(null);
   const [page, setPage] = useState("home"), [menu, setMenu] = useState(null), [accountOpen, setAccountOpen] = useState(false), [adviserOpen, setAdviserOpen] = useState(false);
   const trail = useRef([]), scrolls = useRef({}), pageRef = useRef(page), heading = useRef(null);
   const activeGroup = pageGroup(page);
   useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(p)); onPlayerChange?.(p); }, [p, onPlayerChange]);
   const syncWallet = useCallback(cash => setP(x => ({ ...x, cash })), []);
+  const syncLedger = useCallback(value => setLedgerCredits(Number(value || 0)), []);
+  useEffect(() => {
+    let alive = true;
+    if (!user || !supabase) { setLedgerCredits(null); return () => { alive = false; }; }
+    supabase.rpc("bw_casino_snapshot").then(({ data, error }) => {
+      if (alive && !error && data?.balance != null) syncLedger(data.balance);
+    });
+    return () => { alive = false; };
+  }, [user?.id, syncLedger]);
   const syncCore = useCallback(core => core && setP(x => ({ ...x, level: core.level, xp: core.xp, cash: core.cash, bank: core.bank, energy: core.energy, maxEnergy: core.max_energy, nerve: core.nerve, maxNerve: core.max_nerve, health: core.health, maxHealth: core.max_health, happy: core.happy, maxHappy: core.max_happy, strength: Number(core.strength), defense: Number(core.defense), speed: Number(core.speed), dexterity: Number(core.dexterity), crimeSkill: core.crime_skill, respect: core.respect, merits: core.merits, status: core.status, jobPoints: core.job_points, tutorialStep: core.tutorial_step ?? x.tutorialStep, tutorialDone: core.tutorial_done ?? x.tutorialDone })), []);
   const navigate = useCallback(next => {
     if (!validPage(next)) return;
@@ -157,7 +168,7 @@ export default function MafiaGame({ initialPlayer = null, character = null, user
     takeover: <TakeoverHub onNavigate={navigate}/>, city:<City go={navigate}/>, civic:<CivicServicesHub onState={syncCore} onNavigate={navigate}/>,
     family:<CommunityHub user={user} initialTab="families"/>, chat:<CommunityHub user={user} initialTab="chat"/>,
     players:<CommunityHub user={user} initialTab="players"/>, rankings:<CommunityHub user={user} initialTab="rankings"/>,
-    economy:<EconomyHub onWalletChange={syncWallet}/>, arcade:<CasinoHub onWalletChange={syncWallet}/>,
+    economy:<EconomyHub onLedgerChange={syncLedger}/>, arcade:<CasinoHub onLedgerChange={syncLedger} onCashChange={syncWallet}/>,
     safety:<SafetyHub onDeleteAccount={onDeleteAccount}/>
   }[page];
   const initials = (character?.codename || p.name).split(/\s+/).map(x=>x[0]).join("").slice(0,2).toUpperCase();
@@ -166,7 +177,10 @@ export default function MafiaGame({ initialPlayer = null, character = null, user
     <header className="topbar">
       <button className="brand" onClick={()=>navigate("home")} aria-label="Moretti Home"><i>M</i><span><b>MORETTI</b><small>BLACKWOOD CITY</small></span></button>
       <button className="bw-adviser-trigger" onClick={()=>{setMenu(null);setAccountOpen(false);setAdviserOpen(true)}} aria-haspopup="dialog" aria-expanded={adviserOpen}><span aria-hidden="true">✦</span> Ask Adviser</button>
-      <button className="cash" onClick={()=>navigate("bank")} aria-label={"Open bank, "+money(p.cash)+" on hand"}><small>ON HAND</small><b>$<AnimatedNumber value={p.cash}/></b></button>
+      <div className="wallet-strip" aria-label="City and Arcade balances">
+        <button className="cash" onClick={()=>navigate("bank")} aria-label={"Open bank, "+money(p.cash)+" on hand"}><small>ON HAND</small><b>$<AnimatedNumber value={p.cash}/></b></button>
+        <button className="ledger-balance" onClick={()=>navigate("arcade")} aria-label={ledgerCredits == null ? "Open Arcade, Arcade Dollars loading" : "Open Arcade, "+money(ledgerCredits)+" Arcade Dollars"}><small>ARCADE DOLLARS</small><b>{ledgerCredits == null ? "—" : <><span>$</span><AnimatedNumber value={ledgerCredits}/></>}</b></button>
+      </div>
       <button className="avatar" onClick={()=>{setMenu(null);setAdviserOpen(false);setAccountOpen(true)}} aria-label="Account menu" aria-haspopup="dialog">{initials}</button>
       <div className="resources" data-tutorial="resources"><Resource label="Energy" value={p.energy} max={p.maxEnergy} tone="energy" icon="⚡"/><Resource label="Nerve" value={p.nerve} max={p.maxNerve} tone="nerve" icon="♦"/><Resource label="Health" value={p.health} max={p.maxHealth} tone="health" icon="+"/><Resource label="Happy" value={p.happy} max={p.maxHappy} tone="happy" icon="♥"/></div>
     </header>
