@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const [sql, ui, css, hustle, operations, progression] = await Promise.all([
+const [sql, concurrencySql, ui, css, hustle, operations, progression] = await Promise.all([
   readFile(new URL("../supabase/20260921_progression_guardrails_arcade_games.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/20260922_progression_concurrency_hardening.sql", import.meta.url), "utf8"),
   readFile(new URL("../src/casino/CasinoHub.jsx", import.meta.url), "utf8"),
   readFile(new URL("../src/casino/casino.css", import.meta.url), "utf8"),
   readFile(new URL("../src/hustles/HustleHub.jsx", import.meta.url), "utf8"),
@@ -28,6 +29,8 @@ for (const marker of ["skill-arcade-room", "memory-grid", "signal-keypad", "cour
 assert.ok(hustle.includes("240 runs per rolling 24 hours"), "Street Work budget is not visible");
 assert.ok(operations.includes("20-clear UTC-day cap"), "operation budget is not visible");
 assert.ok(progression.includes("dailyCap||72"), "faction budget is not visible");
+assert.ok(concurrencySql.includes("pg_advisory_xact_lock"), "progression budget checks are not serialized");
+assert.ok(concurrencySql.includes("hashtextextended"), "progression lock key is not stable");
 assert.equal((sql.match(/\$\$/g) || []).length % 2, 0, "migration has unmatched dollar quotes");
 
 console.log("progression guardrails and Arcade skill-room contracts passed");
