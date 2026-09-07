@@ -3,6 +3,12 @@
 --
 -- City Services is lawful civic work: no interest, leverage, cash purchase of arcade
 -- currency, or chance-based rewards. The existing Arcade games remain unchanged.
+-- Existing item IDs are preserved for save compatibility; the legacy alcohol label is
+-- reworked into a non-intoxicating tonic rather than creating a new consumable.
+update public.bw_items
+   set name = 'Blackwood Herbal Tonic',
+       description = 'A non-intoxicating restorative tonic from the city apothecary.'
+ where id = 'bourbon';
 -- Arcade Dollars are play-earned and separate from ordinary city cash. Only verified
 -- net arcade winnings may be redeemed one-way into ordinary in-game cash.
 
@@ -259,9 +265,6 @@ on conflict(id) do update set
   reward_respect = excluded.reward_respect,
   sort_order = excluded.sort_order,
   active = excluded.active;
-
--- Correct the one text literal above for PostgreSQL integer typing on re-runs.
-update public.bw_civic_contracts set reward_cash = 650 where id = 'clinic-supplies';
 
 create table if not exists public.bw_civic_runs (
   id bigint generated always as identity primary key,
