@@ -3,13 +3,12 @@ package com.neotokyo.underworld;
 import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingClientStateListener;
+import com.android.billingclient.api.BillingResult;
 import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.QueryProductDetailsParams;
-import com.android.billingclient.api.QueryProductDetailsResult;
 import com.android.billingclient.api.QueryPurchasesParams;
-import com.android.billingclient.api.QueryPurchasesResult;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -75,10 +74,10 @@ public class PlayBillingPlugin extends Plugin implements PurchasesUpdatedListene
         if (requested != null) {
             for (int index = 0; index < requested.length(); index++) {
                 try {
-                    JSObject item = requested.getJSONObject(index);
-                    String productId = item.getString("productId", "");
+                    org.json.JSONObject item = requested.getJSONObject(index);
+                    String productId = item.optString("productId", "");
                     if (productId.isEmpty()) continue;
-                    String productType = "subscription".equals(item.getString("productType", ""))
+                    String productType = "subscription".equals(item.optString("productType", ""))
                             ? BillingClient.ProductType.SUBS : BillingClient.ProductType.INAPP;
                     products.add(QueryProductDetailsParams.Product.newBuilder()
                             .setProductId(productId)
@@ -149,7 +148,7 @@ public class PlayBillingPlugin extends Plugin implements PurchasesUpdatedListene
             BillingFlowParams flow = BillingFlowParams.newBuilder()
                     .setProductDetailsParamsList(Arrays.asList(item.build()))
                     .build();
-            BillingClient.BillingResult result = billingClient.launchBillingFlow(getActivity(), flow);
+            BillingResult result = billingClient.launchBillingFlow(getActivity(), flow);
             if (result.getResponseCode() != BillingClient.BillingResponseCode.OK) call.reject(result.getDebugMessage());
             else call.resolve(new JSObject().put("launched", true).put("responseCode", result.getResponseCode()));
         });
@@ -173,7 +172,7 @@ public class PlayBillingPlugin extends Plugin implements PurchasesUpdatedListene
         QueryPurchasesParams params = QueryPurchasesParams.newBuilder().setProductType(type).build();
         billingClient.queryPurchasesAsync(params, (result, purchasesResult) -> {
             if (result.getResponseCode() == BillingClient.BillingResponseCode.OK && purchasesResult != null) {
-                List<Purchase> purchases = purchasesResult.getPurchasesList();
+                List<Purchase> purchases = purchasesResult;
                 if (purchases != null) {
                     for (Purchase purchase : purchases) {
                         total[0] += 1;
