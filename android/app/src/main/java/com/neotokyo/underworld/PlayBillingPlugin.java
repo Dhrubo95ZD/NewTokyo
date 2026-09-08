@@ -30,6 +30,18 @@ import java.util.Map;
 public class PlayBillingPlugin extends Plugin implements PurchasesUpdatedListener {
     private BillingClient billingClient;
     private final Map<String, ProductDetails> productDetails = new HashMap<>();
+    private final List<ConnectionRequest> pendingConnections = new ArrayList<>();
+    private boolean connectionInFlight = false;
+
+    private static final class ConnectionRequest {
+        final Runnable onReady;
+        final Runnable onFailure;
+
+        ConnectionRequest(Runnable onReady, Runnable onFailure) {
+            this.onReady = onReady;
+            this.onFailure = onFailure;
+        }
+    }
 
     @Override
     public void load() {
@@ -42,29 +54,53 @@ public class PlayBillingPlugin extends Plugin implements PurchasesUpdatedListene
                                 .build())
                 .enableAutoServiceReconnection()
                 .build();
-        connect(null);
     }
 
     private void connect(final Runnable after) {
+        connect(after, () -> { });
+    }
+
+    private void connect(final Runnable after, final Runnable onFailure) {
         if (billingClient == null) {
-            if (after != null) after.run();
+            if (onFailure != null) onFailure.run();
             return;
         }
         if (billingClient.isReady()) {
             if (after != null) after.run();
             return;
         }
-        billingClient.startConnection(new BillingClientStateListener() {
-            @Override
-            public void onBillingServiceDisconnected() {
-                // Billing 9 auto-reconnects on the next API call.
-            }
+        pendingConnections.add(new ConnectionRequest(after, onFailure));
+        if (connectionInFlight) return;
+        connectionInFlight = true;
+        try {
+            billingClient.startConnection(new BillingClientStateListener() {
+                @Override
+                public void onBillingServiceDisconnected() {
+                    finishConnection(false, "Google Play billing disconnected");
+                }
 
-            @Override
-            public void onBillingSetupFinished(com.android.billingclient.api.BillingResult result) {
-                if (result.getResponseCode() == BillingClient.BillingResponseCode.OK && after != null) after.run();
+                @Override
+                public void onBillingSetupFinished(BillingResult result) {
+                    finishConnection(result.getResponseCode() == BillingClient.BillingResponseCode.OK,
+                            result.getDebugMessage());
+                }
+            });
+        } catch (RuntimeException error) {
+            finishConnection(false, error.getMessage());
+        }
+    }
+
+    private void finishConnection(boolean ready, String message) {
+        connectionInFlight = false;
+        List<ConnectionRequest> callbacks = new ArrayList<>(pendingConnections);
+        pendingConnections.clear();
+        for (ConnectionRequest callback : callbacks) {
+            if (ready) {
+                if (callback.onReady != null) callback.onReady.run();
+            } else if (callback.onFailure != null) {
+                callback.onFailure.run();
             }
-        });
+        }
     }
 
     @PluginMethod
@@ -111,7 +147,7 @@ public class PlayBillingPlugin extends Plugin implements PurchasesUpdatedListene
                 }
                 call.resolve(new JSObject().put("products", response));
             });
-        });
+        }, () -> call.reject("Google Play billing is unavailable"));
     }
 
     private JSObject productJson(ProductDetails detail) {
@@ -151,7 +187,7 @@ public class PlayBillingPlugin extends Plugin implements PurchasesUpdatedListene
             BillingResult result = billingClient.launchBillingFlow(getActivity(), flow);
             if (result.getResponseCode() != BillingClient.BillingResponseCode.OK) call.reject(result.getDebugMessage());
             else call.resolve(new JSObject().put("launched", true).put("responseCode", result.getResponseCode()));
-        });
+        }, () -> call.reject("Google Play billing is unavailable"));
     }
 
     @PluginMethod
@@ -165,7 +201,7 @@ public class PlayBillingPlugin extends Plugin implements PurchasesUpdatedListene
             };
             queryPurchases(BillingClient.ProductType.INAPP, total, done);
             queryPurchases(BillingClient.ProductType.SUBS, total, done);
-        });
+        }, () -> call.reject("Google Play billing is unavailable"));
     }
 
     private void queryPurchases(String type, int[] total, Runnable done) {
