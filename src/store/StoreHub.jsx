@@ -35,7 +35,11 @@ export default function StoreHub({ user = null, onNavigate = null }) {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [nativeAvailable, setNativeAvailable] = useState(Capacitor.isNativePlatform());
+  const [billingLoading, setBillingLoading] = useState(false);
   const pendingRequests = useRef(new Map());
+  const listenerRef = useRef(null);
+  const listenerPromise = useRef(null);
+  const billingPromise = useRef(null);
   const mounted = useRef(true);
 
   const loadSnapshot = useCallback(async () => {
@@ -91,16 +95,52 @@ export default function StoreHub({ user = null, onNavigate = null }) {
     await loadSnapshot();
   }, [loadSnapshot]);
 
-  const setupBilling = useCallback(async catalog => {
+  const ensurePurchaseListener = useCallback(async () => {
+    if (!Capacitor.isNativePlatform() || listenerRef.current) return listenerRef.current;
+    if (listenerPromise.current) return listenerPromise.current;
+    listenerPromise.current = (async () => {
+      try {
+        const registration = PlayBilling.addListener("purchaseUpdated", purchase => { void verifyPurchase(purchase); });
+        const handle = registration?.then ? await registration : registration;
+        if (!handle?.remove) throw new Error("Google Play purchase listener is unavailable");
+        listenerRef.current = handle;
+        if (mounted.current) setNativeAvailable(true);
+        return handle;
+      } catch (_) {
+        if (mounted.current) {
+          setNativeAvailable(false);
+          setNotice("Google Play billing is unavailable in this build. No charge was made.");
+        }
+        return null;
+      } finally {
+        listenerPromise.current = null;
+      }
+    })();
+    return listenerPromise.current;
+  }, [verifyPurchase]);
+
+  const loadBilling = useCallback(async catalog => {
     if (!Capacitor.isNativePlatform() || !catalog?.length) return;
-    try {
-      const result = await PlayBilling.getProducts({ products: catalog.map(product => ({ productId: product.playProductId, productType: product.productType })) });
-      const details = Object.fromEntries((result?.products || []).map(product => [product.productId, product]));
-      if (mounted.current) { setNativeProducts(details); setNativeAvailable(true); }
-    } catch (problem) {
-      if (mounted.current) { setNativeAvailable(false); setNotice("The Play store is not available in this build. No charge was made."); }
-    }
-  }, []);
+    if (billingPromise.current) return billingPromise.current;
+    billingPromise.current = (async () => {
+      if (mounted.current) { setBillingLoading(true); setError(""); }
+      try {
+        const listener = await ensurePurchaseListener();
+        if (!listener) return {};
+        const result = await PlayBilling.getProducts({ products: catalog.map(product => ({ productId: product.playProductId, productType: product.productType })) });
+        const details = Object.fromEntries((result?.products || []).map(product => [product.productId, product]));
+        if (mounted.current) { setNativeProducts(details); setNativeAvailable(true); }
+        return details;
+      } catch (_) {
+        if (mounted.current) { setNativeAvailable(false); setNotice("The Play store is not available in this build. No charge was made."); }
+        return {};
+      } finally {
+        if (mounted.current) setBillingLoading(false);
+        billingPromise.current = null;
+      }
+    })();
+    return billingPromise.current;
+  }, [ensurePurchaseListener]);
 
   useEffect(() => {
     mounted.current = true;
@@ -108,17 +148,10 @@ export default function StoreHub({ user = null, onNavigate = null }) {
     return () => { mounted.current = false; };
   }, [loadSnapshot]);
 
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return undefined;
-    let listener;
-    PlayBilling.addListener("purchaseUpdated", purchase => { void verifyPurchase(purchase); }).then(handle => {
-      listener = handle;
-      // Reconcile Play-owned purchases whenever the store is opened. The
-      // server remains the authority; this only surfaces receipts for verify.
-      void PlayBilling.restorePurchases({}).catch(() => {});
-    }).catch(() => setNativeAvailable(false));
-    return () => { listener?.remove?.(); };
-  }, [verifyPurchase]);
+  useEffect(() => () => {
+    listenerRef.current?.remove?.();
+    listenerRef.current = null;
+  }, []);
 
   const catalog = useMemo(() => snapshot?.catalog || [], [snapshot]);
   const membership = snapshot?.membership || {};
@@ -126,11 +159,11 @@ export default function StoreHub({ user = null, onNavigate = null }) {
   const styleCatalog = snapshot?.styleCatalog || [];
   const tickets = Number(snapshot?.wallet?.styleTickets || 0);
 
-  useEffect(() => { setupBilling(catalog); }, [catalog, setupBilling]);
-
   const buy = async product => {
     if (!Capacitor.isNativePlatform()) { setNotice("Open the Google Play Android build to purchase. No charge was made in this browser."); return; }
-    const detail = nativeProducts[product.playProductId];
+    if (!nativeAvailable) { setNotice("Google Play billing is unavailable in this build. No charge was made."); return; }
+    const details = nativeProducts[product.playProductId] ? nativeProducts : await loadBilling(catalog);
+    const detail = details?.[product.playProductId] || nativeProducts[product.playProductId];
     if (!detail) { setNotice("This product is not available in the current Play build. No charge was made."); return; }
     if (product.productType === "subscription" && !detail.offerToken) { setNotice("The monthly Play offer is not available in this build. No charge was made."); return; }
     const id = requestId();
@@ -148,7 +181,12 @@ export default function StoreHub({ user = null, onNavigate = null }) {
   const restore = async () => {
     if (!Capacitor.isNativePlatform()) { setNotice("Restore is available from the Google Play Android build."); return; }
     setBusy("restore"); setError(""); setNotice("Checking Google Play for previous purchases…");
-    try { await PlayBilling.restorePurchases({}); setBusy(""); setNotice("Restored purchases are being verified by the server…"); }
+    try {
+      const listener = await ensurePurchaseListener();
+      if (!listener) throw new Error("Google Play purchase listener is unavailable");
+      await PlayBilling.restorePurchases({});
+      setBusy(""); setNotice("Restored purchases are being verified by the server…");
+    }
     catch (problem) { setBusy(""); setNotice(""); setError(problem?.message || "Google Play restore failed. Try again later."); }
   };
 
@@ -176,7 +214,7 @@ export default function StoreHub({ user = null, onNavigate = null }) {
   if (loading && !snapshot) return <div className="store-page"><section className="store-empty"><span className="store-spinner"/><h1>Opening the store…</h1><p>Loading the server catalog and your entitlements.</p></section></div>;
 
   return <div className="store-page">
-    <header className="store-hero"><div><span className="store-eyebrow">BLACKWOOD CITY · SUPPORTER STORE</span><h1>Keep Blackwood independent.</h1><p>Direct character-card cosmetics and an optional membership. Gameplay power, city cash, equipment, loot and Arcade Dollars stay earned through play.</p></div><div className="store-hero-seal" aria-hidden="true">M</div></header>
+    <header className="store-hero"><div><span className="store-eyebrow">BLACKWOOD CITY · SUPPORTER STORE</span><h1>Keep Blackwood independent.</h1><p>Direct character-card cosmetics and an optional membership. Gameplay power, city cash, equipment, loot and Arcade Dollars stay earned through play.</p></div><div className="store-hero-actions"><div className="store-hero-seal" aria-hidden="true">M</div>{Capacitor.isNativePlatform() && <button className="store-button secondary" disabled={billingLoading || !catalog.length} onClick={() => { void loadBilling(catalog); }}>{billingLoading ? "Loading Play prices…" : Object.keys(nativeProducts).length ? "Refresh Play prices" : "Load Google Play prices"}</button>}</div></header>
     <div className="store-trust" aria-label="Store promises"><span>✓ Google Play billing</span><span>✓ No paid Arcade Dollars</span><span>✓ No loot boxes</span><span>✓ Cosmetics first</span></div>
     {(notice || error) && <div className={`store-feedback ${error ? "error" : "success"}`} role={error ? "alert" : "status"}>{error || notice}<button onClick={() => { setError(""); setNotice(""); }} aria-label="Dismiss message">×</button></div>}
 
