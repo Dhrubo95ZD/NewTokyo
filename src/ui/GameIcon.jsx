@@ -14,7 +14,7 @@ const paths = {
   awards: "m12 3 2.7 5.5 6 .9-4.4 4.3 1 6.1-5.3-2.9-5.3 2.9 1-6.1L3.3 9.4l6-.9z", inventory: "M4 7h16v14H4zm3-4h10l2 4H5zm2 8h6v2H9z",
   catalogue: "M5 3h13a2 2 0 0 1 2 2v16H7a3 3 0 0 1-3-3V4m3 14h13M8 7h8M8 11h6",
   operations: "M4 5h5l2-2h2l2 2h5v16H4zm4 5h8m-8 4h8m-8 4h5M6 8h12",
-  arcade: "M5 7h14l3 12h-5l-2-3H9l-2 3H2zm4 3H7v2H5v2h2v2h2v-2h2v-2H9zm7 2h2v2h-2z", economy: "M3 18 8 12l4 3 7-9 2 2-9 11-4-3-3 4z",
+  arcade: "M5 7h14l3 12h-5l-2-3H9l-2 3H2zm4 3H7v2H5v2h2v2h2v-2h2v-2H9zm7 2h2v2h-2z", economy: "M3 18 8 12l4 3 7-9 2 2-9 11-4-3-3 4z", store: "M4 8h16v12H4zm3 0a5 5 0 0 1 10 0M8 12h8m-6 4h4",
   adviser: "M12 2a8 8 0 0 1 5 14.2V21H7v-4.8A8 8 0 0 1 12 2m-3 8h2V8H9zm4 0h2V8h-2zm-4 4h6v-2H9z",
   safety: "M12 3 4 7v5c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V7zm-3 9 2 2 4-5"
 };
