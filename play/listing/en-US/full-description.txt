@@ -23,4 +23,7 @@ Open an in-game brokerage account, choose leverage and lot size, study provider-
 VISIT THE ARCADE
 Rossi's Arcade contains three classic rooms settled by the city server: blackjack, slots and roulette. Arcade activity uses play-earned Arcade Dollars only. Arcade Dollars cannot be bought with city cash or real money, transferred outside the game or withdrawn. Verified net Arcade wins may be redeemed one-way into ordinary in-game cash at 100 Arcade Dollars = $50 city cash. There is no cash-to-Arcade conversion and no real-money value.
 
+SUPPORT BLACKWOOD (OPTIONAL IN-APP PURCHASES)
+The Supporter Store offers direct character-card frames and paper treatments through Google Play, plus an optional Moretti Monthly subscription. The membership provides one cosmetic Style Ticket per day, member-only cosmetic rotations and one extra public showcase slot. These purchases do not grant city cash, Arcade Dollars, Ledger Credits, weapons, stats, XP, energy, loot or combat power. Prices are shown in your local Google Play currency. No loot boxes, real-money gambling, cash packs or withdrawals are offered.
+
 Moretti: Blackwood City requires an internet connection and an authenticated account. It contains fictional crime themes, text-based combat, weapons, player interaction and optional simulated chance games. No real-money gambling, withdrawals or real-world cash prizes are offered.

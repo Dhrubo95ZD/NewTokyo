@@ -1,4 +1,4 @@
-# Blackwood After Dark — core UI rebuild and Daily Life
+# Blackwood After Dark — core UI rebuild, Daily Life and Supporter Store
 
 ## Implemented
 
@@ -13,6 +13,7 @@
 - Home now surfaces server-backed priority records for active operations, claimable rewards and restrictions instead of making players search the navigation.
 - Daily Life adds a server-authoritative seven-day check-in bonus, three rotating daily objectives, a ten-action weekly objective, and a compact mission journal with direct campaign links. Claims are idempotent by server date and rewards cannot be duplicated by repeated taps.
 - Character & Collection adds a light, game-like equipment board, readable rarity labels, searchable inventory sorting, quick compare/equip actions, and a public character card. Players can select earnable frames, card layouts, paper treatments and up to three owned showcase items; the server validates every saved choice. The player directory now opens public cards without exposing private inventory.
+- Supporter Store adds a server-backed Google Play catalog, receipt verification boundary, cosmetic-only direct products, Moretti Monthly daily Style Tickets, restore/manage controls and a fourth public showcase slot. Prices come from Play's localised product details; no client click grants value.
 
 ## Validation
 
@@ -24,7 +25,7 @@ The local production web build passes. Existing bundle-size warning remains. Loc
 
 ## Release boundaries
 
-The current branch is an incremental game build. It keeps the existing database contracts, economy, package name and signing setup while extending the UI consistently across the core journeys. The Android candidate is version 0.19.0 (version code 19) with the Daily Life and Character & Collection migrations included.
+The current branch is an incremental game build. It keeps the existing database contracts, economy, package name and signing setup while extending the UI consistently across the core journeys. The Android candidate is version 0.20.0 (version code 20) with the Daily Life, Character & Collection and Supporter Store migrations included.
 
 ## Follow-up after visual approval
 
@@ -32,4 +33,4 @@ The current branch is an incremental game build. It keeps the existing database 
 2. Persist useful tab/filter/form context and add unsaved-form protection.
 3. Check keyboard resize on physical Android, tutorial obstruction, screen-reader flows, contrast and large-text settings.
 4. Continue polishing supporting community, account and safety screens against the same component tokens.
-5. Apply `supabase/20260917_daily_life.sql` and `supabase/20260918_character_collection.sql` to the connected project, build and install each candidate on Android, then use the AAB for the next Play testing update when ready.
+6. Apply `supabase/20260917_daily_life.sql`, `supabase/20260918_character_collection.sql` and `supabase/20260924_blackwood_supporter_store.sql` to the connected project, deploy the Google Play verifier with its secrets, build and install each candidate on Android, then use the AAB for the next Play testing update when ready.
