@@ -97,6 +97,14 @@ export default function StoreHub({ user = null, onNavigate = null }) {
       const result = await PlayBilling.getProducts({ products: catalog.map(product => ({ productId: product.playProductId, productType: product.productType })) });
       const details = Object.fromEntries((result?.products || []).map(product => [product.productId, product]));
       if (mounted.current) { setNativeProducts(details); setNativeAvailable(true); }
+      // Reconcile receipts only after the product query has established the
+      // billing connection. Starting both calls while the screen mounts can
+      // make BillingClient receive concurrent startConnection requests and
+      // terminate the Android process on some Play services versions.
+      try { await PlayBilling.restorePurchases({}); } catch (_) {
+        // A temporary restore failure must not hide a successfully loaded
+        // catalog; the explicit Restore purchases action remains available.
+      }
     } catch (problem) {
       if (mounted.current) { setNativeAvailable(false); setNotice("The Play store is not available in this build. No charge was made."); }
     }
@@ -111,12 +119,13 @@ export default function StoreHub({ user = null, onNavigate = null }) {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return undefined;
     let listener;
-    PlayBilling.addListener("purchaseUpdated", purchase => { void verifyPurchase(purchase); }).then(handle => {
-      listener = handle;
-      // Reconcile Play-owned purchases whenever the store is opened. The
-      // server remains the authority; this only surfaces receipts for verify.
-      void PlayBilling.restorePurchases({}).catch(() => {});
-    }).catch(() => setNativeAvailable(false));
+    try {
+      const registration = PlayBilling.addListener("purchaseUpdated", purchase => { void verifyPurchase(purchase); });
+      if (registration?.then) registration.then(handle => { listener = handle; }).catch(() => setNativeAvailable(false));
+      else listener = registration;
+    } catch (problem) {
+      setNativeAvailable(false);
+    }
     return () => { listener?.remove?.(); };
   }, [verifyPurchase]);
 
