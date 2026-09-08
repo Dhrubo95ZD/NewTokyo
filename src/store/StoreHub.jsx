@@ -117,6 +117,7 @@ export default function StoreHub({ user = null, onNavigate = null }) {
 
   const catalog = useMemo(() => snapshot?.catalog || [], [snapshot]);
   const membership = snapshot?.membership || {};
+  const membershipProduct = catalog.find(product => product.id === "monthly-membership");
   const styleCatalog = snapshot?.styleCatalog || [];
   const tickets = Number(snapshot?.wallet?.styleTickets || 0);
 
@@ -175,7 +176,7 @@ export default function StoreHub({ user = null, onNavigate = null }) {
 
     <section className="store-membership">
       <div className="store-membership-copy"><span className="store-eyebrow">OPTIONAL MONTHLY MEMBERSHIP</span><h2>Moretti Monthly</h2><p>A small, predictable thank-you for collectors who want a little more room to style their public record. Cancel any time in Google Play.</p><ul><li><b>1 Style Ticket</b> each UTC day, claimed once from this page</li><li><b>+1 public showcase slot</b> for your character card (4 instead of 3)</li><li><b>Member badge and early cosmetic rotations</b>, with no combat or economy advantage</li></ul></div>
-      <div className="store-membership-action"><span className="store-price large">{nativeProducts.blackwood_membership_monthly?.formattedPrice || "Price shown by Google Play"}<small>/ month</small></span>{membership.active ? <><span className="store-active-pill">Active until {dateLabel(membership.expiresAt)}</span><button className="store-button secondary" onClick={manageMembership}>Manage in Google Play</button></> : <button className="store-button primary large-button" disabled={busy || !nativeAvailable} onClick={() => buy(catalog.find(product => product.id === "monthly-membership"))}>{busy === "buy:monthly-membership" ? "Opening checkout…" : nativeAvailable ? "Join via Google Play" : "Open Android to join"}</button>}</div>
+      <div className="store-membership-action"><span className="store-price large">{nativeProducts.blackwood_membership_monthly?.formattedPrice || "Price shown by Google Play"}<small>/ month</small></span>{membership.active ? <><span className="store-active-pill">Active until {dateLabel(membership.expiresAt)}</span><button className="store-button secondary" onClick={manageMembership}>Manage in Google Play</button></> : <button className="store-button primary large-button" disabled={busy || !nativeAvailable || !membershipProduct} onClick={() => membershipProduct && buy(membershipProduct)}>{busy === "buy:monthly-membership" ? "Opening checkout…" : nativeAvailable ? "Join via Google Play" : "Open Android to join"}</button>}</div>
     </section>
 
     {membership.active && <section className="store-daily"><div><span className="store-eyebrow">MEMBER LEDGER</span><h2>Today’s Style Ticket</h2><p>Use tickets for member-only paper and frame treatments. They cannot be converted to city cash or Arcade Dollars.</p></div><div className="store-daily-action"><b>{tickets}</b><span>Style Tickets</span><button className="store-button primary" disabled={busy || !snapshot?.daily?.eligible} onClick={claimDaily}>{snapshot?.daily?.claimed ? "Claimed today" : busy === "daily" ? "Claiming…" : "Claim daily ticket"}</button></div></section>}
