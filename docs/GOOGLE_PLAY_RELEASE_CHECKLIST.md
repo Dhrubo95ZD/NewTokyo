@@ -12,6 +12,7 @@ Updated 1 September 2026. This is a project checklist, not legal advice.
 - Alcohol, intoxicant, nightclub and private-card-runner display text has been replaced. Stable database IDs remain unchanged to protect player inventories.
 - Casino and Forex screens state that they are virtual systems with no real-money execution or withdrawal.
 - Reduced-motion handling, mobile layouts and server-authoritative outcomes remain enabled.
+- Supporter Store uses Google Play product details, a server-side purchase-token verifier and cosmetic-only entitlements. Arcade Dollars and Ledger Credits remain earned-only.
 
 ## Blocking before production submission
 
@@ -23,6 +24,10 @@ Updated 1 September 2026. This is a project checklist, not legal advice.
 - [ ] Provide Google review with a reusable test account or documented Google sign-in access that reaches all gated areas.
 - [ ] Create a signed Android App Bundle (`.aab`) with Play App Signing. Keep the Actions debug APK for testers only.
 - [ ] Configure a permanent support email and support/privacy URLs in the store listing.
+- [ ] Create the four Supporter Store products with the exact IDs in `supabase/20260924_blackwood_supporter_store.sql`, add the monthly subscription base plan, and configure regional prices in Play Console.
+- [ ] Deploy `supabase/functions/google-play-purchase` and `supabase/functions/google-play-rtdn` with a least-privilege Play service account; verify purchase, acknowledgement, restore, renewal, grace-period, cancellation and refund paths with Play test accounts.
+- [ ] Configure Real-time Developer Notifications and a reconciliation job so refunds, chargebacks and subscription state changes revoke entitlements promptly.
+- [ ] Keep prices out of the APK and show Play-provided localised pricing. Do not sell city cash, Arcade Dollars, Ledger Credits, equipment, stats, XP, loot boxes or combat power.
 
 ## Quality gate for a closed test
 
