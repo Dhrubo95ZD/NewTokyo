@@ -111,7 +111,12 @@ export default function StoreHub({ user = null, onNavigate = null }) {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return undefined;
     let listener;
-    PlayBilling.addListener("purchaseUpdated", purchase => { void verifyPurchase(purchase); }).then(handle => { listener = handle; }).catch(() => setNativeAvailable(false));
+    PlayBilling.addListener("purchaseUpdated", purchase => { void verifyPurchase(purchase); }).then(handle => {
+      listener = handle;
+      // Reconcile Play-owned purchases whenever the store is opened. The
+      // server remains the authority; this only surfaces receipts for verify.
+      void PlayBilling.restorePurchases({}).catch(() => {});
+    }).catch(() => setNativeAvailable(false));
     return () => { listener?.remove?.(); };
   }, [verifyPurchase]);
 
@@ -127,6 +132,7 @@ export default function StoreHub({ user = null, onNavigate = null }) {
     if (!Capacitor.isNativePlatform()) { setNotice("Open the Google Play Android build to purchase. No charge was made in this browser."); return; }
     const detail = nativeProducts[product.playProductId];
     if (!detail) { setNotice("This product is not available in the current Play build. No charge was made."); return; }
+    if (product.productType === "subscription" && !detail.offerToken) { setNotice("The monthly Play offer is not available in this build. No charge was made."); return; }
     const id = requestId();
     setBusy(`buy:${product.id}`); setError(""); setNotice("Opening secure Google Play checkout…");
     const { data, error: problem } = await supabase.rpc("bw_store_begin_purchase", { p_product_id: product.id, p_request_id: id });
@@ -175,8 +181,8 @@ export default function StoreHub({ user = null, onNavigate = null }) {
     {(notice || error) && <div className={`store-feedback ${error ? "error" : "success"}`} role={error ? "alert" : "status"}>{error || notice}<button onClick={() => { setError(""); setNotice(""); }} aria-label="Dismiss message">×</button></div>}
 
     <section className="store-membership">
-      <div className="store-membership-copy"><span className="store-eyebrow">OPTIONAL MONTHLY MEMBERSHIP</span><h2>Moretti Monthly</h2><p>A small, predictable thank-you for collectors who want a little more room to style their public record. Cancel any time in Google Play.</p><ul><li><b>1 Style Ticket</b> each UTC day, claimed once from this page</li><li><b>+1 public showcase slot</b> for your character card (4 instead of 3)</li><li><b>Member badge and early cosmetic rotations</b>, with no combat or economy advantage</li></ul></div>
-      <div className="store-membership-action"><span className="store-price large">{nativeProducts.blackwood_membership_monthly?.formattedPrice || "Price shown by Google Play"}<small>/ month</small></span>{membership.active ? <><span className="store-active-pill">Active until {dateLabel(membership.expiresAt)}</span><button className="store-button secondary" onClick={manageMembership}>Manage in Google Play</button></> : <button className="store-button primary large-button" disabled={busy || !nativeAvailable || !membershipProduct} onClick={() => membershipProduct && buy(membershipProduct)}>{busy === "buy:monthly-membership" ? "Opening checkout…" : nativeAvailable ? "Join via Google Play" : "Open Android to join"}</button>}</div>
+      <div className="store-membership-copy"><span className="store-eyebrow">OPTIONAL MONTHLY MEMBERSHIP</span><h2>Moretti Monthly</h2><p>A small, predictable thank-you for collectors who want a little more room to style their public record. Cancel any time in Google Play.</p><ul><li><b>1 Style Ticket</b> each UTC day, claimed once from this page</li><li><b>+1 public showcase slot</b> for your character card (4 instead of 3)</li><li><b>Member badge and member-only cosmetic rotations</b>, with no combat or economy advantage</li></ul></div>
+      <div className="store-membership-action"><span className="store-price large">{nativeProducts.blackwood_membership_monthly?.formattedPrice || "Price shown by Google Play"}<small>/ month</small></span>{membership.active ? <><span className="store-active-pill">Active until {dateLabel(membership.expiresAt)}</span><button className="store-button secondary" onClick={manageMembership}>Manage in Google Play</button></> : <button className="store-button primary large-button" disabled={busy || !nativeAvailable || !membershipProduct} onClick={() => membershipProduct && buy(membershipProduct)}>{busy === "buy:monthly-membership" ? "Opening checkout…" : nativeAvailable ? "Join via Google Play" : "Open Android to join"}</button>}<small className="store-membership-terms">Google Play shows the local price and renews monthly until canceled. Manage or cancel in Google Play subscriptions.</small></div>
     </section>
 
     {membership.active && <section className="store-daily"><div><span className="store-eyebrow">MEMBER LEDGER</span><h2>Today’s Style Ticket</h2><p>Use tickets for member-only paper and frame treatments. They cannot be converted to city cash or Arcade Dollars.</p></div><div className="store-daily-action"><b>{tickets}</b><span>Style Tickets</span><button className="store-button primary" disabled={busy || !snapshot?.daily?.eligible} onClick={claimDaily}>{snapshot?.daily?.claimed ? "Claimed today" : busy === "daily" ? "Claiming…" : "Claim daily ticket"}</button></div></section>}
