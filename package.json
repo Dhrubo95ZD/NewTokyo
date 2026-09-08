@@ -25,8 +25,9 @@
     "test:collection": "node scripts/character-collection-contract-smoke.mjs",
     "test:takeover": "node scripts/takeover-contract-smoke.mjs",
     "test:civic": "node scripts/city-services-contract-smoke.mjs",
+    "test:store": "node scripts/store-contract-smoke.mjs",
     "test:guardrails": "node scripts/progression-guardrails-arcade-smoke.mjs",
-    "test": "npm run test:economy && npm run test:casino && npm run test:account && npm run test:community && npm run test:city && npm run test:family && npm run test:broker && npm run test:market && npm run test:combat && npm run test:visual && npm run test:catalogue && npm run test:release && npm run test:progression && npm run test:operations && npm run test:dispatch && npm run test:daily && npm run test:collection && npm run test:takeover && npm run test:civic && npm run test:guardrails",
+    "test": "npm run test:economy && npm run test:casino && npm run test:account && npm run test:community && npm run test:city && npm run test:family && npm run test:broker && npm run test:market && npm run test:combat && npm run test:visual && npm run test:catalogue && npm run test:release && npm run test:progression && npm run test:operations && npm run test:dispatch && npm run test:daily && npm run test:collection && npm run test:takeover && npm run test:civic && npm run test:store && npm run test:guardrails",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"
