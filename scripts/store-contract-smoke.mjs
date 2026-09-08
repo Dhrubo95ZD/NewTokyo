@@ -29,7 +29,7 @@ for (const marker of [
 for (const forbidden of ["'city_cash'", "'cash'", "'arcade_dollars'", "'ledger_credits'", "'stats'", "'power'", "'loot'"]) assert.ok(contents.migration.includes(forbidden), `benefit guard missing: ${forbidden}`);
 assert.ok(!contents.migration.includes("else 'revoked'"), "purchase event check constraint cannot store revoked state");
 assert.ok(contents.migration.includes("else 'cancelled'"), "revocation must use a constrained purchase state");
-for (const marker of ["google-play-purchase", "bw_store_begin_purchase", "restorePurchases", "Claim daily ticket", "Style Tickets", "No paid Arcade Dollars", "Pending, refunded, cancelled or unverified"]) assert.ok(contents.hub.includes(marker), `missing store UI/bridge contract: ${marker}`);
+for (const marker of ["google-play-purchase", "bw_store_begin_purchase", "restorePurchases", "Claim daily ticket", "Style Tickets", "No paid Arcade Dollars", "Pending, refunded, cancelled or unverified", "Load Google Play prices", "ensurePurchaseListener", "billingPromise"]) assert.ok(contents.hub.includes(marker), `missing store UI/bridge contract: ${marker}`);
 assert.ok(!/bw_store_apply_verified_purchase/.test(contents.hub), "client must never call the trusted entitlement grant RPC");
 for (const marker of ["store-page", "store-membership", "store-product-grid", "store-steps", "@media(max-width:560px)"]) assert.ok(contents.css.includes(marker), `missing store styling: ${marker}`);
 for (const marker of ["Supporter Store", "store:<StoreHub", "StoreHub"] ) assert.ok(contents.game.includes(marker), `store route missing: ${marker}`);
