@@ -109,6 +109,22 @@
   opacity: .34;
   mix-blend-mode: multiply;
   filter: grayscale(1) contrast(1.12) brightness(1.08);
+  background: url("../assets/blackwood-hero.webp") center / cover no-repeat;
+}
+
+/* Keep the original silhouette as a subtle ink overlay while letting the
+   generated Blackwood street artwork carry the illustration. */
+.after-dark .bw-welcome .blackwood-skyline > rect:first-of-type {
+  display: none;
+}
+
+.after-dark .bw-welcome .blackwood-skyline-image {
+  opacity: .34;
+  mix-blend-mode: multiply;
+  filter: saturate(.78) contrast(1.16) brightness(1.12);
+}
+.after-dark .bw-welcome .blackwood-skyline-fallback {
+  opacity: 0;
 }
 
 .after-dark .bw-welcome::after {
@@ -171,4 +187,67 @@
   .after-dark .ledger-balance b {
     font-size: 10px;
   }
+}
+
+/* Shared generated thumbnails for equipment and the character dossier. */
+.after-dark .bw-item-thumb,
+.after-dark .character-item-art {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.after-dark .bw-item-thumb {
+  display: grid;
+  place-items: center;
+}
+.after-dark .bw-item-thumb img,
+.after-dark .character-item-art img {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  filter: saturate(.86) contrast(1.05);
+}
+.after-dark .bw-item-thumb > svg,
+.after-dark .character-item-art > svg {
+  position: relative;
+  z-index: 1;
+  opacity: 0;
+}
+.after-dark .bw-item-thumb[data-art-failed] img,
+.after-dark .character-item-art[data-art-failed] img {
+  display: none;
+}
+.after-dark .bw-item-thumb[data-art-failed] > svg,
+.after-dark .character-item-art[data-art-failed] > svg {
+  opacity: 1;
+}
+.after-dark .bw-item-thumb.art-fedora img,
+.after-dark .character-item-art.art-fedora img {
+  transform: scale(1.55);
+}
+.after-dark .bw-item-thumb.art-shoes img,
+.after-dark .bw-item-thumb.art-boots img,
+.after-dark .character-item-art.art-shoes img,
+.after-dark .character-item-art.art-boots img {
+  transform: scale(1.45);
+}
+.after-dark .character-item-art > i {
+  z-index: 2;
+}
+.after-dark .character-item-art > svg {
+  width: 22px;
+  height: 22px;
+}
+.after-dark .character-item-art.large > svg {
+  width: 45px;
+  height: 45px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .after-dark .bw-item-thumb img,
+  .after-dark .character-item-art img { transition: none; }
 }
