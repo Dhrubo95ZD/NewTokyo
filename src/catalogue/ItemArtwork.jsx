@@ -6,12 +6,13 @@ const SHAPES={
 const RANK={common:1,uncommon:2,rare:3,epic:4,legendary:5};
 export default function ItemArtwork({item,large=false}){
   const itemKey=String(item?.id||item?.item_id||item?.name||"item");
-  const seed=[...itemKey].reduce((sum,char)=>sum+char.charCodeAt(0),0),rarity=item?.rarity||"common",rank=RANK[rarity]||1,shape=SHAPES[item?.visualKey]||<><path d="M19 28h62v56H19z"/><path d="m19 28 31-14 31 14-31 16zM50 44v40"/></>,crest=["M18 21h13M24 15v13","M15 18l15 10m0-10L15 28","M15 26h16l-8-13z","M15 20c5-7 12-7 17 0-5 8-12 8-17 0z"][seed%4];
-  const {src,key}=itemArtAsset(item);
+  const seed=[...itemKey].reduce((sum,char)=>sum+char.charCodeAt(0),0),rarity=item?.rarity||"common",rank=RANK[rarity]||1;
+  const {src,key,family,variant,hue,scale}=itemArtAsset(item);
+  const shape=SHAPES[family]||<><path d="M19 28h62v56H19z"/><path d="m19 28 31-14 31 14-31 16zM50 44v40"/></>,crest=["M18 21h13M24 15v13","M15 18l15 10m0-10L15 28","M15 26h16l-8-13z","M15 20c5-7 12-7 17 0-5 8-12 8-17 0z"][seed%4];
   const label=`${item?.name||"Blackwood"}, ${rarity} item illustration`;
-  return <div className={`item-art ${large?"large":""} ${rarity} art-${key}`} style={{"--seed":seed%360}}>
+  return <div className={`item-art ${large?"large":""} ${rarity} art-${key}`} style={{"--seed":seed%360,"--variant":variant,"--art-hue":`${hue}deg`,"--art-scale":scale}}>
     <span className="rarity-ribbon"><b>{rarity}</b><i>{Array.from({length:5},(_,index)=><em className={index<rank?"lit":""} key={index}>◆</em>)}</i></span>
-    <img className="item-art-image" src={src} alt={label} onError={event=>event.currentTarget.closest(".item-art")?.setAttribute("data-art-failed","true")} />
+    <img className="item-art-image" src={src} alt={label} loading={large?"eager":"lazy"} decoding="async" draggable="false" onError={event=>event.currentTarget.closest(".item-art")?.setAttribute("data-art-failed","true")} />
     <svg className="item-art-fallback" viewBox="0 0 100 100" aria-hidden="true"><g className="item-silhouette">{shape}</g><path className="item-crest" d={crest}/><path className="item-serial" d={`M${12+seed%12} 89h${25+seed%33}`}/></svg>
     <small className="item-code">BW · {String(seed).padStart(4,"0").slice(-4)}</small>{item?.equipped&&<span className="equipped-stamp">EQUIPPED</span>}{item?.owned>0&&<b className="owned-count">×{item.owned}</b>}
   </div>
