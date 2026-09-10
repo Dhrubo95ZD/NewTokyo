@@ -68,3 +68,28 @@
   .catalogue-modal .item-art.large { height: clamp(210px, 30vh, 310px); min-height: 210px; }
   .catalogue-modal .item-art.large .item-art-image { padding: 18px 22px; }
 }
+
+/* Crisp plate presentation: catalogue cards are intentionally portrait
+   shaped on phones, so cover would crop the square generated illustration.
+   Keep the entire plate visible and let the frame provide the letterbox. */
+.catalogue-card .item-art {
+  background: radial-gradient(circle at 50% 35%, #5a4031, #17120f 78%);
+}
+.catalogue-card .item-art-image {
+  object-fit: contain;
+  object-position: center;
+  box-sizing: border-box;
+  padding: clamp(8px, 2vw, 18px);
+  transform: none !important;
+  filter: saturate(1.01) contrast(1.05) hue-rotate(var(--art-hue, 0deg));
+}
+.catalogue-card:hover .item-art-image { transform: none !important; }
+
+/* The record remains modal without turning the catalogue into a blurred
+   screenshot. This also avoids WebView backdrop-filter resampling that made
+   the generated plate look soft immediately after a tap. */
+.catalogue-modal {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: #130e0bd9;
+}
