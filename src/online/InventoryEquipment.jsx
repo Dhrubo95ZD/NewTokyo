@@ -12,9 +12,9 @@ const SLOTS = [
 const icon = kind => kind === "weapon" ? "combat" : kind === "armor" ? "property" : kind === "accessory" ? "awards" : "hospital";
 
 function ItemThumb({ item, element = "span" }) {
-  const { src, key } = itemArtAsset(item);
+  const { src, key, variant, hue, scale } = itemArtAsset(item);
   const Tag = element;
-  return <Tag className={`bw-item-thumb art-${key}`} aria-hidden="true"><img src={src} alt="" onError={event=>event.currentTarget.closest(".bw-item-thumb")?.setAttribute("data-art-failed","true")} /><GameIcon name={icon(item?.kind)} /></Tag>;
+  return <Tag className={`bw-item-thumb art-${key}`} style={{ "--variant": variant, "--art-hue": `${hue}deg`, "--art-scale": scale }} aria-hidden="true"><img src={src} alt="" loading="lazy" decoding="async" draggable="false" onError={event=>event.currentTarget.closest(".bw-item-thumb")?.setAttribute("data-art-failed","true")} /><GameIcon name={icon(item?.kind)} /></Tag>;
 }
 
 function Stats({ item }) {
