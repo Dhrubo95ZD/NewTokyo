@@ -52,8 +52,8 @@ const portraitMark = (portraitKey, name) => portraitKey === "seal" ? "✦" : por
 const statRows = item => [["ATK", item?.attack], ["DEF", item?.defense], ["SPD", item?.speed], ["DEX", item?.dexterity]].filter(([, value]) => Number(value) > 0);
 
 function ItemArt({ item, large = false }) {
-  const { src, key } = itemArtAsset(item);
-  return <span className={`character-item-art ${large ? "large" : ""} ${item?.rarity || "common"} art-${key}`} aria-hidden="true"><img src={src} alt="" onError={event=>event.currentTarget.closest(".character-item-art")?.setAttribute("data-art-failed","true")} /><GameIcon name={iconFor(item?.kind)} /><i /></span>;
+  const { src, key, variant, hue, scale } = itemArtAsset(item);
+  return <span className={`character-item-art ${large ? "large" : ""} ${item?.rarity || "common"} art-${key}`} style={{ "--variant": variant, "--art-hue": `${hue}deg`, "--art-scale": scale }} aria-hidden="true"><img src={src} alt="" loading={large ? "eager" : "lazy"} decoding="async" draggable="false" onError={event=>event.currentTarget.closest(".character-item-art")?.setAttribute("data-art-failed","true")} /><GameIcon name={iconFor(item?.kind)} /><i /></span>;
 }
 
 function RarityBadge({ rarity = "common" }) {
