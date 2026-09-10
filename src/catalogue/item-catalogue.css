@@ -20,3 +20,51 @@
 .item-art.art-shoes .item-art-image,.item-art.art-boots .item-art-image{transform:scale(1.45);object-position:center center}
 @media(prefers-reduced-motion:reduce){.item-art-image{transition:none}.catalogue-card:hover .item-art-image{transform:none}}
 @media(max-width:760px){.rarity-legend{grid-template-columns:repeat(5,minmax(92px,1fr));overflow:auto}.rarity-legend button{display:block}.rarity-legend span{display:block;margin-top:6px}}
+
+/* Art v2: generated plates are already composed for a square frame. Do not
+   enlarge a crop in the detail record; contain the full plate and let the
+   higher-resolution WebP carry the sharpness. The stable variant token gives
+   items in the same family/tier a small, repeatable finish difference. */
+.item-art-image {
+  object-fit: cover;
+  object-position: center;
+  image-rendering: auto;
+  transform: scale(var(--art-scale, 1));
+  filter: saturate(calc(.9 + var(--variant, 0) * .008)) contrast(1.06) hue-rotate(var(--art-hue, 0deg));
+  transition: transform 220ms ease, filter 220ms ease;
+}
+.catalogue-card:hover .item-art-image { transform: scale(calc(var(--art-scale, 1) + .025)); }
+.item-art.large {
+  height: clamp(260px, 38vh, 420px);
+  min-height: 260px;
+  background: radial-gradient(circle at 50% 35%, #5a4031, #17120f 72%);
+}
+.item-art.large .item-art-image {
+  object-fit: contain;
+  object-position: center;
+  padding: clamp(18px, 3vw, 34px);
+  transform: none !important;
+  filter: saturate(1.02) contrast(1.08) hue-rotate(var(--art-hue, 0deg));
+}
+.item-art.large:before { background: linear-gradient(180deg, #0b09070a, #0b090746), radial-gradient(circle at 50% 32%, #fff2, transparent 62%); }
+.item-art:not(.large)::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+  opacity: .2;
+  mix-blend-mode: screen;
+  background: repeating-linear-gradient(calc(28deg + var(--variant, 0) * 7deg), transparent 0 25px, hsl(calc(var(--seed, 0) + var(--variant, 0) * 9) 72% 76% / .28) 26px 27px, transparent 28px 53px);
+}
+.item-art.large::after { display: none; }
+.item-art.legendary:not(.large)::after {
+  display: block;
+  opacity: .28;
+  background: conic-gradient(from calc(var(--variant, 0) * 9deg), transparent 0 24%, #fff5 30%, transparent 36% 68%, #f5c85e33 74%, transparent 81%), repeating-linear-gradient(calc(28deg + var(--variant, 0) * 7deg), transparent 0 25px, #fff3 26px 27px, transparent 28px 53px);
+  animation: catalogueShine 5s linear infinite;
+}
+@media(max-width:620px) {
+  .catalogue-modal .item-art.large { height: clamp(210px, 30vh, 310px); min-height: 210px; }
+  .catalogue-modal .item-art.large .item-art-image { padding: 18px 22px; }
+}
