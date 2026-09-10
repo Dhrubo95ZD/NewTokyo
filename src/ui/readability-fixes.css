@@ -251,3 +251,41 @@
   .after-dark .bw-item-thumb img,
   .after-dark .character-item-art img { transition: none; }
 }
+
+/* Art v2 final overrides: the generated plates carry their own framing, so
+   preserve the complete image in large inspector views and keep per-item
+   finishes intact after the shared thumbnail rules above. */
+.after-dark .bw-item-thumb img,
+.after-dark .character-item-art img {
+  object-fit: cover;
+  object-position: center;
+  image-rendering: auto;
+  transform: scale(var(--art-scale, 1));
+  filter: saturate(calc(.9 + var(--variant, 0) * .008)) contrast(1.06) hue-rotate(var(--art-hue, 0deg));
+}
+.after-dark .character-item-art.large {
+  width: min(240px, 100%);
+  height: min(240px, 32vw);
+  min-height: 160px;
+  border-radius: 14px;
+  background: radial-gradient(circle at 50% 35%, #fffdf8, #e9dfd1);
+}
+.after-dark .character-item-art.large img {
+  object-fit: contain;
+  object-position: center;
+  padding: 16px;
+  transform: none !important;
+  filter: saturate(1.02) contrast(1.08) hue-rotate(var(--art-hue, 0deg));
+}
+.after-dark .bw-item-thumb::after,
+.after-dark .character-item-art::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+  opacity: .15;
+  mix-blend-mode: screen;
+  background: repeating-linear-gradient(calc(28deg + var(--variant, 0) * 7deg), transparent 0 18px, hsl(calc(var(--variant, 0) * 13) 72% 75% / .24) 19px 20px, transparent 21px 39px);
+}
+.after-dark .character-item-art.large::after { display: none; }
