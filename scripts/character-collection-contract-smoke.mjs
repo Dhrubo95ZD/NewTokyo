@@ -13,5 +13,5 @@ for (const marker of ["bw_profile_frames", "bw_character_showcases", "bw_charact
 for (const marker of ["Equipment board", "Inventory, at a glance", "Design your character card", "Save public card", "featuredItemIds", "bw_save_character_showcase"]) assert.ok(hub.includes(marker), `missing character UI: ${marker}`);
 for (const marker of ["bw_public_character_card", "View card", "CharacterCard"]) assert.ok(community.includes(marker), `missing public showcase hook: ${marker}`);
 for (const marker of ["character-hub", "character-slot", "character-item-card", "character-card-preview", "prefers-reduced-motion"]) assert.ok(styles.includes(marker), `missing collection styling: ${marker}`);
-assert.match(gradle, /versionCode 20/);
+assert.match(gradle, /versionCode 21/);
 console.log("Character equipment, collection filters, public cards and earnable frame contracts passed.");
