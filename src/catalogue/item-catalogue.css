@@ -93,3 +93,17 @@
   -webkit-backdrop-filter: none;
   background: #130e0bd9;
 }
+
+/* Keep the record affordance easy to hit in Android/WebView. The delegated
+   handler also covers the text node inside the legacy card button. */
+.catalogue-card footer em {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 0 6px 14px;
+  cursor: pointer;
+  touch-action: manipulation;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
