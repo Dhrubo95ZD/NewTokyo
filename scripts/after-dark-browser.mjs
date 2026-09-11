@@ -66,11 +66,11 @@ try {
     const recordButton=page.getByRole('button',{name:'View Ash Dress Shoes record',exact:true});
     await recordButton.waitFor();
     await recordButton.click();
-    const record=page.getByRole('dialog',{name:'Ash Dress Shoes',exact:true});
+    const record=page.getByRole('region',{name:'Ash Dress Shoes record',exact:true});
     await record.waitFor();
     assert.equal(await record.getByText('How to obtain',{exact:true}).count(),1,'record button opens item dialog');
     await page.screenshot({path:`${output}/catalogue-record-${viewport.width}.png`});
-    await record.getByRole('button',{name:'Close item record',exact:true}).click();
+    await page.getByRole('button',{name:'Back to Item Catalogue',exact:false}).click();
     assert.equal(await record.count(),0,'record dialog closes cleanly');
     await page.getByRole('button',{name:'Go back',exact:true}).click();
     await page.getByRole('button',{name:'Continue campaign',exact:true}).waitFor();
