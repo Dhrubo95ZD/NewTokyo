@@ -16,6 +16,8 @@ assert.match(catalogue,/exactChance/);
 assert.match(catalogue,/<article className={`catalogue-card/);
 assert.match(catalogue,/className="catalogue-card-open" onClick=\{\(\) => setSelected\(item\)\}/);
 assert.doesNotMatch(catalogue,/<button className={`catalogue-card/);
+assert.match(catalogue,/createPortal\(<div className="catalogue-modal"/);
+assert.match(catalogue,/, document\.body\)/);
 assert.match(style,/\.catalogue-card-open/);
 assert.match(style,/@media\(max-width:620px\)/);
 assert.match(style,/prefers-reduced-motion/);
