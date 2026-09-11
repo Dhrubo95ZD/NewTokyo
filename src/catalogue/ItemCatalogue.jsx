@@ -1,22 +1,86 @@
-import {useEffect,useMemo,useState} from "react";
-import {supabase} from "../online/supabase.js";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "../online/supabase.js";
 import GameIcon from "../ui/GameIcon.jsx";
 import ItemArtwork from "./ItemArtwork.jsx";
 import "./item-catalogue.css";
-const money=value=>`$${Number(value||0).toLocaleString()}`,FILTERS=["all","owned","relics","weapons","armor","accessories","supplies"],STATS=[["attack","ATK"],["defense","DEF"],["speed","SPD"],["dexterity","DEX"]],RANK={common:1,uncommon:2,rare:3,epic:4,legendary:5};
-const Pips=({rarity})=><i className="rarity-pips">{Array.from({length:RANK[rarity]||1},(_,index)=><em className="lit" key={index}>◆</em>)}</i>;
-export default function ItemCatalogue(){
- const [data,setData]=useState(null),[error,setError]=useState(""),[query,setQuery]=useState(""),[filter,setFilter]=useState("all"),[rarity,setRarity]=useState("all"),[collection,setCollection]=useState("all"),[selected,setSelected]=useState(null);
- const load=async()=>{setError("");const{data:value,error:problem}=await supabase.rpc("bw_item_catalogue");if(problem)setError(problem.message);else setData(value)};useEffect(()=>{load()},[]);
- const items=useMemo(()=>data?.items?.filter(item=>{const text=`${item.name} ${item.description} ${item.slot||""} ${item.collection}`.toLowerCase(),category=filter==="all"||filter==="owned"&&item.owned>0||filter==="relics"&&item.dropOnly||filter==="weapons"&&item.kind==="weapon"||filter==="armor"&&item.kind==="armor"||filter==="accessories"&&item.kind==="accessory"||filter==="supplies"&&["medical","booster"].includes(item.kind);return text.includes(query.trim().toLowerCase())&&category&&(rarity==="all"||item.rarity===rarity)&&(collection==="all"||item.collection===collection)})||[],[data,query,filter,rarity,collection]);
- useEffect(()=>{const onRecordActivate=event=>{const target=event.target?.nodeType===3?event.target.parentElement:event.target,footer=target?.closest?.(".catalogue-card footer");if(!footer)return;const card=footer.closest(".catalogue-card"),name=card?.querySelector("h2")?.textContent?.trim(),record=items.find(item=>item.name===name);if(record){event.preventDefault();event.stopPropagation();setSelected(record)}};const options={capture:true,passive:false};document.addEventListener("pointerup",onRecordActivate,options);document.addEventListener("touchend",onRecordActivate,options);document.addEventListener("click",onRecordActivate,options);return()=>{document.removeEventListener("pointerup",onRecordActivate,options);document.removeEventListener("touchend",onRecordActivate,options);document.removeEventListener("click",onRecordActivate,options)}},[items]);
- if(!data)return <div className="catalogue-page"><header className="catalogue-hero"><small>BLACKWOOD COLLECTION</small><h1>The Item Catalogue</h1><p>{error||"Opening the authenticated city archive…"}</p>{error&&<button onClick={load}>Retry</button>}</header></div>;const summary=data.summary;
- return <div className="catalogue-page"><header className="catalogue-hero"><div><small>BLACKWOOD COLLECTION · LIVE ARCHIVE</small><h1>The Item Catalogue</h1><p>Distinct illustrated records, visible power tiers and server-verified acquisition odds for every item.</p></div><div className="catalogue-progress"><strong>{summary.owned}<i>/ {summary.total}</i></strong><span>unique items owned</span><figure><i style={{width:`${summary.owned/Math.max(1,summary.total)*100}%`}}/></figure></div></header>
- <section className="catalogue-summary">{[["Known items",summary.total],["Owned",summary.owned],["Equipped",summary.equipped],["Relics",`${summary.ownedRelics}/${summary.relics}`]].map(([label,value])=><div key={label}><small>{label}</small><b>{value}</b></div>)}</section>
- <section className="rarity-legend" aria-label="Rarity guide">{Object.keys(RANK).map(value=><button className={`${value} ${rarity===value?"active":""}`} onClick={()=>setRarity(rarity===value?"all":value)} key={value}><Pips rarity={value}/><span><b>{value}</b><small>Tier {RANK[value]}</small></span></button>)}</section>
- <section className="catalogue-tools"><label className="catalogue-search"><GameIcon name="catalogue"/><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search item, slot or description" aria-label="Search catalogue"/></label><select value={rarity} onChange={event=>setRarity(event.target.value)} aria-label="Filter rarity"><option value="all">All rarities</option>{Object.keys(RANK).map(value=><option value={value} key={value}>{value}</option>)}</select><select value={collection} onChange={event=>setCollection(event.target.value)} aria-label="Filter collection"><option value="all">All collections</option>{data.collections.map(value=><option value={value.name} key={value.name}>{value.name} · {value.owned}/{value.total}</option>)}</select></section>
- <nav className="catalogue-filters" aria-label="Item categories">{FILTERS.map(value=><button className={filter===value?"active":""} onClick={()=>setFilter(value)} key={value}>{value}</button>)}</nav><div className="catalogue-results"><span><b>{items.length}</b> matching items</span><em>◆ count and frame colour show rarity</em></div>
- {items.length?<section className="catalogue-grid">{items.map(item=>{const best=item.dropOnly&&item.obtain.find(route=>route.exactChance);return <button className={`catalogue-card ${item.rarity} ${item.owned?"owned":""}`} onClick={()=>setSelected(item)} key={item.id}><ItemArtwork item={item}/><div><small>{item.collection}</small><h2>{item.name}</h2><span>{item.slot||item.kind} · Level {item.levelRequired}</span><dl>{STATS.map(([key,label])=><div className={item[key]>0?"active":""} key={key}><dt>{label}</dt><dd>{item[key]}</dd></div>)}</dl><div className="card-acquisition"><small>{item.dropOnly?"DISCLOSED ITEM CHANCE":"ACQUISITION"}</small><b>{best?.exactChance||"Shop or player market"}</b></div><footer><b>{item.owned?`${item.owned} owned`:money(item.price)}</b><em>View record →</em></footer></div></button>})}</section>:<div className="catalogue-empty"><b>No records match</b><p>Clear a filter or search for another item.</p></div>}
- {selected&&<div className="catalogue-modal" role="dialog" aria-modal="true" aria-label={selected.name} onMouseDown={event=>event.target===event.currentTarget&&setSelected(null)}><article className={selected.rarity}><button className="catalogue-close" onClick={()=>setSelected(null)} aria-label="Close item record">×</button><ItemArtwork item={selected} large/><header><small>{selected.collection}</small><div className="modal-rarity"><b>{selected.rarity}</b><Pips rarity={selected.rarity}/></div><h2>{selected.name}</h2><p>{selected.description}</p></header><section className="catalogue-detail-stats">{STATS.map(([key,label])=><div key={key}><small>{label}</small><b>{selected[key]}</b></div>)}<div><small>LEVEL</small><b>{selected.levelRequired}</b></div><div><small>VALUE</small><b>{money(selected.price)}</b></div></section><section className="obtain-routes"><h3>How to obtain</h3>{selected.obtain.map((route,index)=><div key={`${route.source}-${index}`}><i><GameIcon name={route.kind==="combat"?"combat":route.kind==="market"?"market":route.kind==="shop"?"shop":route.kind==="contract"?"contracts":"hustles"}/></i><span><small>{route.source}</small><b>{route.chance}</b>{route.exactChance&&<em>{route.exactChance}</em>}<p>{route.detail}</p></span></div>)}</section><footer className="catalogue-ownership"><span><small>YOUR RECORD</small><b>{selected.owned?`${selected.owned} owned${selected.equipped?" · equipped":""}`:"Not yet owned"}</b></span><button onClick={()=>setSelected(null)}>Back to catalogue</button></footer></article></div>}</div>;
-}
 
+const money = value => `$${Number(value || 0).toLocaleString()}`;
+const FILTERS = ["all", "owned", "relics", "weapons", "armor", "accessories", "supplies"];
+const STATS = [["attack", "ATK"], ["defense", "DEF"], ["speed", "SPD"], ["dexterity", "DEX"]];
+const RANK = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5 };
+
+const Pips = ({ rarity }) => <i className="rarity-pips">{Array.from({ length: RANK[rarity] || 1 }, (_, index) => <em className="lit" key={index}>◆</em>)}</i>;
+
+export default function ItemCatalogue() {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [rarity, setRarity] = useState("all");
+  const [collection, setCollection] = useState("all");
+  const [selected, setSelected] = useState(null);
+
+  const load = async () => {
+    setError("");
+    const { data: value, error: problem } = await supabase.rpc("bw_item_catalogue");
+    if (problem) setError(problem.message);
+    else setData(value);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const items = useMemo(() => data?.items?.filter(item => {
+    const text = `${item.name} ${item.description} ${item.slot || ""} ${item.collection}`.toLowerCase();
+    const category = filter === "all"
+      || filter === "owned" && item.owned > 0
+      || filter === "relics" && item.dropOnly
+      || filter === "weapons" && item.kind === "weapon"
+      || filter === "armor" && item.kind === "armor"
+      || filter === "accessories" && item.kind === "accessory"
+      || filter === "supplies" && ["medical", "booster"].includes(item.kind);
+    return text.includes(query.trim().toLowerCase()) && category
+      && (rarity === "all" || item.rarity === rarity)
+      && (collection === "all" || item.collection === collection);
+  }) || [], [data, query, filter, rarity, collection]);
+
+  if (!data) return <div className="catalogue-page"><header className="catalogue-hero"><small>BLACKWOOD COLLECTION</small><h1>The Item Catalogue</h1><p>{error || "Opening the authenticated city archive…"}</p>{error && <button type="button" onClick={load}>Retry</button>}</header></div>;
+
+  const summary = data.summary;
+  return <div className="catalogue-page">
+    <header className="catalogue-hero">
+      <div><small>BLACKWOOD COLLECTION · LIVE ARCHIVE</small><h1>The Item Catalogue</h1><p>Distinct illustrated records, visible power tiers and server-verified acquisition odds for every item.</p></div>
+      <div className="catalogue-progress"><strong>{summary.owned}<i>/ {summary.total}</i></strong><span>unique items owned</span><figure><i style={{ width: `${summary.owned / Math.max(1, summary.total) * 100}%` }} /></figure></div>
+    </header>
+    <section className="catalogue-summary">{[["Known items", summary.total], ["Owned", summary.owned], ["Equipped", summary.equipped], ["Relics", `${summary.ownedRelics}/${summary.relics}`]].map(([label, value]) => <div key={label}><small>{label}</small><b>{value}</b></div>)}</section>
+    <section className="rarity-legend" aria-label="Rarity guide">{Object.keys(RANK).map(value => <button type="button" className={`${value} ${rarity === value ? "active" : ""}`} onClick={() => setRarity(rarity === value ? "all" : value)} key={value}><Pips rarity={value} /><span><b>{value}</b><small>Tier {RANK[value]}</small></span></button>)}</section>
+    <section className="catalogue-tools">
+      <label className="catalogue-search"><GameIcon name="catalogue" /><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search item, slot or description" aria-label="Search catalogue" /></label>
+      <select value={rarity} onChange={event => setRarity(event.target.value)} aria-label="Filter rarity"><option value="all">All rarities</option>{Object.keys(RANK).map(value => <option value={value} key={value}>{value}</option>)}</select>
+      <select value={collection} onChange={event => setCollection(event.target.value)} aria-label="Filter collection"><option value="all">All collections</option>{data.collections.map(value => <option value={value.name} key={value.name}>{value.name} · {value.owned}/{value.total}</option>)}</select>
+    </section>
+    <nav className="catalogue-filters" aria-label="Item categories">{FILTERS.map(value => <button type="button" className={filter === value ? "active" : ""} onClick={() => setFilter(value)} key={value}>{value}</button>)}</nav>
+    <div className="catalogue-results"><span><b>{items.length}</b> matching items</span><em>◆ count and frame colour show rarity</em></div>
+    {items.length ? <section className="catalogue-grid">{items.map(item => {
+      const routes = Array.isArray(item.obtain) ? item.obtain : [];
+      const best = item.dropOnly && routes.find(route => route.exactChance);
+      return <article className={`catalogue-card ${item.rarity} ${item.owned ? "owned" : ""}`} key={item.id}>
+        <ItemArtwork item={item} />
+        <div><small>{item.collection}</small><h2>{item.name}</h2><span>{item.slot || item.kind} · Level {item.levelRequired}</span>
+          <dl>{STATS.map(([key, label]) => <div className={item[key] > 0 ? "active" : ""} key={key}><dt>{label}</dt><dd>{item[key]}</dd></div>)}</dl>
+          <div className="card-acquisition"><small>{item.dropOnly ? "DISCLOSED ITEM CHANCE" : "ACQUISITION"}</small><b>{best?.exactChance || "Shop or player market"}</b></div>
+          <footer><b>{item.owned ? `${item.owned} owned` : money(item.price)}</b><button type="button" className="catalogue-card-open" onClick={() => setSelected(item)} aria-label={`View ${item.name} record`}>View record →</button></footer>
+        </div>
+      </article>;
+    })}</section> : <div className="catalogue-empty"><b>No records match</b><p>Clear a filter or search for another item.</p></div>}
+    {selected && <div className="catalogue-modal" role="dialog" aria-modal="true" aria-label={selected.name} onMouseDown={event => event.target === event.currentTarget && setSelected(null)}>
+      <article className={selected.rarity}>
+        <button type="button" className="catalogue-close" onClick={() => setSelected(null)} aria-label="Close item record">×</button>
+        <ItemArtwork item={selected} large />
+        <header><small>{selected.collection}</small><div className="modal-rarity"><b>{selected.rarity}</b><Pips rarity={selected.rarity} /></div><h2>{selected.name}</h2><p>{selected.description}</p></header>
+        <section className="catalogue-detail-stats">{STATS.map(([key, label]) => <div key={key}><small>{label}</small><b>{selected[key]}</b></div>)}<div><small>LEVEL</small><b>{selected.levelRequired}</b></div><div><small>VALUE</small><b>{money(selected.price)}</b></div></section>
+        <section className="obtain-routes"><h3>How to obtain</h3>{(Array.isArray(selected.obtain) ? selected.obtain : []).map((route, index) => <div key={`${route.source}-${index}`}><i><GameIcon name={route.kind === "combat" ? "combat" : route.kind === "market" ? "market" : route.kind === "shop" ? "shop" : route.kind === "contract" ? "contracts" : "hustles"} /></i><span><small>{route.source}</small><b>{route.chance}</b>{route.exactChance && <em>{route.exactChance}</em>}<p>{route.detail}</p></span></div>)}</section>
+        <footer className="catalogue-ownership"><span><small>YOUR RECORD</small><b>{selected.owned ? `${selected.owned} owned${selected.equipped ? " · equipped" : ""}` : "Not yet owned"}</b></span><button type="button" onClick={() => setSelected(null)}>Back to catalogue</button></footer>
+      </article>
+    </div>}
+  </div>;
+}
