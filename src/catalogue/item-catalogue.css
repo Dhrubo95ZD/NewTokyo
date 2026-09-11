@@ -124,3 +124,44 @@
 }
 .catalogue-card-open:active { background: #ead5ad; }
 .catalogue-card-open:focus-visible { outline: 3px solid #b58a47; outline-offset: 2px; }
+
+/* Item records use a normal page state on Android. This avoids modal portals,
+   transformed ancestors and WebView compositing entirely. */
+.catalogue-record-page { min-height: 70dvh; }
+.catalogue-record-back {
+  min-height: 48px;
+  margin: 0 0 16px;
+  padding: 10px 16px;
+  border: 1px solid #bca991;
+  background: #fff;
+  color: #5f3822;
+  font-weight: 800;
+}
+.catalogue-record {
+  --tier: #9a968f;
+  display: grid;
+  grid-template-columns: minmax(240px, 36%) 1fr;
+  grid-template-areas: "art head" "stats stats" "obtain obtain" "foot foot";
+  overflow: hidden;
+  background: #faf7f2;
+  border: 1px solid #b28a68;
+  border-top: 5px solid var(--tier);
+}
+.catalogue-record.uncommon { --tier: #51b785; }
+.catalogue-record.rare { --tier: #4ba4e4; }
+.catalogue-record.epic { --tier: #ac76df; }
+.catalogue-record.legendary { --tier: #e3ae3e; }
+.catalogue-record > .item-art { grid-area: art; }
+.catalogue-record > header { grid-area: head; padding: 34px; }
+.catalogue-record > header small { text-transform: uppercase; letter-spacing: .16em; color: #825439; }
+.catalogue-record h2 { margin: 10px 0 14px; font: 45px/1 Georgia, serif; }
+.catalogue-record header p { color: #655d56; font: 18px/1.5 Georgia, serif; }
+.catalogue-record .catalogue-detail-stats { grid-area: stats; }
+.catalogue-record .obtain-routes { grid-area: obtain; }
+.catalogue-record .catalogue-ownership { grid-area: foot; }
+@media(max-width:620px) {
+  .catalogue-record { display: block; }
+  .catalogue-record > header { padding: 22px; }
+  .catalogue-record h2 { font-size: 34px; }
+  .catalogue-record > .item-art.large { height: 280px; min-height: 280px; }
+}
