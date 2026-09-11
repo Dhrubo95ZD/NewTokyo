@@ -55,11 +55,30 @@ try {
     assert.equal(await page.locator('.bw-crime-card').count(),2,'locked crime excluded');
     await page.getByRole('button',{name:'Go back',exact:true}).click();
     await page.getByRole('button',{name:'Continue campaign',exact:true}).waitFor();
+    await navigation.getByRole('button',{name:'City',exact:false}).click();
+    await page.getByRole('dialog',{name:'City',exact:true}).getByRole('button',{name:'Supporter Store',exact:false}).click();
+    await page.getByRole('heading',{name:'Keep Blackwood independent.',exact:true}).waitFor();
+    await page.screenshot({path:`${output}/store-${viewport.width}.png`,fullPage:true});
+    await page.getByRole('button',{name:'Go back',exact:true}).click();
+    await page.getByRole('button',{name:'Continue campaign',exact:true}).waitFor();
+    await navigation.getByRole('button',{name:'Character',exact:false}).click();
+    await page.getByRole('dialog',{name:'Character',exact:true}).getByRole('button',{name:'Item Catalogue',exact:false}).click();
+    const recordButton=page.getByRole('button',{name:'View Ash Dress Shoes record',exact:true});
+    await recordButton.waitFor();
+    await recordButton.click();
+    const record=page.getByRole('dialog',{name:'Ash Dress Shoes',exact:true});
+    await record.waitFor();
+    assert.equal(await record.getByText('How to obtain',{exact:true}).count(),1,'record button opens item dialog');
+    await page.screenshot({path:`${output}/catalogue-record-${viewport.width}.png`});
+    await record.getByRole('button',{name:'Close item record',exact:true}).click();
+    assert.equal(await record.count(),0,'record dialog closes cleanly');
+    await page.getByRole('button',{name:'Go back',exact:true}).click();
+    await page.getByRole('button',{name:'Continue campaign',exact:true}).waitFor();
     await page.evaluate(()=>{window.__ui.offline=true});
     await page.getByRole('button',{name:'Refresh Home records'}).click();
     await page.getByText('Some records could not be refreshed.',{exact:false}).waitFor();
     assert.deepEqual(errors,[],'no browser exceptions');
     await context.close();
   }
-  console.log('After Dark browser checks passed: 320/390/1440px, adviser, navigation, retry, server results, duplicate prevention, offline and overflow.');
+  console.log('After Dark browser checks passed: 320/390/1440px, adviser, navigation, store route, retry, server results, duplicate prevention, offline and overflow.');
 } finally { await browser?.close(); await server.close(); }
