@@ -19,11 +19,11 @@ try {
   const open = page.getByRole('button',{name:'View Ash Dress Shoes record',exact:true});
   await open.waitFor();
   await open.click();
-  const record = page.getByRole('dialog',{name:'Ash Dress Shoes',exact:true});
+  const record = page.getByRole('region',{name:'Ash Dress Shoes record',exact:true});
   await record.waitFor();
   assert.equal(await record.getByRole('heading',{name:'Ash Dress Shoes',exact:true}).count(),1);
   assert.equal(await record.getByText('How to obtain',{exact:true}).count(),1);
-  await record.getByRole('button',{name:'Close item record',exact:true}).click();
+  await page.getByRole('button',{name:'Back to Item Catalogue',exact:false}).click();
   assert.equal(await record.count(),0);
   assert.deepEqual(errors,[],'catalogue interaction must not raise browser errors');
   console.log('Catalogue browser check passed: real record button opens and closes the item dialog at 390x844.');
