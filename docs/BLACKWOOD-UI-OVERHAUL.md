@@ -25,7 +25,7 @@ The local production web build passes. Existing bundle-size warning remains. Loc
 
 ## Release boundaries
 
-The current branch is an incremental game build. It keeps the existing database contracts, economy, package name and signing setup while extending the UI consistently across the core journeys. The Android candidate is version 0.20.0 (version code 20) with the Daily Life, Character & Collection and Supporter Store migrations included.
+The current branch is an incremental game build. It keeps the existing database contracts, economy, package name and signing setup while extending the UI consistently across the core journeys. The Android candidate is version 0.20.1 (version code 21) with the Daily Life, Character & Collection and Supporter Store migrations included.
 
 ## Follow-up after visual approval
 
