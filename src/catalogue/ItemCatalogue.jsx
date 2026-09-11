@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "../online/supabase.js";
 import GameIcon from "../ui/GameIcon.jsx";
 import ItemArtwork from "./ItemArtwork.jsx";
@@ -72,7 +73,7 @@ export default function ItemCatalogue() {
         </div>
       </article>;
     })}</section> : <div className="catalogue-empty"><b>No records match</b><p>Clear a filter or search for another item.</p></div>}
-    {selected && <div className="catalogue-modal" role="dialog" aria-modal="true" aria-label={selected.name} onMouseDown={event => event.target === event.currentTarget && setSelected(null)}>
+    {selected && createPortal(<div className="catalogue-modal" role="dialog" aria-modal="true" aria-label={selected.name} onMouseDown={event => event.target === event.currentTarget && setSelected(null)}>
       <article className={selected.rarity}>
         <button type="button" className="catalogue-close" onClick={() => setSelected(null)} aria-label="Close item record">×</button>
         <ItemArtwork item={selected} large />
@@ -81,6 +82,6 @@ export default function ItemCatalogue() {
         <section className="obtain-routes"><h3>How to obtain</h3>{(Array.isArray(selected.obtain) ? selected.obtain : []).map((route, index) => <div key={`${route.source}-${index}`}><i><GameIcon name={route.kind === "combat" ? "combat" : route.kind === "market" ? "market" : route.kind === "shop" ? "shop" : route.kind === "contract" ? "contracts" : "hustles"} /></i><span><small>{route.source}</small><b>{route.chance}</b>{route.exactChance && <em>{route.exactChance}</em>}<p>{route.detail}</p></span></div>)}</section>
         <footer className="catalogue-ownership"><span><small>YOUR RECORD</small><b>{selected.owned ? `${selected.owned} owned${selected.equipped ? " · equipped" : ""}` : "Not yet owned"}</b></span><button type="button" onClick={() => setSelected(null)}>Back to catalogue</button></footer>
       </article>
-    </div>}
+    </div>, document.body)}
   </div>;
 }
