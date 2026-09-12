@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "./supabase.js";
 import GameIcon from "../ui/GameIcon.jsx";
+import { itemArtAsset } from "../catalogue/item-art-assets.js";
 
 const SLOTS = [
   ["primary", "Primary", "Long guns and heavy weapons"],
@@ -51,7 +52,8 @@ const portraitMark = (portraitKey, name) => portraitKey === "seal" ? "✦" : por
 const statRows = item => [["ATK", item?.attack], ["DEF", item?.defense], ["SPD", item?.speed], ["DEX", item?.dexterity]].filter(([, value]) => Number(value) > 0);
 
 function ItemArt({ item, large = false }) {
-  return <span className={`character-item-art ${large ? "large" : ""} ${item?.rarity || "common"}`} aria-hidden="true"><GameIcon name={iconFor(item?.kind)} /><i /></span>;
+  const { src, key, variant, hue, scale } = itemArtAsset(item);
+  return <span className={`character-item-art ${large ? "large" : ""} ${item?.rarity || "common"} art-${key}`} style={{ "--variant": variant, "--art-hue": `${hue}deg`, "--art-scale": scale }} aria-hidden="true"><img src={src} alt="" loading={large ? "eager" : "lazy"} decoding="async" draggable="false" onError={event=>event.currentTarget.closest(".character-item-art")?.setAttribute("data-art-failed","true")} /><GameIcon name={iconFor(item?.kind)} /><i /></span>;
 }
 
 function RarityBadge({ rarity = "common" }) {

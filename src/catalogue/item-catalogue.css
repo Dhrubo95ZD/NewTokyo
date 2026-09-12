@@ -3,4 +3,165 @@
 @media(max-width:620px){.catalogue-hero{display:block}.catalogue-progress{margin-top:22px}.catalogue-summary{grid-template-columns:repeat(2,1fr)}.catalogue-summary div:nth-child(2){border-right:0}.catalogue-summary div:nth-child(-n+2){border-bottom:1px solid #ded2c5}.catalogue-tools{grid-template-columns:1fr}.catalogue-search{grid-column:auto}.catalogue-grid{grid-template-columns:1fr}.catalogue-card{grid-template-columns:120px 1fr;grid-template-rows:auto;min-height:205px}.catalogue-card>div:last-child{padding:15px}.catalogue-card h2{font-size:21px}.catalogue-results em{display:none}.catalogue-modal{padding:0;align-items:end}.catalogue-modal>article{display:block;max-height:92dvh;border-width:1px 0 0}.catalogue-modal .item-art{height:180px}.catalogue-modal>article>header{padding:22px}.catalogue-modal h2{font-size:34px}.catalogue-detail-stats{grid-template-columns:repeat(3,1fr)}.catalogue-detail-stats div:nth-child(3){border-right:0}.obtain-routes{padding:22px}.catalogue-ownership{padding:18px 22px;gap:10px}.catalogue-ownership button{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.catalogue-card,.item-art.legendary:after{transition:none;animation:none}}
 .rarity-legend{--common:#85827c;--uncommon:#35735a;--rare:#316f9f;--epic:#76509d;--legendary:#a06b13;display:grid;grid-template-columns:repeat(5,1fr);margin:22px 0;border:1px solid #cbb9a7;background:#fff}.rarity-legend button{display:flex;align-items:center;gap:10px;min-height:64px;padding:11px;border:0;border-right:1px solid #ded2c6;background:#fff;color:var(--tier);text-align:left}.rarity-legend button:last-child{border:0}.rarity-legend button.common{--tier:var(--common)}.rarity-legend button.uncommon{--tier:var(--uncommon)}.rarity-legend button.rare{--tier:var(--rare)}.rarity-legend button.epic{--tier:var(--epic)}.rarity-legend button.legendary{--tier:var(--legendary)}.rarity-legend button.active{box-shadow:inset 0 -5px currentColor;background:#f7f2eb}.rarity-legend span b,.rarity-legend span small{display:block;text-transform:capitalize}.rarity-legend span small{margin-top:3px;color:#82776e}.rarity-pips{display:flex;gap:2px;font-style:normal}.rarity-pips em{font-size:9px;font-style:normal}.item-art{--tier:#aaa;isolation:isolate;border-bottom:5px solid var(--tier)}.item-art.common,.catalogue-modal .common{--tier:#9a968f}.item-art.uncommon,.catalogue-modal .uncommon{--tier:#51b785}.item-art.rare,.catalogue-modal .rare{--tier:#4ba4e4}.item-art.epic,.catalogue-modal .epic{--tier:#ac76df}.item-art.legendary,.catalogue-modal .legendary{--tier:#e3ae3e}.item-art:before{z-index:-1}.item-art svg{width:63%;height:63%;filter:drop-shadow(0 8px 8px #0008)}.item-art .item-silhouette{fill:#0e0c0b88;stroke:var(--tier);stroke-width:3}.item-art .item-crest{fill:none;stroke:#fff9;stroke-width:2}.item-art .item-serial{fill:none;stroke:var(--tier);stroke-width:2}.item-art .rarity-ribbon{position:absolute;z-index:4;left:10px;top:10px;bottom:auto;display:grid;gap:4px;padding:7px 9px;border-left:3px solid var(--tier);background:#171310dc;color:#fff}.item-art .rarity-ribbon b{position:static;padding:0;background:none;color:#fff;text-transform:uppercase;font:900 9px Arial;letter-spacing:.15em}.item-art .rarity-ribbon i{display:flex;gap:2px}.item-art .rarity-ribbon em{color:#544b45;font:7px Arial}.item-art .rarity-ribbon em.lit{color:var(--tier)}.item-art .item-code{position:absolute;z-index:3;right:10px;bottom:9px;color:#ffffffa8;font:700 7px Arial;letter-spacing:.12em}.item-art .equipped-stamp{left:9px;bottom:9px;top:auto;border:1px solid var(--tier)}.item-art .owned-count{right:9px;top:9px;border:1px solid var(--tier)}.catalogue-card{border-top:4px solid var(--tier)}.catalogue-card.common{--tier:#9a968f}.catalogue-card.uncommon{--tier:#51a77c}.catalogue-card.rare{--tier:#438fca}.catalogue-card.epic{--tier:#9965c7}.catalogue-card.legendary{--tier:#d49b26}.catalogue-card>div:last-child>small{color:var(--tier);font-weight:900}.card-acquisition{margin:-3px 0 13px;padding:9px 10px;border-left:3px solid var(--tier);background:#f5f0e9}.card-acquisition small,.card-acquisition b{display:block}.card-acquisition small{color:#776b62!important;font:700 7px Arial!important;letter-spacing:.14em}.card-acquisition b{margin-top:3px;color:#32271f;font-size:11px}.modal-rarity{display:flex;align-items:center;gap:10px;margin-top:10px;color:var(--tier);text-transform:uppercase;letter-spacing:.13em}.catalogue-modal>article{border-top:5px solid var(--tier)}
+
+/* Generated Blackwood art sits behind the catalogue's semantic badges. Keep a
+   real image on every card, while retaining the vector silhouette as a local
+   fallback if a bundled asset ever fails to load. */
+.item-art:before{z-index:1;pointer-events:none;background:linear-gradient(180deg,#0b09070d 0%,#0b09073d 100%),radial-gradient(circle at 50% 28%,#fff2,transparent 58%)}
+.item-art-image{position:absolute;z-index:0;inset:0;width:100%;height:100%;display:block;object-fit:cover;object-position:center;filter:saturate(.88) contrast(1.06);transition:transform 220ms ease,filter 220ms ease}
+.catalogue-card:hover .item-art-image{transform:scale(1.035);filter:saturate(.98) contrast(1.08)}
+.item-art .item-art-fallback{display:none;position:relative;z-index:0;width:63%;height:63%;filter:drop-shadow(0 8px 8px #0008)}
+.item-art[data-art-failed] .item-art-image{display:none}
+.item-art[data-art-failed] .item-art-fallback{display:block}
+/* The source fedora has generous studio framing; this crop keeps the hat and
+   stand while excluding the generated edge lettering. */
+.item-art.art-fedora .item-art-image{transform:scale(1.55);object-position:center center}
+.item-art.large.art-fedora .item-art-image{transform:scale(1.45)}
+.item-art.art-shoes .item-art-image,.item-art.art-boots .item-art-image{transform:scale(1.45);object-position:center center}
+@media(prefers-reduced-motion:reduce){.item-art-image{transition:none}.catalogue-card:hover .item-art-image{transform:none}}
 @media(max-width:760px){.rarity-legend{grid-template-columns:repeat(5,minmax(92px,1fr));overflow:auto}.rarity-legend button{display:block}.rarity-legend span{display:block;margin-top:6px}}
+
+/* Art v2: generated plates are already composed for a square frame. Do not
+   enlarge a crop in the detail record; contain the full plate and let the
+   higher-resolution WebP carry the sharpness. The stable variant token gives
+   items in the same family/tier a small, repeatable finish difference. */
+.item-art-image {
+  object-fit: cover;
+  object-position: center;
+  image-rendering: auto;
+  transform: scale(var(--art-scale, 1));
+  filter: saturate(calc(.9 + var(--variant, 0) * .008)) contrast(1.06) hue-rotate(var(--art-hue, 0deg));
+  transition: transform 220ms ease, filter 220ms ease;
+}
+.catalogue-card:hover .item-art-image { transform: scale(calc(var(--art-scale, 1) + .025)); }
+.item-art.large {
+  height: clamp(260px, 38vh, 420px);
+  min-height: 260px;
+  background: radial-gradient(circle at 50% 35%, #5a4031, #17120f 72%);
+}
+.item-art.large .item-art-image {
+  object-fit: contain;
+  object-position: center;
+  padding: clamp(18px, 3vw, 34px);
+  transform: none !important;
+  filter: saturate(1.02) contrast(1.08) hue-rotate(var(--art-hue, 0deg));
+}
+.item-art.large:before { background: linear-gradient(180deg, #0b09070a, #0b090746), radial-gradient(circle at 50% 32%, #fff2, transparent 62%); }
+.item-art:not(.large)::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+  opacity: .2;
+  mix-blend-mode: screen;
+  background: repeating-linear-gradient(calc(28deg + var(--variant, 0) * 7deg), transparent 0 25px, hsl(calc(var(--seed, 0) + var(--variant, 0) * 9) 72% 76% / .28) 26px 27px, transparent 28px 53px);
+}
+.item-art.large::after { display: none; }
+.item-art.legendary:not(.large)::after {
+  display: block;
+  opacity: .28;
+  background: conic-gradient(from calc(var(--variant, 0) * 9deg), transparent 0 24%, #fff5 30%, transparent 36% 68%, #f5c85e33 74%, transparent 81%), repeating-linear-gradient(calc(28deg + var(--variant, 0) * 7deg), transparent 0 25px, #fff3 26px 27px, transparent 28px 53px);
+  animation: catalogueShine 5s linear infinite;
+}
+@media(max-width:620px) {
+  .catalogue-modal .item-art.large { height: clamp(210px, 30vh, 310px); min-height: 210px; }
+  .catalogue-modal .item-art.large .item-art-image { padding: 18px 22px; }
+}
+
+/* Crisp plate presentation: catalogue cards are intentionally portrait
+   shaped on phones, so cover would crop the square generated illustration.
+   Keep the entire plate visible and let the frame provide the letterbox. */
+.catalogue-card .item-art {
+  background: radial-gradient(circle at 50% 35%, #5a4031, #17120f 78%);
+}
+.catalogue-card .item-art-image {
+  object-fit: contain;
+  object-position: center;
+  box-sizing: border-box;
+  padding: clamp(8px, 2vw, 18px);
+  transform: none !important;
+  filter: saturate(1.01) contrast(1.05) hue-rotate(var(--art-hue, 0deg));
+}
+.catalogue-card:hover .item-art-image { transform: none !important; }
+
+/* The record remains modal without turning the catalogue into a blurred
+   screenshot. This also avoids WebView backdrop-filter resampling that made
+   the generated plate look soft immediately after a tap. */
+.catalogue-modal {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: #130e0bd9;
+}
+
+/* Keep the record affordance easy to hit in Android/WebView. The delegated
+   handler also covers the text node inside the legacy card button. */
+.catalogue-card footer em {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 0 6px 14px;
+  cursor: pointer;
+  touch-action: manipulation;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.catalogue-card-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 132px;
+  min-height: 48px;
+  padding: 8px 10px;
+  border: 1px solid #b58a47;
+  border-radius: 4px;
+  background: #fffaf0;
+  color: #7b4b20;
+  font: italic 600 12px/1.2 Georgia, serif;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.catalogue-card-open:active { background: #ead5ad; }
+.catalogue-card-open:focus-visible { outline: 3px solid #b58a47; outline-offset: 2px; }
+
+/* Item records use a normal page state on Android. This avoids modal portals,
+   transformed ancestors and WebView compositing entirely. */
+.catalogue-record-page { min-height: 70dvh; }
+.catalogue-record-back {
+  min-height: 48px;
+  margin: 0 0 16px;
+  padding: 10px 16px;
+  border: 1px solid #bca991;
+  background: #fff;
+  color: #5f3822;
+  font-weight: 800;
+}
+.catalogue-record {
+  --tier: #9a968f;
+  display: grid;
+  grid-template-columns: minmax(240px, 36%) 1fr;
+  grid-template-areas: "art head" "stats stats" "obtain obtain" "foot foot";
+  overflow: hidden;
+  background: #faf7f2;
+  border: 1px solid #b28a68;
+  border-top: 5px solid var(--tier);
+}
+.catalogue-record.uncommon { --tier: #51b785; }
+.catalogue-record.rare { --tier: #4ba4e4; }
+.catalogue-record.epic { --tier: #ac76df; }
+.catalogue-record.legendary { --tier: #e3ae3e; }
+.catalogue-record > .item-art { grid-area: art; }
+.catalogue-record > header { grid-area: head; padding: 34px; }
+.catalogue-record > header small { text-transform: uppercase; letter-spacing: .16em; color: #825439; }
+.catalogue-record h2 { margin: 10px 0 14px; font: 45px/1 Georgia, serif; }
+.catalogue-record header p { color: #655d56; font: 18px/1.5 Georgia, serif; }
+.catalogue-record .catalogue-detail-stats { grid-area: stats; }
+.catalogue-record .obtain-routes { grid-area: obtain; }
+.catalogue-record .catalogue-ownership { grid-area: foot; }
+@media(max-width:620px) {
+  .catalogue-record { display: block; }
+  .catalogue-record > header { padding: 22px; }
+  .catalogue-record h2 { font-size: 34px; }
+  .catalogue-record > .item-art.large { height: 280px; min-height: 280px; }
+}

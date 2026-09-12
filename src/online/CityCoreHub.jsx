@@ -23,7 +23,7 @@ const CORE_TABS = {
   gym: ["NORTHSIDE ATHLETIC CLUB", "Gym", "Build battle stats with server-controlled energy."],
   work: ["EMPLOYMENT OFFICE", "Jobs", "Take a position, earn job points and work timed shifts."],
   missions: ["THE MORETTI LEDGER", "Campaign & Progression", "Story chapters, faction assignments and permanent city standing."],
-  operations: ["BLACKWOOD FIELD OFFICE", "District Operations", "No-energy, multi-stage PvE work with district heat, mastery, rare finds and a 20-clear daily budget."],
+  operations: ["BLACKWOOD FIELD OFFICE", "Rise to Power", "Run multi-stage district operations, defeat mastery-gated bosses and improve duplicate equipment in the workshop."],
   bank: ["FEDERAL TRUST", "Bank", "Move money between your wallet and protected account."],
   hospital: ["ST. MERCY", "Hospital", "Players recovering from fights and critical failures."],
   jail: ["BLACKWOOD COUNTY", "Jail", "Players currently serving crime sentences."],

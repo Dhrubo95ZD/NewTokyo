@@ -60,6 +60,7 @@ Apply the migrations once to the existing Supabase project, in this order:
 25. `supabase/20260922_progression_concurrency_hardening.sql`
 26. `supabase/20260923_retire_arcade_skill_rooms.sql`
 27. `supabase/20260924_blackwood_supporter_store.sql`
+28. `supabase/20260925_rise_to_power.sql`
 
 The reset script is deliberately separate and must only be run manually for a new game. Arcade Dollars remain isolated from ordinary city cash: verified net Arcade wins may be redeemed one-way at 100 Arcade Dollars = $50 city cash, while city cash and real money can never be converted into Arcade Dollars.
 
@@ -68,6 +69,8 @@ The reset script is deliberately separate and must only be run manually for a ne
 The store is cosmetic-first. The app never hard-codes a price and never grants an entitlement from a client click. Google Play supplies the localised price, the `google-play-purchase` Edge Function verifies the purchase token with Google, and only then does the database write the entitlement.
 
 Apply `supabase/20260924_blackwood_supporter_store.sql` after the character-collection migration. Deploy `supabase/functions/google-play-purchase` for app purchase/restore flows and `supabase/functions/google-play-rtdn` behind a Google Play Real-time Developer Notification (Pub/Sub) push subscription. Configure these Supabase Edge Function secrets:
+
+Apply `supabase/20260925_rise_to_power.sql` after the Supporter Store migration. It adds eight mastery-gated district bosses, targeted relic drops with a disclosed five-win pity rule, duplicate dismantling, deterministic workshop crafting and three equipment upgrade ranks. Workshop parts are earned only through play and cannot be purchased.
 
 - `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`: a least-privilege Google Play service-account JSON that can read and acknowledge purchases for this package
 - `GOOGLE_PLAY_PACKAGE_NAME`: `com.neotokyo.underworld` (set it explicitly in production)

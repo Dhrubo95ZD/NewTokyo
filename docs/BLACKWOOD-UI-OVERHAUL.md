@@ -25,7 +25,7 @@ The local production web build passes. Existing bundle-size warning remains. Loc
 
 ## Release boundaries
 
-The current branch is an incremental game build. It keeps the existing database contracts, economy, package name and signing setup while extending the UI consistently across the core journeys. The Android candidate is version 0.20.0 (version code 20) with the Daily Life, Character & Collection and Supporter Store migrations included.
+The current branch is an incremental game build. It keeps the existing database contracts, economy, package name and signing setup while extending the UI consistently across the core journeys. The Android candidate is version 0.21.0 (version code 22) with the Daily Life, Character & Collection, Supporter Store and Rise to Power migrations included.
 
 ## Follow-up after visual approval
 
@@ -33,4 +33,4 @@ The current branch is an incremental game build. It keeps the existing database 
 2. Persist useful tab/filter/form context and add unsaved-form protection.
 3. Check keyboard resize on physical Android, tutorial obstruction, screen-reader flows, contrast and large-text settings.
 4. Continue polishing supporting community, account and safety screens against the same component tokens.
-6. Apply `supabase/20260917_daily_life.sql`, `supabase/20260918_character_collection.sql` and `supabase/20260924_blackwood_supporter_store.sql` to the connected project, deploy the Google Play verifier with its secrets, build and install each candidate on Android, then use the AAB for the next Play testing update when ready.
+6. Apply `supabase/20260917_daily_life.sql`, `supabase/20260918_character_collection.sql`, `supabase/20260924_blackwood_supporter_store.sql` and `supabase/20260925_rise_to_power.sql` to the connected project, deploy the Google Play verifier with its secrets, build and install each candidate on Android, then use the AAB for the next Play testing update when ready.
