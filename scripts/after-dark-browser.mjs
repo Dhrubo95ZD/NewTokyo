@@ -55,6 +55,18 @@ try {
     assert.equal(await page.locator('.bw-crime-card').count(),2,'locked crime excluded');
     await page.getByRole('button',{name:'Go back',exact:true}).click();
     await page.getByRole('button',{name:'Continue campaign',exact:true}).waitFor();
+    await navigation.getByRole('button',{name:'Play',exact:false}).click();
+    await page.getByRole('dialog',{name:'Play',exact:true}).getByRole('button',{name:'District Operations',exact:false}).click();
+    await page.getByRole('heading',{name:'Rise to Power',exact:true}).waitFor();
+    await page.getByRole('button',{name:'Boss board',exact:true}).click();
+    await page.getByRole('button',{name:'Challenge boss',exact:true}).waitFor();
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Boss board must not overflow');
+    await page.getByRole('button',{name:'Workshop',exact:true}).click();
+    await page.getByRole('button',{name:'Dismantle one',exact:false}).waitFor();
+    await page.screenshot({path:`${output}/rise-workshop-${viewport.width}.png`,fullPage:true});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Workshop must not overflow');
+    await page.getByRole('button',{name:'Go back',exact:true}).click();
+    await page.getByRole('button',{name:'Continue campaign',exact:true}).waitFor();
     await navigation.getByRole('button',{name:'City',exact:false}).click();
     await page.getByRole('dialog',{name:'City',exact:true}).getByRole('button',{name:'Supporter Store',exact:false}).click();
     await page.getByRole('heading',{name:'Keep Blackwood independent.',exact:true}).waitFor();
