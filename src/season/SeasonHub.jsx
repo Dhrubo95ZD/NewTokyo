@@ -32,7 +32,7 @@ export default function SeasonHub({ onNavigate }) {
   const load = useCallback(async () => {
     setBusy(true); setError("");
     try {
-    const [progressionResult, operationsResult] = await Promise.all([supabase.rpc("bw_progression_snapshot"), supabase.rpc("bw_operations_snapshot")]);
+    const [progressionResult, operationsResult] = await Promise.all([supabase.rpc("bw_connected_progression_snapshot"), supabase.rpc("bw_operations_snapshot")]);
     const problems = [progressionResult.error, operationsResult.error].filter(Boolean);
     if (problems.length) setError(problems.map(item => item.message).join(" "));
     if (!progressionResult.error) setData(progressionResult.data);
