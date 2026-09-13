@@ -16,7 +16,7 @@ try {
     // Fixture must never access real player services or external fonts.
     await context.route(/https:\/\//,route=>route.abort());
     await page.goto('http://127.0.0.1:4178/tests/ui/index.html');
-    await page.getByRole('button',{name:'Continue campaign',exact:true}).waitFor();
+    await page.getByRole('button',{name:'Go to objective',exact:true}).waitFor();
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Home must not overflow');
     const trigger=page.getByRole('button',{name:'Ask Adviser',exact:false});
     const bounds=await trigger.boundingBox();
@@ -54,7 +54,7 @@ try {
     await page.getByRole('button',{name:'Ready now',exact:true}).click();
     assert.equal(await page.locator('.bw-crime-card').count(),2,'locked crime excluded');
     await page.getByRole('button',{name:'Go back',exact:true}).click();
-    await page.getByRole('button',{name:'Continue campaign',exact:true}).waitFor();
+    await page.getByRole('button',{name:'Go to objective',exact:true}).waitFor();
     await navigation.getByRole('button',{name:'Play',exact:false}).click();
     await page.getByRole('dialog',{name:'Play',exact:true}).getByRole('button',{name:'District Operations',exact:false}).click();
     await page.getByRole('heading',{name:'Rise to Power',exact:true}).waitFor();
@@ -66,13 +66,13 @@ try {
     await page.screenshot({path:`${output}/rise-workshop-${viewport.width}.png`,fullPage:true});
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Workshop must not overflow');
     await page.getByRole('button',{name:'Go back',exact:true}).click();
-    await page.getByRole('button',{name:'Continue campaign',exact:true}).waitFor();
+    await page.getByRole('button',{name:'Go to objective',exact:true}).waitFor();
     await navigation.getByRole('button',{name:'City',exact:false}).click();
     await page.getByRole('dialog',{name:'City',exact:true}).getByRole('button',{name:'Supporter Store',exact:false}).click();
     await page.getByRole('heading',{name:'Keep Blackwood independent.',exact:true}).waitFor();
     await page.screenshot({path:`${output}/store-${viewport.width}.png`,fullPage:true});
     await page.getByRole('button',{name:'Go back',exact:true}).click();
-    await page.getByRole('button',{name:'Continue campaign',exact:true}).waitFor();
+    await page.getByRole('button',{name:'Go to objective',exact:true}).waitFor();
     await navigation.getByRole('button',{name:'Character',exact:false}).click();
     await page.getByRole('dialog',{name:'Character',exact:true}).getByRole('button',{name:'Item Catalogue',exact:false}).click();
     const recordButton=page.getByRole('button',{name:'View Ash Dress Shoes record',exact:true});
@@ -85,7 +85,7 @@ try {
     await page.getByRole('button',{name:'Back to Item Catalogue',exact:false}).click();
     assert.equal(await record.count(),0,'record dialog closes cleanly');
     await page.getByRole('button',{name:'Go back',exact:true}).click();
-    await page.getByRole('button',{name:'Continue campaign',exact:true}).waitFor();
+    await page.getByRole('button',{name:'Go to objective',exact:true}).waitFor();
     await page.evaluate(()=>{window.__ui.offline=true});
     await page.getByRole('button',{name:'Refresh Home records'}).click();
     await page.getByText('Some records could not be refreshed.',{exact:false}).waitFor();
