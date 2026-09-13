@@ -7,7 +7,7 @@ const shellCss = fs.readFileSync("src/living-city.css", "utf8");
 const game = fs.readFileSync("src/MafiaGame.jsx", "utf8");
 const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
 
-for (const marker of ["bw_progression_snapshot", "bw_operations_snapshot", "YOUR NEXT MOVE", "LONG-TERM TARGETS", "No energy is required", "Open campaign guide", "server recorded"]) {
+for (const marker of ["bw_connected_progression_snapshot", "bw_operations_snapshot", "YOUR NEXT MOVE", "LONG-TERM TARGETS", "No energy is required", "Open campaign guide", "server recorded"]) {
   assert.ok(ui.includes(marker), `missing Dispatch contract: ${marker}`);
 }
 for (const marker of ["dispatch-hero", "dispatch-next", "dispatch-actions", "dispatch-objectives", "@media(max-width:650px)", "prefers-reduced-motion"]) {
