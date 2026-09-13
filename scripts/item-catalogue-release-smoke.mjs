@@ -29,7 +29,7 @@ assert.match(ledger,/create table if not exists public\.bw_ledger_wallets/);
 assert.match(ledger,/cannot be bought with dollars/i);
 assert.match(ledger,/bw_reward_ledger_from_action/);
 assert.doesNotMatch(ledger,/update public\.player_wallets/);
-assert.match(casino,/LEDGER CREDITS/);
+assert.match(casino,/same wallet as Prime FX/);
 assert.match(economy,/same play-earned Arcade Dollars/);
 assert.match(economy,/shared with Rossi.s Arcade/);
 assert.doesNotMatch(casino,/onWalletChange/);
@@ -40,4 +40,4 @@ for(const [name,sql] of [["catalogue",cleanup],["ledger",ledger]]) {
   assert.equal((sql.match(/\$\$/g)||[]).length%2,0,`${name} migration has unmatched dollar quotes`);
 }
 
-console.log("item catalogue, LC isolation and Android release contracts passed");
+console.log("item catalogue, Arcade Dollar isolation and Android release contracts passed");
