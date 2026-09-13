@@ -31,6 +31,8 @@ supabase.rpc = async (name,params) => {
   if(name==='bw_operations_snapshot') return {data:operations()};
   if(name==='bw_rise_snapshot') return {data:rise()};
   if(name==='bw_progression_snapshot') return {data:progression()};
+  if(name==='bw_connected_progression_snapshot') return {data:{...progression(),journey:{completed:0,total:1,currentChapter:1,next:{...progression().missions[0],actionPage:'crimes',unlockText:'Unlocks the career step.'}},currency:{available:25024,tradingDeposited:5000,redeemableWinnings:300}}};
+  if(name==='bw_currency_snapshot') return {data:{currency:'ARCADE_DOLLARS',currencyName:'Arcade Dollars',available:25024,tradingDeposited:5000,totalPlayBalance:30024,redeemableWinnings:300}};
   if(name==='bw_daily_life_snapshot') return {data:daily()};
   if(name==='bw_item_catalogue') return {data:catalogue()};
   if(name==='bw_store_snapshot') return {data:{catalog:[{id:'patron-amber',playProductId:'blackwood_patron_amber',productType:'one_time',category:'cosmetic',name:'Amber Patron Seal',shortDescription:'A warm brass frame for your public character card.',detail:'Cosmetic only.',owned:false}],membership:{active:false,showcaseLimit:3},wallet:{styleTickets:0},daily:{eligible:false,claimed:false},styleCatalog:[]}};
