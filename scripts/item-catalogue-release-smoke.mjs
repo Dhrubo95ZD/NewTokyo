@@ -13,6 +13,12 @@ assert.ok(game.includes("['catalogue','Item Catalogue']"));
 assert.match(catalogue,/bw_item_catalogue/);
 assert.match(catalogue,/How to obtain/);
 assert.match(catalogue,/exactChance/);
+assert.match(catalogue,/<article className={`catalogue-card/);
+assert.match(catalogue,/className="catalogue-card-open" onClick=\{\(\) => setSelected\(item\)\}/);
+assert.doesNotMatch(catalogue,/<button className={`catalogue-card/);
+assert.match(catalogue,/catalogue-record-page/);
+assert.match(catalogue,/role="region" aria-label=\{`\$\{selected\.name\} record`\}/);
+assert.match(style,/\.catalogue-card-open/);
 assert.match(style,/@media\(max-width:620px\)/);
 assert.match(style,/prefers-reduced-motion/);
 assert.match(cleanup,/create or replace function public\.bw_item_catalogue/);
@@ -23,8 +29,9 @@ assert.match(ledger,/create table if not exists public\.bw_ledger_wallets/);
 assert.match(ledger,/cannot be bought with dollars/i);
 assert.match(ledger,/bw_reward_ledger_from_action/);
 assert.doesNotMatch(ledger,/update public\.player_wallets/);
-assert.match(casino,/LEDGER CREDITS/);
-assert.match(economy,/Separate from dollar cash/);
+assert.match(casino,/same wallet as Prime FX/);
+assert.match(economy,/same play-earned Arcade Dollars/);
+assert.match(economy,/shared with Rossi.s Arcade/);
 assert.doesNotMatch(casino,/onWalletChange/);
 assert.doesNotMatch(economy,/onWalletChange/);
 assert.match(android,/targetSdkVersion = 36/);
@@ -33,4 +40,4 @@ for(const [name,sql] of [["catalogue",cleanup],["ledger",ledger]]) {
   assert.equal((sql.match(/\$\$/g)||[]).length%2,0,`${name} migration has unmatched dollar quotes`);
 }
 
-console.log("item catalogue, LC isolation and Android release contracts passed");
+console.log("item catalogue, Arcade Dollar isolation and Android release contracts passed");
