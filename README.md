@@ -10,7 +10,7 @@ A persistent online crime RPG built with React, Vite, Capacitor and Supabase for
 - Equipment, inventory, rare relics, transparent acquisition odds and a public character-card collection
 - World chat, private mail, forums, player directory, reporting, muting and blocking
 - Rossi's Arcade: blackjack, slots and roulette using separate play-earned Arcade Dollars; verified net wins may redeem one-way into ordinary in-game cash
-- Prime FX Ledger Credit accounts using virtual, play-earned credits; no cash value or real execution
+- Prime FX uses the same play-earned Arcade Dollar wallet as Rossi's Arcade, with deposited trading funds shown separately; no real cash value or execution
 - Free account-aware Consigliere, guided tutorial, Daily Life and Blackwood Dispatch
 - Supporter Store with Google Play-verified direct character-card cosmetics and an optional Moretti Monthly membership; no paid cash, Arcade Dollars, stats, equipment, loot or power
 - Responsive desktop and mobile layouts with an Android safe-area dock
@@ -61,6 +61,7 @@ Apply the migrations once to the existing Supabase project, in this order:
 26. `supabase/20260923_retire_arcade_skill_rooms.sql`
 27. `supabase/20260924_blackwood_supporter_store.sql`
 28. `supabase/20260925_rise_to_power.sql`
+29. `supabase/20260926_connected_city_loop.sql`
 
 The reset script is deliberately separate and must only be run manually for a new game. Arcade Dollars remain isolated from ordinary city cash: verified net Arcade wins may be redeemed one-way at 100 Arcade Dollars = $50 city cash, while city cash and real money can never be converted into Arcade Dollars.
 
@@ -71,6 +72,8 @@ The store is cosmetic-first. The app never hard-codes a price and never grants a
 Apply `supabase/20260924_blackwood_supporter_store.sql` after the character-collection migration. Deploy `supabase/functions/google-play-purchase` for app purchase/restore flows and `supabase/functions/google-play-rtdn` behind a Google Play Real-time Developer Notification (Pub/Sub) push subscription. Configure these Supabase Edge Function secrets:
 
 Apply `supabase/20260925_rise_to_power.sql` after the Supporter Store migration. It adds eight mastery-gated district bosses, targeted relic drops with a disclosed five-win pity rule, duplicate dismantling, deterministic workshop crafting and three equipment upgrade ranks. Workshop parts are earned only through play and cannot be purchased.
+
+Apply `supabase/20260926_connected_city_loop.sql` last. It extends the campaign through operations, bosses, workshop upgrades and Takeover; connects boss wins to the existing Takeover map; unifies Arcade Dollar presentation across Arcade and Prime FX; and repairs last-copy dismantling and simultaneous upgrade transactions.
 
 - `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`: a least-privilege Google Play service-account JSON that can read and acknowledge purchases for this package
 - `GOOGLE_PLAY_PACKAGE_NAME`: `com.neotokyo.underworld` (set it explicitly in production)
