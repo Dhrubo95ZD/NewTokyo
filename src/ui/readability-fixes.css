@@ -8,6 +8,11 @@
   min-width: 0;
 }
 
+/* The status strip is display-only and must never block controls beneath the fixed header. */
+.after-dark .resources {
+  pointer-events: none;
+}
+
 .after-dark .wallet-strip .cash {
   margin-left: 0;
 }
@@ -175,6 +180,36 @@
 }
 
 @media (max-width: 360px) {
+  .after-dark .topbar {
+    display: grid;
+    grid-template-columns: 32px 40px minmax(0, 1fr) 30px;
+    grid-template-rows: 44px 62px;
+    align-content: start;
+    column-gap: 6px;
+    row-gap: 6px;
+  }
+
+  .after-dark .brand { grid-column: 1; }
+  .after-dark .bw-adviser-trigger {
+    grid-column: 2;
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+    font-size: 0;
+  }
+  .after-dark .wallet-strip {
+    grid-column: 3;
+    display: grid;
+    grid-template-columns: minmax(0, .8fr) minmax(66px, 1.2fr);
+    width: 100%;
+  }
+  .after-dark .avatar { grid-column: 4; }
+  .after-dark .resources {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+  }
+
   .after-dark .wallet-strip {
     gap: 2px;
   }
