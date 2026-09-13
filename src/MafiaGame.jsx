@@ -14,6 +14,7 @@ import HomeBoard from "./ui/HomeBoard.jsx";
 import DailyLifeHub from "./ui/DailyLifeHub.jsx";
 import Dialog from "./ui/Dialog.jsx";
 import StoreHub from "./store/StoreHub.jsx";
+import blackwoodHero from "./assets/blackwood-hero.webp";
 import { GROUPS, pageGroup, pageLabel, validPage } from "./ui/navigation.js";
 import { App } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
@@ -92,7 +93,7 @@ function Resource({ label, value, max, tone, icon }) { return <div className={`r
 function Panel({ title, eyebrow, action, children, className = "" }) { return <section className={`panel ${className}`}><header><div>{eyebrow && <small>{eyebrow}</small>}<h2>{title}</h2></div>{action}</header>{children}</section>; }
 function PageHead({ eyebrow, title, text, children }) { return <div className="page-head"><div><small>{eyebrow}</small><h1>{title}</h1>{text && <p>{text}</p>}<i className="deco-rule"/></div>{children}</div>; }
 
-function Skyline() { return <svg className="blackwood-skyline" viewBox="0 0 900 250" role="img" aria-label="Blackwood City skyline"><defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#17120f"/><stop offset="1" stopColor="#5b3928"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="3"/></filter></defs><rect width="900" height="250" fill="url(#sky)"/><circle cx="735" cy="54" r="29" fill="#e8cda5" opacity=".88"/><circle cx="735" cy="54" r="42" fill="#e8cda5" opacity=".12" filter="url(#glow)"/><path d="M0 217V168h54v-34h51v54h36v-92h61v43h32v-72h70v126h46v-58h58v30h37V91h72v102h47v-44h55v67h45V112h64v40h46v64h64v34H0z" fill="#100e0c"/><path d="M468 91V50h10V28h8v22h10v41" fill="#100e0c"/><g fill="#d59b5d" opacity=".58">{[[67,151],[84,151],[159,116],[181,116],[256,86],[279,86],[367,151],[391,151],[467,111],[490,111],[532,119],[550,119],[673,134],[697,134],[795,146],[815,146]].map(([x,y])=><rect key={x} x={x} y={y} width="7" height="11"/>)}</g><path d="M0 220h900" stroke="#d2a06e" strokeWidth="2" opacity=".45"/></svg>; }
+function Skyline() { return <><img className="blackwood-skyline blackwood-skyline-image" src={blackwoodHero} alt="" aria-hidden="true"/><svg className="blackwood-skyline blackwood-skyline-fallback" viewBox="0 0 900 250" aria-hidden="true"><defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#17120f"/><stop offset="1" stopColor="#5b3928"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="3"/></filter></defs><rect width="900" height="250" fill="url(#sky)"/><circle cx="735" cy="54" r="29" fill="#e8cda5" opacity=".88"/><circle cx="735" cy="54" r="42" fill="#e8cda5" opacity=".12" filter="url(#glow)"/><path d="M0 217V168h54v-34h51v54h36v-92h61v43h32v-72h70v126h46v-58h58v30h37V91h72v102h47v-44h55v67h45V112h64v40h46v64h64v34H0z" fill="#100e0c"/><path d="M468 91V50h10V28h8v22h10v41" fill="#100e0c"/><g fill="#d59b5d" opacity=".58">{[[67,151],[84,151],[159,116],[181,116],[256,86],[279,86],[367,151],[391,151],[467,111],[490,111],[532,119],[550,119],[673,134],[697,134],[795,146],[815,146]].map(([x,y])=><rect key={x} x={x} y={y} width="7" height="11"/>)}</g><path d="M0 220h900" stroke="#d2a06e" strokeWidth="2" opacity=".45"/></svg></>; }
 
 function City({ go }) {
   const [query, setQuery] = useState("");
@@ -124,8 +125,8 @@ export default function MafiaGame({ initialPlayer = null, character = null, user
   useEffect(() => {
     let alive = true;
     if (!user || !supabase) { setLedgerCredits(null); return () => { alive = false; }; }
-    supabase.rpc("bw_casino_snapshot").then(({ data, error }) => {
-      if (alive && !error && data?.balance != null) syncLedger(data.balance);
+    supabase.rpc("bw_currency_snapshot").then(({ data, error }) => {
+      if (alive && !error && data?.available != null) syncLedger(data.available);
     });
     return () => { alive = false; };
   }, [user?.id, syncLedger]);
@@ -163,7 +164,7 @@ export default function MafiaGame({ initialPlayer = null, character = null, user
     return () => { listener.then(handle => handle.remove()); };
   }, [adviserOpen, menu, accountOpen]);
   const serverPages = ["crimes", "hustles", "operations", "combat", "gym", "work", "missions", "factions", "catalogue", "shop", "market", "bank", "hospital", "jail", "property", "social", "mail", "forums", "awards", "inventory"];
-  const content = serverPages.includes(page) ? <CityCoreHub initialTab={page === "factions" ? "missions" : page} progressionTab={page === "factions" ? "factions" : "story"} user={user} onState={syncCore} /> : {
+  const content = serverPages.includes(page) ? <CityCoreHub initialTab={page === "factions" ? "missions" : page} progressionTab={page === "factions" ? "factions" : "story"} user={user} onState={syncCore} onNavigate={navigate} /> : {
     home: <HomeBoard p={p} go={navigate} onState={syncCore} skyline={<Skyline/>}/>,
     daily: <DailyLifeHub onState={syncCore} onNavigate={navigate}/>,
     dispatch: <SeasonHub onNavigate={navigate}/>,
@@ -181,7 +182,7 @@ export default function MafiaGame({ initialPlayer = null, character = null, user
       <button className="bw-adviser-trigger" onClick={()=>{setMenu(null);setAccountOpen(false);setAdviserOpen(true)}} aria-haspopup="dialog" aria-expanded={adviserOpen}><span aria-hidden="true">✦</span> Ask Adviser</button>
       <div className="wallet-strip" aria-label="City and Arcade balances">
         <button className="cash" onClick={()=>navigate("bank")} aria-label={"Open bank, "+money(p.cash)+" on hand"}><small>ON HAND</small><b>$<AnimatedNumber value={p.cash}/></b></button>
-        <button className="ledger-balance" onClick={()=>navigate("arcade")} aria-label={ledgerCredits == null ? "Open Arcade, Arcade Dollars loading" : "Open Arcade, "+money(ledgerCredits)+" Arcade Dollars"}><small>ARCADE DOLLARS</small><b>{ledgerCredits == null ? "—" : <><span>$</span><AnimatedNumber value={ledgerCredits}/></>}</b></button>
+        <button className="ledger-balance" onClick={()=>navigate("arcade")} aria-label={ledgerCredits == null ? "Open Arcade, Arcade Dollars loading" : "Open Arcade, "+money(ledgerCredits)+" available Arcade Dollars"}><small>ARCADE $ · AVAILABLE</small><b>{ledgerCredits == null ? "—" : <><span>$</span><AnimatedNumber value={ledgerCredits}/></>}</b></button>
       </div>
       <button className="avatar" onClick={()=>{setMenu(null);setAdviserOpen(false);setAccountOpen(true)}} aria-label="Account menu" aria-haspopup="dialog">{initials}</button>
       <div className="resources" data-tutorial="resources"><Resource label="Energy" value={p.energy} max={p.maxEnergy} tone="energy" icon="⚡"/><Resource label="Nerve" value={p.nerve} max={p.maxNerve} tone="nerve" icon="♦"/><Resource label="Health" value={p.health} max={p.maxHealth} tone="health" icon="+"/><Resource label="Happy" value={p.happy} max={p.maxHappy} tone="happy" icon="♥"/></div>
