@@ -13,6 +13,10 @@
   pointer-events: none;
 }
 
+.after-dark .bw-mobile-back {
+  display: none;
+}
+
 .after-dark .wallet-strip .cash {
   margin-left: 0;
 }
@@ -137,6 +141,29 @@
 }
 
 @media (max-width: 760px) {
+  .after-dark .bw-mobile-back {
+    position: fixed;
+    z-index: 240;
+    top: calc(134px + env(safe-area-inset-top, 0px));
+    left: 16px;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid #d9d3c9;
+    border-radius: 7px;
+    background: #fffefa;
+    color: #4b463e;
+    box-shadow: 0 3px 10px #5a4d3a1f;
+    font-size: 20px;
+  }
+
+  .after-dark .bw-location > button {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
   .after-dark > main {
     padding-top: calc(200px + env(safe-area-inset-top, 0px));
   }
