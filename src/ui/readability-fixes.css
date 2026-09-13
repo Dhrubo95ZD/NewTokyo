@@ -137,7 +137,21 @@
 }
 
 @media (max-width: 760px) {
+  .after-dark > main {
+    padding-top: calc(200px + env(safe-area-inset-top, 0px));
+  }
+
   .after-dark .bw-location {
+    position: fixed;
+    top: calc(128px + env(safe-area-inset-top, 0px));
+    left: 0;
+    right: 0;
+    min-height: 56px;
+    margin: 0;
+    padding: 6px 16px;
+    background: #fffefa;
+    border-bottom: 1px solid #ded8cd;
+    box-shadow: 0 4px 10px #5a4d3a12;
     z-index: 130;
   }
 
