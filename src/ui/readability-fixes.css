@@ -14,7 +14,31 @@
 }
 
 .after-dark .bw-mobile-back {
-  display: none;
+  position: fixed;
+  z-index: 240;
+  top: calc(136px + env(safe-area-inset-top, 0px));
+  left: calc(222px + 36px);
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid #d9d3c9;
+  border-radius: 7px;
+  background: #fffefa;
+  color: #4b463e;
+  box-shadow: 0 3px 10px #5a4d3a1f;
+  font-size: 20px;
+}
+
+.after-dark .bw-location {
+  padding-left: 56px;
+}
+
+@media (max-width: 1000px) and (min-width: 761px) {
+  .after-dark .bw-mobile-back {
+    left: calc(190px + 24px);
+  }
 }
 
 .after-dark .wallet-strip .cash {
@@ -142,26 +166,8 @@
 
 @media (max-width: 760px) {
   .after-dark .bw-mobile-back {
-    position: fixed;
-    z-index: 240;
     top: calc(134px + env(safe-area-inset-top, 0px));
     left: 16px;
-    display: grid;
-    place-items: center;
-    width: 44px;
-    height: 44px;
-    padding: 0;
-    border: 1px solid #d9d3c9;
-    border-radius: 7px;
-    background: #fffefa;
-    color: #4b463e;
-    box-shadow: 0 3px 10px #5a4d3a1f;
-    font-size: 20px;
-  }
-
-  .after-dark .bw-location > button {
-    visibility: hidden;
-    pointer-events: none;
   }
 
   .after-dark > main {
