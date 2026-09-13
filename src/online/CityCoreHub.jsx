@@ -41,7 +41,7 @@ const CORE_TABS = {
 function Empty({ title, text }) { return <div className="core-empty"><i>◇</i><b>{title}</b><p>{text}</p></div>; }
 function Meter({ value, max }) { return <figure className="core-meter"><i style={{ width: `${Math.min(100, Number(value || 0) / Math.max(1, Number(max || 1)) * 100)}%` }} /></figure>; }
 
-export default function CityCoreHub({ initialTab, progressionTab = "story", user, onState }) {
+export default function CityCoreHub({ initialTab, progressionTab = "story", user, onState, onNavigate }) {
   const [data, setData] = useState(null), [loadout, setLoadout] = useState({ equipment: [], bonuses: {} }), [directory, setDirectory] = useState([]), [mail, setMail] = useState([]), [forums, setForums] = useState({ threads: [], posts: [] });
   const [busy, setBusy] = useState(false), [error, setError] = useState(""), [notice, setNotice] = useState(""), [selectedThread, setSelectedThread] = useState(null);
   const [amount, setAmount] = useState(1000), [recipient, setRecipient] = useState(""), [subject, setSubject] = useState(""), [message, setMessage] = useState("");
@@ -97,7 +97,7 @@ export default function CityCoreHub({ initialTab, progressionTab = "story", user
 
     {initialTab === "work" && <JobCenter onState={onState} />}
 
-    {initialTab === "missions" && <ProgressionHub onState={onState} initialTab={progressionTab} />}
+    {initialTab === "missions" && <ProgressionHub onState={onState} onNavigate={onNavigate} initialTab={progressionTab} />}
     {initialTab === "operations" && <DistrictOperations onState={onState} />}
 
     {initialTab === "bank" && <div className="core-bank"><div className="bank-balances"><article><small>ON HAND</small><b>{money(player.cash)}</b><p>Available for crimes, purchases and mugging.</p></article><article><small>PROTECTED ACCOUNT</small><b>{money(player.bank)}</b><p>Safe from player attacks.</p></article></div><div className="bank-transfer"><label>Transfer amount<input type="number" min="1" value={amount} onChange={event => setAmount(Math.max(1, Number(event.target.value)))} /></label><button disabled={busy || amount > player.cash} onClick={() => act("bw_bank_transfer", { p_direction: "deposit", p_amount: amount }, "Deposit completed.")}>Deposit</button><button disabled={busy || amount > player.bank} onClick={() => act("bw_bank_transfer", { p_direction: "withdraw", p_amount: amount }, "Withdrawal completed.")}>Withdraw</button></div></div>}
