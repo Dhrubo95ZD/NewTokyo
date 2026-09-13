@@ -92,7 +92,7 @@ Create these Play Console products with the exact IDs in the migration:
 
 Before release, test a license account through clean install, purchase, pending payment, restore, renewal, grace period, cancellation, refund and account deletion. Configure Real-time Developer Notifications so subscription changes and refunds are reconciled server-side. Never put the service-account key or a service-role key in the APK or a `VITE_` environment variable.
 
-The store grants no city cash, cash packs, Ledger Credits, Arcade Dollars, weapons, stats, XP, energy, nerve, loot boxes or randomised rewards. Style Tickets can only redeem fixed-cost member cosmetics and cannot be exchanged for money or any gameplay currency.
+The store grants no city cash, cash packs, Arcade Dollars, weapons, stats, XP, energy, nerve, loot boxes or randomised rewards. Style Tickets can only redeem fixed-cost member cosmetics and cannot be exchanged for money or any gameplay currency.
 
 ## Live market setup
 
