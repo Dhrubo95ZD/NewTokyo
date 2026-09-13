@@ -166,17 +166,17 @@
 
 @media (max-width: 760px) {
   .after-dark .bw-mobile-back {
-    top: calc(134px + env(safe-area-inset-top, 0px));
+    top: calc(198px + env(safe-area-inset-top, 0px));
     left: 16px;
   }
 
   .after-dark > main {
-    padding-top: calc(200px + env(safe-area-inset-top, 0px));
+    padding-top: calc(262px + env(safe-area-inset-top, 0px));
   }
 
   .after-dark .bw-location {
     position: fixed;
-    top: calc(128px + env(safe-area-inset-top, 0px));
+    top: calc(192px + env(safe-area-inset-top, 0px));
     left: 0;
     right: 0;
     min-height: 56px;
