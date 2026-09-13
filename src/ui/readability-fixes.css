@@ -137,6 +137,10 @@
 }
 
 @media (max-width: 760px) {
+  .after-dark .bw-location {
+    z-index: 130;
+  }
+
   .after-dark .wallet-strip {
     gap: 4px;
   }
