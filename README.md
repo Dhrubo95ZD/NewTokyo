@@ -12,7 +12,6 @@ A persistent online crime RPG built with React, Vite, Capacitor and Supabase for
 - Rossi's Arcade: blackjack, slots and roulette using separate play-earned Arcade Dollars; verified net wins may redeem one-way into ordinary in-game cash
 - Prime FX uses the same play-earned Arcade Dollar wallet as Rossi's Arcade, with deposited trading funds shown separately; no real cash value or execution
 - Free account-aware Consigliere, guided tutorial, Daily Life and Blackwood Dispatch
-- Supporter Store with Google Play-verified direct character-card cosmetics and an optional Moretti Monthly membership; no paid cash, Arcade Dollars, stats, equipment, loot or power
 - Responsive desktop and mobile layouts with an Android safe-area dock
 
 ## Local development
@@ -59,40 +58,18 @@ Apply the migrations once to the existing Supabase project, in this order:
 24. `supabase/20260921_progression_guardrails_arcade_games.sql`
 25. `supabase/20260922_progression_concurrency_hardening.sql`
 26. `supabase/20260923_retire_arcade_skill_rooms.sql`
-27. `supabase/20260924_blackwood_supporter_store.sql`
-28. `supabase/20260925_rise_to_power.sql`
-29. `supabase/20260926_connected_city_loop.sql`
+27. `supabase/20260925_rise_to_power.sql`
+28. `supabase/20260926_connected_city_loop.sql`
 
 The reset script is deliberately separate and must only be run manually for a new game. Arcade Dollars remain isolated from ordinary city cash: verified net Arcade wins may be redeemed one-way at 100 Arcade Dollars = $50 city cash, while city cash and real money can never be converted into Arcade Dollars.
 
-## Supporter Store launch checklist
+## Current gameplay migrations
 
-The store is cosmetic-first. The app never hard-codes a price and never grants an entitlement from a client click. Google Play supplies the localised price, the `google-play-purchase` Edge Function verifies the purchase token with Google, and only then does the database write the entitlement.
+Apply `supabase/20260925_rise_to_power.sql` after `supabase/20260923_retire_arcade_skill_rooms.sql`. It adds mastery-gated district bosses, targeted relic drops with a disclosed pity rule, duplicate dismantling, deterministic workshop crafting and equipment upgrade ranks. Workshop parts are earned only through play.
 
-Apply `supabase/20260924_blackwood_supporter_store.sql` after the character-collection migration. Deploy `supabase/functions/google-play-purchase` for app purchase/restore flows and `supabase/functions/google-play-rtdn` behind a Google Play Real-time Developer Notification (Pub/Sub) push subscription. Configure these Supabase Edge Function secrets:
+Apply `supabase/20260926_connected_city_loop.sql` last. It extends the campaign through operations, bosses, workshop upgrades and Takeover; connects boss wins to the existing Takeover map; unifies Arcade Dollar presentation across Arcade and Prime FX; and hardens dismantling and simultaneous upgrades.
 
-Apply `supabase/20260925_rise_to_power.sql` after the Supporter Store migration. It adds eight mastery-gated district bosses, targeted relic drops with a disclosed five-win pity rule, duplicate dismantling, deterministic workshop crafting and three equipment upgrade ranks. Workshop parts are earned only through play and cannot be purchased.
-
-Apply `supabase/20260926_connected_city_loop.sql` last. It extends the campaign through operations, bosses, workshop upgrades and Takeover; connects boss wins to the existing Takeover map; unifies Arcade Dollar presentation across Arcade and Prime FX; and repairs last-copy dismantling and simultaneous upgrade transactions.
-
-- `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`: a least-privilege Google Play service-account JSON that can read and acknowledge purchases for this package
-- `GOOGLE_PLAY_PACKAGE_NAME`: `com.neotokyo.underworld` (set it explicitly in production)
-- `GOOGLE_PLAY_PUBSUB_TOKEN`: an optional shared bearer token for the Pub/Sub push endpoint (prefer Pub/Sub OIDC in production as well)
-
-Create these Play Console products with the exact IDs in the migration:
-
-| Play product ID | Type | Benefit | Suggested starting price* |
-| --- | --- | --- | --- |
-| `blackwood_patron_amber` | Non-consumable | Amber character-card frame | $1.99 |
-| `blackwood_patron_midnight` | Non-consumable | Midnight character-card frame | $2.99 |
-| `blackwood_night_paper` | Non-consumable | Night Ledger paper treatment | $1.99 |
-| `blackwood_membership_monthly` | Subscription (`monthly` base plan) | 1 cosmetic Style Ticket/day, member badge, +1 showcase slot | $4.99/month |
-
-\*Prices are a starting hypothesis, not an app promise. Use Play regional pricing and review retention, conversion and refund rates before changing them. Prices are intentionally not shipped in the APK.
-
-Before release, test a license account through clean install, purchase, pending payment, restore, renewal, grace period, cancellation, refund and account deletion. Configure Real-time Developer Notifications so subscription changes and refunds are reconciled server-side. Never put the service-account key or a service-role key in the APK or a `VITE_` environment variable.
-
-The store grants no city cash, cash packs, Arcade Dollars, weapons, stats, XP, energy, nerve, loot boxes or randomised rewards. Style Tickets can only redeem fixed-cost member cosmetics and cannot be exchanged for money or any gameplay currency.
+Real-money monetisation is intentionally deferred while the core game, progression and economy are still being built. This version contains no paid store, subscriptions, purchase verifier, billing SDK or paid entitlements.
 
 ## Live market setup
 
