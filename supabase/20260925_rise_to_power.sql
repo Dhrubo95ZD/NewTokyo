@@ -1,5 +1,5 @@
 -- Rise to Power: district bosses, targeted loot and deterministic workshop progression.
--- Apply after 20260924_blackwood_supporter_store.sql. Safe to re-run.
+-- Apply after 20260923_retire_arcade_skill_rooms.sql. Safe to re-run.
 
 create table if not exists public.bw_rise_materials(
   user_id uuid primary key references auth.users(id) on delete cascade,
