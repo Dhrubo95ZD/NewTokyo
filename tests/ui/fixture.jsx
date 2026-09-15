@@ -35,7 +35,6 @@ supabase.rpc = async (name,params) => {
   if(name==='bw_currency_snapshot') return {data:{currency:'ARCADE_DOLLARS',currencyName:'Arcade Dollars',available:25024,tradingDeposited:5000,totalPlayBalance:30024,redeemableWinnings:300}};
   if(name==='bw_daily_life_snapshot') return {data:daily()};
   if(name==='bw_item_catalogue') return {data:catalogue()};
-  if(name==='bw_store_snapshot') return {data:{catalog:[{id:'patron-amber',playProductId:'blackwood_patron_amber',productType:'one_time',category:'cosmetic',name:'Amber Patron Seal',shortDescription:'A warm brass frame for your public character card.',detail:'Cosmetic only.',owned:false}],membership:{active:false,showcaseLimit:3},wallet:{styleTickets:0},daily:{eligible:false,claimed:false},styleCatalog:[]}};
   if(name==='bw_do_crime') {
     const success = window.__ui.calls.filter(call=>call.name==='bw_do_crime').length === 1;
     player.nerve -= 2; if(success)player.cash+=180;
