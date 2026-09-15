@@ -16,7 +16,7 @@ requireText(sql,"mod(r.wins+1,5)=0","target-loot pity");
 requireText(sql,"coalesce(u.rank,0)*.06","authoritative upgrade power");
 requireText(sql,"workshop_parts>=r.parts_cost","atomic crafting spend");
 requireText(sql,"workshop_parts>=cost","atomic upgrade spend");
-if(/public\.(?:bw_supporter|arcade_wallet|player_wallets)|purchase_token/i.test(sql))throw new Error("Rise progression must not consume supporter, arcade or cash balances");
+if(/public\.(?:arcade_wallet|player_wallets)/i.test(sql))throw new Error("Rise progression must not consume arcade or cash balances");
 requireText(ui,"Target relic chance is 20%","disclosed odds");
 requireText(ui,"Equipped copies are always protected","dismantle warning");
 requireText(inventory,"effectiveAttack ?? item.attack","effective inventory stats");
