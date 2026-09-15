@@ -13,7 +13,6 @@ import CivicServicesHub from "./civic/CivicServicesHub.jsx";
 import HomeBoard from "./ui/HomeBoard.jsx";
 import DailyLifeHub from "./ui/DailyLifeHub.jsx";
 import Dialog from "./ui/Dialog.jsx";
-import StoreHub from "./store/StoreHub.jsx";
 import blackwoodHero from "./assets/blackwood-hero.webp";
 import { GROUPS, pageGroup, pageLabel, validPage } from "./ui/navigation.js";
 import { App } from "@capacitor/app";
@@ -48,7 +47,6 @@ const CITY_DIRECTORY = [
     ["bank", "Federal Trust", "PROTECTED ACCOUNT", "Move city cash into a protected account; no interest is paid.", "bank"],
     ["economy", "Market Desk", "TRANSPARENT MARKETS", "Review the existing market desk without adding a second city wallet.", "economy"],
     ["arcade", "Rossi's Arcade", "ARCADE DOLLARS", "Three classic rooms use a separate play-earned wallet.", "arcade"],
-    ["store", "Supporter Store", "GOOGLE PLAY STORE", "Direct character-card cosmetics and an optional membership; no paid power or Arcade Dollars.", "store"],
   ]},
   { area: "NORTHSIDE", items: [
     ["shop", "Security & Tools", "EQUIPMENT", "Buy lawful tools, armour, medicine and supplies.", "shop"],
@@ -171,7 +169,7 @@ export default function MafiaGame({ initialPlayer = null, character = null, user
     takeover: <TakeoverHub onNavigate={navigate}/>, city:<City go={navigate}/>, civic:<CivicServicesHub onState={syncCore} onNavigate={navigate}/>,
     family:<CommunityHub user={user} initialTab="families"/>, chat:<CommunityHub user={user} initialTab="chat"/>,
     players:<CommunityHub user={user} initialTab="players"/>, rankings:<CommunityHub user={user} initialTab="rankings"/>,
-    economy:<EconomyHub onLedgerChange={syncLedger}/>, arcade:<CasinoHub onLedgerChange={syncLedger} onCashChange={syncWallet}/>, store:<StoreHub user={user} onNavigate={navigate}/>,
+    economy:<EconomyHub onLedgerChange={syncLedger}/>, arcade:<CasinoHub onLedgerChange={syncLedger} onCashChange={syncWallet}/>,
     safety:<SafetyHub onDeleteAccount={onDeleteAccount}/>
   }[page];
   const initials = (character?.codename || p.name).split(/\s+/).map(x=>x[0]).join("").slice(0,2).toUpperCase();
