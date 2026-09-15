@@ -13,7 +13,7 @@ import CivicServicesHub from "./civic/CivicServicesHub.jsx";
 import HomeBoard from "./ui/HomeBoard.jsx";
 import DailyLifeHub from "./ui/DailyLifeHub.jsx";
 import Dialog from "./ui/Dialog.jsx";
-import StoreHub from "./store/StoreHub.jsx";
+import blackwoodHero from "./assets/blackwood-hero.webp";
 import { GROUPS, pageGroup, pageLabel, validPage } from "./ui/navigation.js";
 import { App } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
@@ -47,7 +47,6 @@ const CITY_DIRECTORY = [
     ["bank", "Federal Trust", "PROTECTED ACCOUNT", "Move city cash into a protected account; no interest is paid.", "bank"],
     ["economy", "Market Desk", "TRANSPARENT MARKETS", "Review the existing market desk without adding a second city wallet.", "economy"],
     ["arcade", "Rossi's Arcade", "ARCADE DOLLARS", "Three classic rooms use a separate play-earned wallet.", "arcade"],
-    ["store", "Supporter Store", "GOOGLE PLAY STORE", "Direct character-card cosmetics and an optional membership; no paid power or Arcade Dollars.", "store"],
   ]},
   { area: "NORTHSIDE", items: [
     ["shop", "Security & Tools", "EQUIPMENT", "Buy lawful tools, armour, medicine and supplies.", "shop"],
@@ -92,7 +91,7 @@ function Resource({ label, value, max, tone, icon }) { return <div className={`r
 function Panel({ title, eyebrow, action, children, className = "" }) { return <section className={`panel ${className}`}><header><div>{eyebrow && <small>{eyebrow}</small>}<h2>{title}</h2></div>{action}</header>{children}</section>; }
 function PageHead({ eyebrow, title, text, children }) { return <div className="page-head"><div><small>{eyebrow}</small><h1>{title}</h1>{text && <p>{text}</p>}<i className="deco-rule"/></div>{children}</div>; }
 
-function Skyline() { return <svg className="blackwood-skyline" viewBox="0 0 900 250" role="img" aria-label="Blackwood City skyline"><defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#17120f"/><stop offset="1" stopColor="#5b3928"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="3"/></filter></defs><rect width="900" height="250" fill="url(#sky)"/><circle cx="735" cy="54" r="29" fill="#e8cda5" opacity=".88"/><circle cx="735" cy="54" r="42" fill="#e8cda5" opacity=".12" filter="url(#glow)"/><path d="M0 217V168h54v-34h51v54h36v-92h61v43h32v-72h70v126h46v-58h58v30h37V91h72v102h47v-44h55v67h45V112h64v40h46v64h64v34H0z" fill="#100e0c"/><path d="M468 91V50h10V28h8v22h10v41" fill="#100e0c"/><g fill="#d59b5d" opacity=".58">{[[67,151],[84,151],[159,116],[181,116],[256,86],[279,86],[367,151],[391,151],[467,111],[490,111],[532,119],[550,119],[673,134],[697,134],[795,146],[815,146]].map(([x,y])=><rect key={x} x={x} y={y} width="7" height="11"/>)}</g><path d="M0 220h900" stroke="#d2a06e" strokeWidth="2" opacity=".45"/></svg>; }
+function Skyline() { return <><img className="blackwood-skyline blackwood-skyline-image" src={blackwoodHero} alt="" aria-hidden="true"/><svg className="blackwood-skyline blackwood-skyline-fallback" viewBox="0 0 900 250" aria-hidden="true"><defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#17120f"/><stop offset="1" stopColor="#5b3928"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="3"/></filter></defs><rect width="900" height="250" fill="url(#sky)"/><circle cx="735" cy="54" r="29" fill="#e8cda5" opacity=".88"/><circle cx="735" cy="54" r="42" fill="#e8cda5" opacity=".12" filter="url(#glow)"/><path d="M0 217V168h54v-34h51v54h36v-92h61v43h32v-72h70v126h46v-58h58v30h37V91h72v102h47v-44h55v67h45V112h64v40h46v64h64v34H0z" fill="#100e0c"/><path d="M468 91V50h10V28h8v22h10v41" fill="#100e0c"/><g fill="#d59b5d" opacity=".58">{[[67,151],[84,151],[159,116],[181,116],[256,86],[279,86],[367,151],[391,151],[467,111],[490,111],[532,119],[550,119],[673,134],[697,134],[795,146],[815,146]].map(([x,y])=><rect key={x} x={x} y={y} width="7" height="11"/>)}</g><path d="M0 220h900" stroke="#d2a06e" strokeWidth="2" opacity=".45"/></svg></>; }
 
 function City({ go }) {
   const [query, setQuery] = useState("");
@@ -124,8 +123,8 @@ export default function MafiaGame({ initialPlayer = null, character = null, user
   useEffect(() => {
     let alive = true;
     if (!user || !supabase) { setLedgerCredits(null); return () => { alive = false; }; }
-    supabase.rpc("bw_casino_snapshot").then(({ data, error }) => {
-      if (alive && !error && data?.balance != null) syncLedger(data.balance);
+    supabase.rpc("bw_currency_snapshot").then(({ data, error }) => {
+      if (alive && !error && data?.available != null) syncLedger(data.available);
     });
     return () => { alive = false; };
   }, [user?.id, syncLedger]);
@@ -163,14 +162,14 @@ export default function MafiaGame({ initialPlayer = null, character = null, user
     return () => { listener.then(handle => handle.remove()); };
   }, [adviserOpen, menu, accountOpen]);
   const serverPages = ["crimes", "hustles", "operations", "combat", "gym", "work", "missions", "factions", "catalogue", "shop", "market", "bank", "hospital", "jail", "property", "social", "mail", "forums", "awards", "inventory"];
-  const content = serverPages.includes(page) ? <CityCoreHub initialTab={page === "factions" ? "missions" : page} progressionTab={page === "factions" ? "factions" : "story"} user={user} onState={syncCore} /> : {
+  const content = serverPages.includes(page) ? <CityCoreHub initialTab={page === "factions" ? "missions" : page} progressionTab={page === "factions" ? "factions" : "story"} user={user} onState={syncCore} onNavigate={navigate} /> : {
     home: <HomeBoard p={p} go={navigate} onState={syncCore} skyline={<Skyline/>}/>,
     daily: <DailyLifeHub onState={syncCore} onNavigate={navigate}/>,
     dispatch: <SeasonHub onNavigate={navigate}/>,
     takeover: <TakeoverHub onNavigate={navigate}/>, city:<City go={navigate}/>, civic:<CivicServicesHub onState={syncCore} onNavigate={navigate}/>,
     family:<CommunityHub user={user} initialTab="families"/>, chat:<CommunityHub user={user} initialTab="chat"/>,
     players:<CommunityHub user={user} initialTab="players"/>, rankings:<CommunityHub user={user} initialTab="rankings"/>,
-    economy:<EconomyHub onLedgerChange={syncLedger}/>, arcade:<CasinoHub onLedgerChange={syncLedger} onCashChange={syncWallet}/>, store:<StoreHub user={user} onNavigate={navigate}/>,
+    economy:<EconomyHub onLedgerChange={syncLedger}/>, arcade:<CasinoHub onLedgerChange={syncLedger} onCashChange={syncWallet}/>,
     safety:<SafetyHub onDeleteAccount={onDeleteAccount}/>
   }[page];
   const initials = (character?.codename || p.name).split(/\s+/).map(x=>x[0]).join("").slice(0,2).toUpperCase();
@@ -181,13 +180,14 @@ export default function MafiaGame({ initialPlayer = null, character = null, user
       <button className="bw-adviser-trigger" onClick={()=>{setMenu(null);setAccountOpen(false);setAdviserOpen(true)}} aria-haspopup="dialog" aria-expanded={adviserOpen}><span aria-hidden="true">✦</span> Ask Adviser</button>
       <div className="wallet-strip" aria-label="City and Arcade balances">
         <button className="cash" onClick={()=>navigate("bank")} aria-label={"Open bank, "+money(p.cash)+" on hand"}><small>ON HAND</small><b>$<AnimatedNumber value={p.cash}/></b></button>
-        <button className="ledger-balance" onClick={()=>navigate("arcade")} aria-label={ledgerCredits == null ? "Open Arcade, Arcade Dollars loading" : "Open Arcade, "+money(ledgerCredits)+" Arcade Dollars"}><small>ARCADE DOLLARS</small><b>{ledgerCredits == null ? "—" : <><span>$</span><AnimatedNumber value={ledgerCredits}/></>}</b></button>
+        <button className="ledger-balance" onClick={()=>navigate("arcade")} aria-label={ledgerCredits == null ? "Open Arcade, Arcade Dollars loading" : "Open Arcade, "+money(ledgerCredits)+" available Arcade Dollars"}><small>ARCADE $ · AVAILABLE</small><b>{ledgerCredits == null ? "—" : <><span>$</span><AnimatedNumber value={ledgerCredits}/></>}</b></button>
       </div>
       <button className="avatar" onClick={()=>{setMenu(null);setAdviserOpen(false);setAccountOpen(true)}} aria-label="Account menu" aria-haspopup="dialog">{initials}</button>
       <div className="resources" data-tutorial="resources"><Resource label="Energy" value={p.energy} max={p.maxEnergy} tone="energy" icon="⚡"/><Resource label="Nerve" value={p.nerve} max={p.maxNerve} tone="nerve" icon="♦"/><Resource label="Health" value={p.health} max={p.maxHealth} tone="health" icon="+"/><Resource label="Happy" value={p.happy} max={p.maxHappy} tone="happy" icon="♥"/></div>
     </header>
+    {page!=="home"&&<button className="bw-mobile-back" style={{position:"fixed",zIndex:1000}} aria-label="Go back" onClick={()=>trail.current.length?window.history.back():navigate("home")}>←</button>}
     <aside className="sidebar"><div className="bw-profile"><span>{initials}</span><div><b>{p.name}</b><small>{p.title} · Level {p.level}</small></div></div><nav aria-label="Game sections">{GROUPS.map(group=><section key={group.id}><button className={activeGroup.id===group.id?"active":""} onClick={()=>group.id==="home"?navigate("home"):setMenu(group.id)}><GameIcon name={group.icon}/>{group.label}<span>›</span></button>{activeGroup.id===group.id&&<div className="bw-subnav">{group.pages.map(([id,label])=><button data-page={id} aria-current={page===id?"page":undefined} onClick={()=>navigate(id)} key={id}>{label}</button>)}</div>}</section>)}</nav><button className="bw-sidebar-help" onClick={()=>navigate("safety")}>Help & Safety</button></aside>
-    <main id="game-content"><div className="bw-location" ref={heading} tabIndex={-1}>{page!=="home"&&<button aria-label="Go back" onClick={()=>trail.current.length?window.history.back():navigate("home")}>←</button>}<span>{activeGroup.label}<i>/</i><b>{pageLabel(page)}</b></span></div><div className="page-motion" key={page}>{content}</div></main>
+    <main id="game-content"><div className="bw-location" ref={heading} tabIndex={-1}><span>{activeGroup.label}<i>/</i><b>{pageLabel(page)}</b></span></div><div className="page-motion" key={page}>{content}</div></main>
     <nav className="mobile-dock" aria-label="Primary navigation">{MOBILE_NAV.map(group=><button className={activeGroup.id===group.id?"active":""} aria-current={activeGroup.id===group.id?"page":undefined} aria-label={group.label} onClick={()=>group.id==="home"?navigate("home"):setMenu(group.id)} key={group.id}><i><GameIcon name={group.icon}/></i><span>{group.label}</span></button>)}</nav>
     {menu&&<Dialog label={GROUPS.find(group=>group.id===menu)?.label || "Navigation"} onClose={()=>setMenu(null)} className="bw-navigation"><header className="bw-dialog-head"><div><span className="bw-eyebrow">EXPLORE BLACKWOOD</span><h2>{GROUPS.find(group=>group.id===menu)?.label}</h2></div><button className="bw-close" aria-label="Close navigation" onClick={()=>setMenu(null)}>×</button></header><div className="bw-destination-list">{GROUPS.find(group=>group.id===menu)?.pages.map(([id,label])=><button key={id} data-page={id} aria-current={page===id?"page":undefined} onClick={()=>navigate(id)}><GameIcon name={id==="factions"?"family":id}/><span>{label}</span><b>→</b></button>)}</div></Dialog>}
     {accountOpen&&<Dialog label="Account" onClose={()=>setAccountOpen(false)} className="bw-account"><header className="bw-dialog-head"><h2>Your account</h2><button className="bw-close" aria-label="Close account" onClick={()=>setAccountOpen(false)}>×</button></header><p>{character?.codename || p.name}</p><p>{user?.email}</p><button className="bw-secondary" onClick={()=>navigate("safety")}>Help & Safety</button><button className="bw-secondary" onClick={onSignOut}>Sign out</button></Dialog>}
