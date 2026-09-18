@@ -79,6 +79,21 @@ function familyFor(item) {
 
 const generatedPath = (rarity, family) => `../assets/items-v2/${rarity}-${family}.webp`;
 
+// Named relics keep an explicit item-ID contract. The catalogue, loadout board
+// and public character card therefore cannot silently drift to a different
+// family when a display name changes.
+const ITEM_ART_BY_ID = Object.freeze({
+  "relic-harbor-iron": ["rare", "revolver"],
+  "relic-ward-stiletto": ["rare", "blade"],
+  "relic-ash-crown": ["rare", "fedora"],
+  "relic-night-watch": ["rare", "watch"],
+  "relic-copperhead-gloves": ["rare", "knuckles"],
+  "relic-capo-signet": ["epic", "ring"],
+  "relic-bellini-typewriter": ["epic", "pistol"],
+  "relic-blackwood-oath": ["legendary", "coat"],
+  "relic-moretti-peacemaker": ["legendary", "revolver"],
+});
+
 // The same item keeps the same illustration on the catalogue, inventory,
 // equipment board and public character card. A deterministic variant token
 // adds a restrained hue/texture treatment per item ID, so two items in one
@@ -89,16 +104,21 @@ export function itemArtAsset(item) {
   const key = `${rarity}-${family}`;
   const id = item?.item_id || item?.itemId || item?.id || item?.name || key;
   const seed = hash(id);
-  const src = GENERATED[generatedPath(rarity, family)] || FALLBACK[family] || legacyMedical;
+  const explicit = ITEM_ART_BY_ID[id];
+  const resolvedRarity = explicit?.[0] || rarity;
+  const resolvedFamily = explicit?.[1] || family;
+  const resolvedKey = `${resolvedRarity}-${resolvedFamily}`;
+  const src = GENERATED[generatedPath(resolvedRarity, resolvedFamily)] || GENERATED[generatedPath(rarity, family)] || FALLBACK[resolvedFamily] || FALLBACK[family] || legacyMedical;
   return {
     src,
-    key,
-    family,
-    rarity,
+    key: resolvedKey,
+    family: resolvedFamily,
+    rarity: resolvedRarity,
     variant: seed % 24,
     hue: (seed % 21) - 10,
     scale: 1 + (seed % 5) * 0.008,
   };
 }
 
-export const ITEM_ART_ASSETS = Object.freeze({ ...FALLBACK });
+export const ITEM_ART_MANIFEST = Object.freeze(Object.fromEntries(Object.entries(ITEM_ART_BY_ID).map(([id, [rarity, family]]) => [id, GENERATED[generatedPath(rarity, family)] || FALLBACK[family] || legacyMedical])));
+export const ITEM_ART_ASSETS = Object.freeze({ ...FALLBACK, ...ITEM_ART_MANIFEST });

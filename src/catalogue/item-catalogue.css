@@ -21,6 +21,9 @@
 @media(prefers-reduced-motion:reduce){.item-art-image{transition:none}.catalogue-card:hover .item-art-image{transform:none}}
 @media(max-width:760px){.rarity-legend{grid-template-columns:repeat(5,minmax(92px,1fr));overflow:auto}.rarity-legend button{display:block}.rarity-legend span{display:block;margin-top:6px}}
 
+.catalogue-target-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:18px;padding:15px 18px;border:1px solid #b99762;background:#fff8e8;color:#4b3522}.catalogue-target-banner div{display:grid;gap:4px}.catalogue-target-banner small{color:#976b32;font:800 9px Arial;letter-spacing:.16em}.catalogue-target-banner b{font:700 21px Georgia}.catalogue-target-banner span{color:#806b55;font-size:11px}.catalogue-target-banner button,.catalogue-target-button{min-height:42px;padding:8px 13px;border:1px solid #ac8144;background:#fff;color:#704819;font-size:10px;font-weight:800}.catalogue-card.targeted{box-shadow:inset 0 0 0 3px #b38a49}.catalogue-card.targeted .catalogue-card-open{background:#f8e8c3}.catalogue-ownership>div{display:flex;gap:8px;align-items:center}.catalogue-target-button{background:#e9d3a5}
+@media(max-width:620px){.catalogue-target-banner{align-items:flex-start;display:grid}.catalogue-target-banner button{width:100%}.catalogue-ownership{align-items:flex-start;display:grid}.catalogue-ownership>div{display:grid;width:100%}.catalogue-ownership>div button{width:100%}}
+
 /* Art v2: generated plates are already composed for a square frame. Do not
    enlarge a crop in the detail record; contain the full plate and let the
    higher-resolution WebP carry the sharpness. The stable variant token gives

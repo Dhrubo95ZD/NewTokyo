@@ -10,6 +10,7 @@ A persistent online crime RPG built with React, Vite, Capacitor and Supabase for
 - Equipment, inventory, rare relics, transparent acquisition odds and a public character-card collection
 - World chat, private mail, forums, player directory, reporting, muting and blocking
 - Rossi's Arcade: blackjack, slots and roulette using separate play-earned Arcade Dollars; verified net wins may redeem one-way into ordinary in-game cash
+- Make Your Mark V1: decision-driven district dossiers, three-stage boss counterplay, permanent city contribution, saved loadout presets and pinned collection targets
 - Prime FX uses the same play-earned Arcade Dollar wallet as Rossi's Arcade, with deposited trading funds shown separately; no real cash value or execution
 - Free account-aware Consigliere, guided tutorial, Daily Life and Blackwood Dispatch
 - Responsive desktop and mobile layouts with an Android safe-area dock
@@ -60,6 +61,7 @@ Apply the migrations once to the existing Supabase project, in this order:
 26. `supabase/20260923_retire_arcade_skill_rooms.sql`
 27. `supabase/20260925_rise_to_power.sql`
 28. `supabase/20260926_connected_city_loop.sql`
+29. `supabase/20260927_make_your_mark_v1.sql`
 
 The reset script is deliberately separate and must only be run manually for a new game. Arcade Dollars remain isolated from ordinary city cash: verified net Arcade wins may be redeemed one-way at 100 Arcade Dollars = $50 city cash, while city cash and real money can never be converted into Arcade Dollars.
 
@@ -68,6 +70,8 @@ The reset script is deliberately separate and must only be run manually for a ne
 Apply `supabase/20260925_rise_to_power.sql` after `supabase/20260923_retire_arcade_skill_rooms.sql`. It adds mastery-gated district bosses, targeted relic drops with a disclosed pity rule, duplicate dismantling, deterministic workshop crafting and equipment upgrade ranks. Workshop parts are earned only through play.
 
 Apply `supabase/20260926_connected_city_loop.sql` last. It extends the campaign through operations, bosses, workshop upgrades and Takeover; connects boss wins to the existing Takeover map; unifies Arcade Dollar presentation across Arcade and Prime FX; and hardens dismantling and simultaneous upgrades.
+
+Apply `supabase/20260927_make_your_mark_v1.sql` after the connected city loop. It makes operation stages scenario-aware, replaces one-roll bosses with three-stage plans, counts distinct first clears, records permanent city contribution without requiring a temporary Takeover, assigns only eligible Daily Life objectives, makes Arcade net P/L auditable, and adds locked/favourite equipment with two saved loadout presets. The migration also exposes a server-persisted collection target so the Home board, Catalogue and boss routes point at the same goal.
 
 Real-money monetisation is intentionally deferred while the core game, progression and economy are still being built. This version contains no paid store, subscriptions, purchase verifier, billing SDK or paid entitlements.
 

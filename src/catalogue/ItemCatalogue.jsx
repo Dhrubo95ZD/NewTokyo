@@ -19,12 +19,18 @@ export default function ItemCatalogue() {
   const [rarity, setRarity] = useState("all");
   const [collection, setCollection] = useState("all");
   const [selected, setSelected] = useState(null);
+  const [target, setTarget] = useState(null);
+  const [targetBusy, setTargetBusy] = useState(false);
 
   const load = async () => {
     setError("");
-    const { data: value, error: problem } = await supabase.rpc("bw_item_catalogue");
+    const [{ data: value, error: problem }, targetResult] = await Promise.all([
+      supabase.rpc("bw_item_catalogue"),
+      supabase.rpc("bw_collection_target_snapshot"),
+    ]);
     if (problem) setError(problem.message);
     else setData(value);
+    if (!targetResult.error) setTarget(targetResult.data);
   };
 
   useEffect(() => { load(); }, []);
@@ -46,6 +52,23 @@ export default function ItemCatalogue() {
   if (!data) return <div className="catalogue-page"><header className="catalogue-hero"><small>BLACKWOOD COLLECTION</small><h1>The Item Catalogue</h1><p>{error || "Opening the authenticated city archive…"}</p>{error && <button type="button" onClick={load}>Retry</button>}</header></div>;
 
   const summary = data.summary;
+  const targetId = target?.item?.id;
+  const setCollectionTarget = async itemId => {
+    if (targetBusy) return;
+    setTargetBusy(true);
+    const { data: value, error: problem } = await supabase.rpc("bw_set_collection_target", { p_item_id: itemId });
+    if (problem) setError(problem.message);
+    else setTarget(value);
+    setTargetBusy(false);
+  };
+  const clearCollectionTarget = async () => {
+    if (targetBusy) return;
+    setTargetBusy(true);
+    const { data: value, error: problem } = await supabase.rpc("bw_clear_collection_target");
+    if (problem) setError(problem.message);
+    else setTarget(value);
+    setTargetBusy(false);
+  };
   if (selected) return <div className="catalogue-page catalogue-record-page">
     <button type="button" className="catalogue-record-back" onClick={() => setSelected(null)}>← Back to Item Catalogue</button>
     <article className={`catalogue-record ${selected.rarity}`} role="region" aria-label={`${selected.name} record`}>
@@ -53,14 +76,15 @@ export default function ItemCatalogue() {
       <header><small>{selected.collection}</small><div className="modal-rarity"><b>{selected.rarity}</b><Pips rarity={selected.rarity} /></div><h2>{selected.name}</h2><p>{selected.description}</p></header>
       <section className="catalogue-detail-stats">{STATS.map(([key, label]) => <div key={key}><small>{label}</small><b>{selected[key]}</b></div>)}<div><small>LEVEL</small><b>{selected.levelRequired}</b></div><div><small>VALUE</small><b>{money(selected.price)}</b></div></section>
       <section className="obtain-routes"><h3>How to obtain</h3>{(Array.isArray(selected.obtain) ? selected.obtain : []).map((route, index) => <div key={`${route.source}-${index}`}><i><GameIcon name={route.kind === "combat" ? "combat" : route.kind === "market" ? "market" : route.kind === "shop" ? "shop" : route.kind === "contract" ? "contracts" : "hustles"} /></i><span><small>{route.source}</small><b>{route.chance}</b>{route.exactChance && <em>{route.exactChance}</em>}<p>{route.detail}</p></span></div>)}</section>
-      <footer className="catalogue-ownership"><span><small>YOUR RECORD</small><b>{selected.owned ? `${selected.owned} owned${selected.equipped ? " · equipped" : ""}` : "Not yet owned"}</b></span><button type="button" onClick={() => setSelected(null)}>Back to catalogue</button></footer>
+      <footer className="catalogue-ownership"><span><small>YOUR RECORD</small><b>{selected.owned ? `${selected.owned} owned${selected.equipped ? " · equipped" : ""}` : "Not yet owned"}</b></span><div><button type="button" className="catalogue-target-button" disabled={targetBusy} onClick={() => targetId === selected.id ? clearCollectionTarget() : setCollectionTarget(selected.id)}>{targetId === selected.id ? "Unpin collection target" : "Pin collection target"}</button><button type="button" onClick={() => setSelected(null)}>Back to catalogue</button></div></footer>
     </article>
   </div>;
   return <div className="catalogue-page">
     <header className="catalogue-hero">
-      <div><small>BLACKWOOD COLLECTION · LIVE ARCHIVE · BUILD 0.20.1</small><h1>The Item Catalogue</h1><p>Distinct illustrated records, visible power tiers and server-verified acquisition odds for every item.</p></div>
+      <div><small>BLACKWOOD COLLECTION · LIVE ARCHIVE · BUILD 0.23.0</small><h1>The Item Catalogue</h1><p>Distinct illustrated records, visible power tiers and server-verified acquisition odds for every item.</p></div>
       <div className="catalogue-progress"><strong>{summary.owned}<i>/ {summary.total}</i></strong><span>unique items owned</span><figure><i style={{ width: `${summary.owned / Math.max(1, summary.total) * 100}%` }} /></figure></div>
     </header>
+    {target?.pinned && <section className="catalogue-target-banner"><div><small>PINNED COLLECTION TARGET</small><b>{target.item?.name}</b><span>{target.route?.source} · {target.route?.detail}</span></div><button type="button" disabled={targetBusy} onClick={clearCollectionTarget}>Unpin</button></section>}
     <section className="catalogue-summary">{[["Known items", summary.total], ["Owned", summary.owned], ["Equipped", summary.equipped], ["Relics", `${summary.ownedRelics}/${summary.relics}`]].map(([label, value]) => <div key={label}><small>{label}</small><b>{value}</b></div>)}</section>
     <section className="rarity-legend" aria-label="Rarity guide">{Object.keys(RANK).map(value => <button type="button" className={`${value} ${rarity === value ? "active" : ""}`} onClick={() => setRarity(rarity === value ? "all" : value)} key={value}><Pips rarity={value} /><span><b>{value}</b><small>Tier {RANK[value]}</small></span></button>)}</section>
     <section className="catalogue-tools">
@@ -73,12 +97,12 @@ export default function ItemCatalogue() {
     {items.length ? <section className="catalogue-grid">{items.map(item => {
       const routes = Array.isArray(item.obtain) ? item.obtain : [];
       const best = item.dropOnly && routes.find(route => route.exactChance);
-      return <article className={`catalogue-card ${item.rarity} ${item.owned ? "owned" : ""}`} key={item.id}>
+      return <article className={`catalogue-card ${item.rarity} ${item.owned ? "owned" : ""} ${targetId === item.id ? "targeted" : ""}`} key={item.id}>
         <ItemArtwork item={item} />
         <div><small>{item.collection}</small><h2>{item.name}</h2><span>{item.slot || item.kind} · Level {item.levelRequired}</span>
           <dl>{STATS.map(([key, label]) => <div className={item[key] > 0 ? "active" : ""} key={key}><dt>{label}</dt><dd>{item[key]}</dd></div>)}</dl>
           <div className="card-acquisition"><small>{item.dropOnly ? "DISCLOSED ITEM CHANCE" : "ACQUISITION"}</small><b>{best?.exactChance || "Shop or player market"}</b></div>
-          <footer><b>{item.owned ? `${item.owned} owned` : money(item.price)}</b><button type="button" className="catalogue-card-open" onClick={() => setSelected(item)} aria-label={`View ${item.name} record`}>View record →</button></footer>
+          <footer><b>{item.owned ? `${item.owned} owned` : money(item.price)}</b><button type="button" className="catalogue-card-open" onClick={() => setSelected(item)} aria-label={`View ${item.name} record`}>{targetId === item.id ? "Pinned target · View" : "View record →"}</button></footer>
         </div>
       </article>;
     })}</section> : <div className="catalogue-empty"><b>No records match</b><p>Clear a filter or search for another item.</p></div>}
