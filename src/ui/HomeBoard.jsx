@@ -14,8 +14,9 @@ export function nextMove(core, operations, progression, daily) {
   if (status && status !== 'okay') return { page: status === 'jail' ? 'jail' : 'hospital', title: status === 'jail' ? 'Check your release' : 'Recover and regroup', text: 'Your current status limits some activities. Check your city record.', action: 'View status' };
   if (daily?.claimedToday === false) return { page: 'daily', title: 'Your daily bonus is ready', text: `${daily.streak?.current || 0} day streak · claim the next city reward`, action: 'Claim daily bonus' };
   if (operations?.active) return { page: 'operations', title: operations.active.operationName, text: `${operations.active.districtName} · ${operations.active.stageTitle}`, action: 'Continue operation' };
+  if (operations?.target?.pinned) return { page: 'operations', title: `Chase ${operations.target.item?.name}`, text: `${operations.target.route?.source || 'Pinned collection target'} · ${operations.target.route?.detail || 'Open the field office to continue the route.'}`, action: 'Open target route' };
   const mission = progression?.missions?.find(item => item.unlocked && !item.claimedAt);
-  if (mission) return { page: 'missions', title: mission.title, text: `${mission.objective} · ${mission.progress}/${mission.target}`, action: mission.progress >= mission.target ? 'Review & claim reward' : 'Continue campaign' };
+  if (mission) return { page: mission.progress >= mission.target ? 'missions' : (mission.actionPage || 'missions'), title: mission.title, text: `${mission.objective} · ${mission.progress}/${mission.target}${mission.unlockText ? ` · ${mission.unlockText}` : ''}`, action: mission.progress >= mission.target ? 'Review & claim reward' : 'Go to objective' };
   return { page: 'hustles', title: 'Make your next move', text: 'Street Work offers repeatable work without an energy cost.', action: 'Explore Street Work' };
 }
 
@@ -26,12 +27,12 @@ export default function HomeBoard({ p, go, onState, skyline }) {
   useEffect(() => {
     let alive = true;
     setBusy(true); setIssue('');
-    Promise.allSettled([supabase.rpc('bw_get_state'), supabase.rpc('bw_operations_snapshot'), supabase.rpc('bw_progression_snapshot'), supabase.rpc('bw_daily_life_snapshot')]).then(results => {
+    Promise.allSettled([supabase.rpc('bw_get_state'), supabase.rpc('bw_operations_snapshot'), supabase.rpc('bw_connected_progression_snapshot'), supabase.rpc('bw_daily_life_snapshot'), supabase.rpc('bw_collection_target_snapshot')]).then(results => {
       if (!alive) return;
       const values = results.map(result => result.status === 'fulfilled' && !result.value.error ? result.value.data : null);
-      setRecord({ core: values[0], operations: values[1], progression: values[2], daily: values[3] });
+      setRecord({ core: values[0], operations: values[1], progression: values[2], daily: values[3], target: values[4] });
       if (values[0]?.player) onState(values[0].player);
-      if (values.slice(0, 3).some(value => !value)) setIssue('Some records could not be refreshed. Your saved progress is safe.');
+      if (values.slice(0, 4).some(value => !value)) setIssue('Some records could not be refreshed. Your saved progress is safe.');
       setBusy(false);
     });
     return () => { alive = false; };
@@ -41,12 +42,15 @@ export default function HomeBoard({ p, go, onState, skyline }) {
   const active = record?.operations?.active;
   const claimable = record?.progression?.missions?.find(item => item.unlocked && !item.claimedAt && item.progress >= item.target);
   const status = record?.core?.player?.status;
+  const journey = record?.progression?.journey;
   return <div className="bw-home">
     <section className="bw-welcome">{skyline}<div><span className="bw-eyebrow">YOUR STORY. YOUR CITY.</span><h1>Welcome back,<br/><em>{p.name}.</em></h1><p>Build a name Blackwood remembers.</p></div><span className="bw-level">LEVEL <b>{p.level}</b></span></section>
     <section className="bw-next" aria-busy={busy}><div className="bw-next-heading"><span className="bw-eyebrow">YOUR NEXT MOVE</span><button className="bw-text-button" disabled={busy} onClick={refresh} aria-label="Refresh Home records">{busy ? 'Syncing…' : 'Refresh ↻'}</button></div><h2>{busy ? 'Opening your city record…' : move.title}</h2><p>{busy ? 'Checking your campaign and active operations.' : move.text}</p><button className="bw-primary" disabled={busy} onClick={() => go(move.page)}>{busy ? 'Checking progress…' : move.action}<span aria-hidden="true">→</span></button>{issue && <p className="bw-warning" role="status">{issue} Use Refresh to try again.</p>}</section>
     {record && <section className="bw-priority-grid" aria-label="Priority records">
+      {journey?.next && <button className="bw-priority-card" onClick={() => go(journey.next.actionPage || 'missions')}><span className="bw-eyebrow">CAMPAIGN · CHAPTER {journey.currentChapter}</span><b>{journey.next.title}</b><small>{journey.completed}/{journey.total} objectives completed · {journey.next.unlockText}</small><em>Continue the route →</em></button>}
       {record.daily?.claimedToday === false && <button className="bw-priority-card reward" onClick={() => go('daily')}><span className="bw-eyebrow">DAILY BONUS READY</span><b>Keep your streak alive</b><small>{record.daily.streak?.current || 0} day streak · today’s reward is waiting</small><em>Open Daily Life →</em></button>}
       {active && <button className="bw-priority-card active" onClick={() => go('operations')}><span className="bw-eyebrow">ACTIVE OPERATION</span><b>{active.operationName}</b><small>{active.districtName} · {active.stageTitle}</small><em>Continue dossier →</em></button>}
+      {record.target?.pinned && <button className="bw-priority-card target" onClick={() => go('operations')}><span className="bw-eyebrow">PINNED COLLECTION TARGET</span><b>{record.target.item?.name}</b><small>{record.target.route?.source || 'Blackwood collection'} · {record.target.route?.winsToGuarantee ? `${record.target.route.winsToGuarantee} wins to guarantee` : 'Route ready'}</small><em>Open target route →</em></button>}
       {claimable && <button className="bw-priority-card reward" onClick={() => go('missions')}><span className="bw-eyebrow">REWARD READY</span><b>{claimable.title}</b><small>{claimable.cash ? `${cash(claimable.cash)} · ` : ''}{claimable.xp || 0} XP ready to claim</small><em>Claim chapter reward →</em></button>}
       {!active && !claimable && status && status !== 'okay' && <button className="bw-priority-card caution" onClick={() => go(status === 'jail' ? 'jail' : 'hospital')}><span className="bw-eyebrow">CITY STATUS</span><b>{status === 'jail' ? 'You are in custody' : 'You are recovering'}</b><small>Some activities are temporarily unavailable.</small><em>Review status →</em></button>}
     </section>}
