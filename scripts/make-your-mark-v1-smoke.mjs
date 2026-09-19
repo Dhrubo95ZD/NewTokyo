@@ -35,7 +35,13 @@ for (const marker of [
 
 assert.ok(!sql.includes("case when p_choice=a.approach then 9"), "old repeated-opening bonus survived");
 assert.ok(!sql.includes("from public.bw_civic_contracts where user_id=p_uid"), "city contribution still reads user data from the contract template");
+for (const marker of [
+  "A concurrent retry can pass the optimistic lookup",
+  "The record lock serializes attempts. Re-check the request",
+  "the inventory lock may have waited for",
+]) assert.ok(sql.includes(marker), `missing concurrent idempotency guard: ${marker}`);
 for (const marker of ["stageOptions", "scenarioClue", "bw_challenge_district_boss_plan", "Pin target", "three-stage encounter"]) assert.ok(operations.includes(marker), `missing operations UI contract: ${marker}`);
+assert.ok(!operations.includes("% 5 || 5"), "boss guarantee countdown shows zero immediately after a guaranteed drop");
 for (const marker of ["bw_collection_target_snapshot", "bw_set_collection_target", "Pin collection target", "PINNED COLLECTION TARGET"]) assert.ok(catalogue.includes(marker), `missing target catalogue contract: ${marker}`);
 for (const marker of ["bw_loadout_presets_snapshot", "bw_save_loadout_preset", "bw_apply_loadout_preset", "bw_set_item_flags", "Saved loadout presets", "CURRENT SLOT"]) assert.ok(character.includes(marker), `missing loadout UI contract: ${marker}`);
 for (const marker of ["bw_blackjack_action_v1", "p_request_id:crypto.randomUUID()", "netArcadeProfit", "Lifetime P/L"]) assert.ok(casino.includes(marker), `missing Arcade accounting UI contract: ${marker}`);
@@ -43,6 +49,6 @@ for (const marker of ["bw_collection_target_snapshot", "PINNED COLLECTION TARGET
 for (const marker of ["ITEM_ART_BY_ID", "relic-harbor-iron", "ITEM_ART_MANIFEST"]) assert.ok(art.includes(marker), `missing explicit item art contract: ${marker}`);
 assert.match(readme, /20260927_make_your_mark_v1\.sql/);
 assert.match(packageJson, /"test:v1"/);
-assert.match(gradle, /versionCode 25/);
+assert.match(gradle, /versionCode 26/);
 
 console.log("Make Your Mark V1 server, UI, accounting, art, release and progression contracts passed.");

@@ -2,6 +2,8 @@
 
 A persistent online crime RPG built with React, Vite, Capacitor and Supabase for Android. Authenticated player state is owned by database RPCs: the client requests an action while Supabase validates costs, rolls outcomes and records the result.
 
+Current Android candidate: **0.24.0 (version code 26)**. This publish-hardening release makes concurrent mobile retries idempotent for district operations, boss encounters and equipment dismantling.
+
 ## Current game
 
 - Google login, character creation and authoritative cloud state

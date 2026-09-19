@@ -59,7 +59,7 @@ try {
     await page.getByRole('dialog',{name:'Play',exact:true}).getByRole('button',{name:'District Operations',exact:false}).click();
     await page.getByRole('heading',{name:'Rise to Power',exact:true}).waitFor();
     await page.getByRole('button',{name:'Boss board',exact:true}).click();
-    await page.getByRole('button',{name:'Challenge boss',exact:true}).waitFor();
+    await page.getByRole('button',{name:'Run three-stage encounter',exact:true}).waitFor();
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Boss board must not overflow');
     await page.getByRole('button',{name:'Workshop',exact:true}).click();
     await page.getByRole('button',{name:'Dismantle one',exact:false}).waitFor();

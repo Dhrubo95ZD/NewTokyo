@@ -81,7 +81,7 @@ export default function ItemCatalogue() {
   </div>;
   return <div className="catalogue-page">
     <header className="catalogue-hero">
-      <div><small>BLACKWOOD COLLECTION · LIVE ARCHIVE · BUILD 0.23.0</small><h1>The Item Catalogue</h1><p>Distinct illustrated records, visible power tiers and server-verified acquisition odds for every item.</p></div>
+      <div><small>BLACKWOOD COLLECTION · LIVE ARCHIVE · BUILD 0.24.0</small><h1>The Item Catalogue</h1><p>Distinct illustrated records, visible power tiers and server-verified acquisition odds for every item.</p></div>
       <div className="catalogue-progress"><strong>{summary.owned}<i>/ {summary.total}</i></strong><span>unique items owned</span><figure><i style={{ width: `${summary.owned / Math.max(1, summary.total) * 100}%` }} /></figure></div>
     </header>
     {target?.pinned && <section className="catalogue-target-banner"><div><small>PINNED COLLECTION TARGET</small><b>{target.item?.name}</b><span>{target.route?.source} · {target.route?.detail}</span></div><button type="button" disabled={targetBusy} onClick={clearCollectionTarget}>Unpin</button></section>}

@@ -176,7 +176,15 @@ begin
   if p_choice not in('careful','direct','social') then raise exception 'invalid stage choice'; end if;
   select e.event into existing from public.bw_district_operation_actions e where e.user_id=uid and e.request_id=p_request_id;
   if existing is not null then return jsonb_build_object('event',existing,'operations',public.bw_operations_snapshot()); end if;
-  select * into a from public.bw_active_district_operations where user_id=uid for update; if a.user_id is null then raise exception 'no active operation'; end if;
+  select * into a from public.bw_active_district_operations where user_id=uid for update;
+  if a.user_id is null then
+    -- A concurrent retry can pass the optimistic lookup above, wait here while
+    -- the first request commits, and then find that the active row was deleted.
+    -- Re-read the durable action so a successful mobile retry stays idempotent.
+    select e.event into existing from public.bw_district_operation_actions e where e.user_id=uid and e.request_id=p_request_id;
+    if existing is not null then return jsonb_build_object('event',existing,'operations',public.bw_operations_snapshot()); end if;
+    raise exception 'no active operation';
+  end if;
   if a.expires_at<now() then delete from public.bw_active_district_operations where user_id=uid; raise exception 'operation dossier expired'; end if;
   select * into o from public.bw_district_operations where id=a.operation_id; s:=public.bw_refresh_player(uid);
   selected:=(select choice_json from jsonb_array_elements(public.bw_operation_stage_options(a.current_stage,a.scenario_id)) as choices(choice_json) where choice_json->>'id'=p_choice);
@@ -245,6 +253,11 @@ begin
   s:=public.bw_refresh_player(uid); if s.status<>'okay' then raise exception 'you are currently %',s.status; end if;
   select * into dp from public.bw_district_progress where user_id=uid and district_id=b.district_id; if s.level<b.required_level or coalesce(dp.mastery,0)<b.required_mastery or coalesce(dp.clears,0)<b.required_clears then raise exception 'district mastery requirements not met'; end if;
   insert into public.bw_rise_boss_records(user_id,boss_id) values(uid,b.id) on conflict do nothing; select * into r from public.bw_rise_boss_records where user_id=uid and boss_id=b.id for update;
+  -- The record lock serializes attempts. Re-check the request after acquiring it
+  -- so two in-flight copies return the same committed result instead of a false
+  -- cooldown error (or awarding the encounter twice).
+  select event into prior from public.bw_rise_boss_attempts where user_id=uid and request_id=p_request_id;
+  if prior is not null then return jsonb_build_object('event',prior,'rise',public.bw_rise_snapshot()); end if;
   if r.last_attempt_at is not null and r.last_attempt_at+make_interval(hours=>b.cooldown_hours)>now() then raise exception 'boss recon is still on cooldown'; end if;
   if coalesce(dp.heat,0)>85 then raise exception 'district heat must fall to 85 or lower'; end if;
   select coalesce(sum(i.attack),0),coalesce(sum(i.defense),0),coalesce(sum(i.speed),0),coalesce(sum(i.dexterity),0) into eq_attack,eq_defense,eq_speed,eq_dexterity from public.bw_equipment e join public.bw_items i on i.id=e.item_id where e.user_id=uid;
@@ -360,6 +373,11 @@ begin
   select event into prior from public.bw_rise_actions where user_id=uid and request_id=p_request_id; if prior is not null then return jsonb_build_object('event',prior,'rise',public.bw_rise_snapshot()); end if;
   if p_quantity<1 or p_quantity>99 then raise exception 'quantity must be between 1 and 99'; end if;
   select * into i from public.bw_items where id=p_item_id; select * into v from public.bw_inventory where user_id=uid and item_id=p_item_id for update;
+  -- As with operation and boss actions, the inventory lock may have waited for
+  -- the first copy of this request. Prefer its recorded result over an
+  -- "equipment not found"/quantity error from the now-updated inventory row.
+  select event into prior from public.bw_rise_actions where user_id=uid and request_id=p_request_id;
+  if prior is not null then return jsonb_build_object('event',prior,'rise',public.bw_rise_snapshot()); end if;
   if i.id is null or i.slot is null or v.item_id is null then raise exception 'equipment not found'; end if;
   if v.locked then raise exception 'unlock this item before dismantling it'; end if;
   available:=v.quantity-case when exists(select 1 from public.bw_equipment where user_id=uid and item_id=p_item_id) then 1 else 0 end; if available<p_quantity then raise exception 'not enough unequipped copies'; end if;
